@@ -287,7 +287,7 @@ ${small ? smallContext() : context()}`;
   cfg.oaVoice = store.get('ai-oa-voice', 'marin');
   const OA_VOICES = [['marin', 'Marin — warm & natural (recommended)'], ['cedar', 'Cedar — calm & natural'], ['coral', 'Coral — bright & friendly'], ['sage', 'Sage — gentle'], ['verse', 'Verse — expressive'], ['alloy', 'Alloy — neutral'], ['ash', 'Ash'], ['ballad', 'Ballad'], ['echo', 'Echo'], ['fable', 'Fable'], ['nova', 'Nova — energetic'], ['onyx', 'Onyx — deep'], ['shimmer', 'Shimmer — soft']];
   const VOICE_STYLE = 'Speak like a warm, friendly human teacher on a one-to-one video call: natural conversational pace, expressive intonation, small natural pauses, encouraging and kind. Never sound robotic or like you are reading.';
-  const engine = () => (cfg.key ? 'claude' : cfg.brain === 'local' && hasGPU ? 'local' : cfg.brain === 'offline' ? 'offline' : 'cloud');
+  const engine = () => (cfg.brain === 'wang' ? 'wang' : cfg.key ? 'claude' : cfg.brain === 'local' && hasGPU ? 'local' : cfg.brain === 'offline' ? 'offline' : 'cloud');
 
   // ---------- Cloud AI for everyone via Puter.js (no API key; each visitor uses their own free Puter allowance) ----------
   let puterP = null;
@@ -396,7 +396,70 @@ ${small ? smallContext() : context()}`;
     for await (const c of chunks) { const d = (c.choices[0] && c.choices[0].delta && c.choices[0].delta.content) || ''; if (d) { full += d; onText(d); } }
     return full;
   }
-  const askAI = (onText, voice, holder) => (engine() === 'claude' ? askClaude(onText, voice, holder) : engine() === 'cloud' ? askCloud(onText, voice, holder) : askLocal(onText, voice, holder));
+  const askAI = (onText, voice, holder) => (engine() === 'wang' ? askWang(onText, voice, holder) : engine() === 'claude' ? askClaude(onText, voice, holder) : engine() === 'cloud' ? askCloud(onText, voice, holder) : askLocal(onText, voice, holder));
+
+  // ---------- WANG AI (your own WANG AI server; the API key stays on the server) ----------
+  Object.assign(MLS.UI, {
+    brainWang: { en: '🤖 WANG AI', ne: '🤖 WANG AI', zh: '🤖 WANG AI' },
+    wangHelp: { en: 'Uses your own WANG AI server. The AI key stays safely on that server, so students need no key or account. Start the server first (see the WANG AI README), then enter its address below.', ne: 'तपाईंको आफ्नै WANG AI सर्भर प्रयोग गर्छ। AI key सर्भरमै सुरक्षित रहन्छ, त्यसैले विद्यार्थीलाई key वा खाता चाहिँदैन। पहिले सर्भर सुरु गर्नुहोस् (WANG AI README हेर्नुहोस्), अनि तल यसको ठेगाना लेख्नुहोस्।', zh: '使用你自己的 WANG AI 服务器。AI 密钥安全地保存在服务器上，学生不需要密钥或账号。请先启动服务器（见 WANG AI README），然后在下方填写地址。' },
+    wangUrl: { en: 'WANG AI server address', ne: 'WANG AI सर्भरको ठेगाना', zh: 'WANG AI 服务器地址' },
+    wangTest: { en: 'Test connection', ne: 'जडान जाँच्नुहोस्', zh: '测试连接' },
+    wangReady: { en: '✓ Connected · {model}', ne: '✓ जोडियो · {model}', zh: '✓ 已连接 · {model}' },
+    wangNoKey: { en: '⚠️ Connected, but the server has no AI key yet. Add ANTHROPIC_API_KEY to backend/.env and restart it.', ne: '⚠️ जोडियो, तर सर्भरमा AI key छैन। backend/.env मा ANTHROPIC_API_KEY थपेर सर्भर फेरि सुरु गर्नुहोस्।', zh: '⚠️ 已连接，但服务器还没有 AI 密钥。请在 backend/.env 中添加 ANTHROPIC_API_KEY 并重启。' },
+    wangOffline: { en: '🤖 Can\'t reach the WANG AI server at {url}. Start it on your computer (see the WANG AI README), check the address in ⚙️ settings — or pick another AI brain there.', ne: '🤖 {url} मा WANG AI सर्भरसम्म पुग्न सकिएन। आफ्नो कम्प्युटरमा सर्भर सुरु गर्नुहोस् (WANG AI README हेर्नुहोस्), ⚙️ सेटिङमा ठेगाना जाँच्नुहोस् — वा त्यहाँ अर्को AI दिमाग छान्नुहोस्।', zh: '🤖 无法连接 {url} 上的 WANG AI 服务器。请在电脑上启动它（见 WANG AI README），在 ⚙️ 设置中检查地址——或选择其他 AI 大脑。' },
+  });
+  cfg.wangUrl = store.get('ai-wang-url', 'http://localhost:8000');
+  let wangConv = null, wangOk = false;            // the server remembers the conversation by this id
+  const wangBase = () => (cfg.wangUrl || 'http://localhost:8000').trim().replace(/\/+$/, '');
+  async function askWang(onText, voice, holder, retried = false) {
+    const ctrl = new AbortController();
+    if (holder) holder.stream = { abort: () => ctrl.abort() };
+    const question = history[history.length - 1].content;
+    let resp;
+    try {
+      resp = await fetch(wangBase() + '/api/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
+        body: JSON.stringify({ message: question, conversation_id: wangConv, mode: 'ml_sikshya', context: (voice ? smallContext() : context()).slice(0, 12000), voice: !!voice }),
+      });
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw e;
+      wangOk = false; refresh();
+      throw { wang: 'offline' };
+    }
+    if (resp.status === 404 && wangConv && !retried) { wangConv = null; return askWang(onText, voice, holder, true); } // server was reset: start a new conversation
+    if (!resp.ok || !resp.body) {
+      let msg = 'HTTP ' + resp.status;
+      try { const j = await resp.json(); if (typeof j.detail === 'string') msg = j.detail; } catch { /* not JSON */ }
+      throw { wang: 'server', msg };
+    }
+    const reader = resp.body.getReader(), dec = new TextDecoder();
+    let buf = '', full = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let nl;
+      while ((nl = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+        if (!line) continue;
+        const ev = JSON.parse(line);
+        if (ev.type === 'start') { wangConv = ev.conversation_id; if (!wangOk) { wangOk = true; refresh(); } }
+        else if (ev.type === 'delta') { full += ev.text; onText(ev.text); }
+        else if (ev.type === 'error') throw { wang: 'server', msg: ev.message };
+      }
+    }
+    if (!full) throw { wang: 'server', msg: 'empty answer' };
+    return full;
+  }
+  function wangErrorText(e) {
+    if (e && e.wang === 'offline') return esc(u('wangOffline').replace('{url}', wangBase()));
+    return `⚠️ ${esc((e && (e.msg || e.message)) || String(e))}`;
+  }
+  async function wangHealth() {
+    const r = await fetch(wangBase() + '/api/health');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
 
   // ---------- Claude (official SDK, browser build) ----------
   let sdkP = null;
@@ -415,6 +478,7 @@ ${small ? smallContext() : context()}`;
     return msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
   }
   function apiErrorText(e, A) {
+    if (engine() === 'wang') return wangErrorText(e);
     const m = puterErr(e);
     if (engine() === 'cloud') {
       if (needsConnect(e)) return FILE_MODE ? u('fileT') : u('needConnect');
@@ -629,7 +693,7 @@ ${small ? smallContext() : context()}`;
     stopSpeaking();
     rec = new SpeechRec();
     rec.lang = recLang(); rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
-    const ta = panel.querySelector('textarea');
+    const ta = panel.querySelector('.tutor-form textarea');
     let finalText = '';
     rec.onstart = () => { listening = true; setState('listening'); };
     rec.onresult = (e) => {
@@ -673,12 +737,12 @@ ${small ? smallContext() : context()}`;
     fab.onclick = () => (panel.hidden ? openTutor() : close());
     panel.querySelector('.close').onclick = close;
     panel.querySelector('.set').onclick = () => { const s = panel.querySelector('.tutor-settings'); s.hidden = !s.hidden; drawSettings(); };
-    panel.querySelector('.new').onclick = () => { stopSpeaking(); history = []; drawMsgs(); };
+    panel.querySelector('.new').onclick = () => { stopSpeaking(); history = []; wangConv = null; drawMsgs(); };
     panel.querySelector('.spk').onclick = () => { cfg.speak = !cfg.speak; store.set('ai-speak', cfg.speak); if (!cfg.speak) stopSpeaking(); refresh(); };
     panel.querySelector('.mic').onclick = listen;
     panel.querySelector('.callbtn').onclick = openCall;
     panel.querySelector('.convo').onclick = () => { convo = !convo; drawConvo(); if (convo) { toast(u('talkOn')); listen(); } else if (listening) rec.stop(); };
-    const ta = panel.querySelector('textarea');
+    const ta = panel.querySelector('.tutor-form textarea');
     ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(ta.value); } });
     panel.querySelector('form').onsubmit = (e) => { e.preventDefault(); send(ta.value); };
     if (synth) synth.onvoiceschanged = () => {};
@@ -691,10 +755,10 @@ ${small ? smallContext() : context()}`;
     const av = panel.querySelector('.tutor-avatar'), cls = av.className;
     av.innerHTML = avatarSVG(cfg.look); av.className = cls;
     panel.querySelector('.tt').textContent = `${teacherName()} · ${u('tutor')}`;
-    panel.querySelector('.mode').innerHTML = engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'cloud' ? `<i class="dot ${isSignedIn() ? 'on' : ''}"></i>⚡ ${esc(modelLabel())}${isSignedIn() ? '' : ' · ' + u(FILE_MODE ? 'fileShort' : 'notConnected')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
+    panel.querySelector('.mode').innerHTML = engine() === 'wang' ? `<i class="dot ${wangOk ? 'on' : ''}"></i>${u('brainWang')}` : engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'cloud' ? `<i class="dot ${isSignedIn() ? 'on' : ''}"></i>⚡ ${esc(modelLabel())}${isSignedIn() ? '' : ' · ' + u(FILE_MODE ? 'fileShort' : 'notConnected')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
     if (!panel.querySelector('.tutor-state').textContent) panel.querySelector('.tutor-state').textContent = u('stReady');
     panel.querySelector('.spk').textContent = cfg.speak ? '🔊' : '🔇';
-    panel.querySelector('textarea').placeholder = u('tutorPh');
+    panel.querySelector('.tutor-form textarea').placeholder = u('tutorPh');
     panel.querySelector('.convo span').textContent = u('talkMode');
     panel.querySelector('.vnote').textContent = SpeechRec ? '' : u('noMic');
     const chips = [['chipExplain', MLS.route === 'learn'], ['chipError', !!(MLS.lastRun && MLS.lastRun.err)], ['chipData', !!(MLS.datalab && MLS.datalab.profile)], ['chipPractice', true], ['chipNext', true]].filter((c) => c[1]);
@@ -737,8 +801,10 @@ ${small ? smallContext() : context()}`;
       <label class="small chk"><input type="checkbox" class="speak" ${cfg.speak ? 'checked' : ''}> ${u('tutorSpeak')}</label>
       <p class="small muted">${u('voiceNote')}</p>
       <b>⚡ ${u('brainT')}</b>
-      <div class="seg brain">${[['cloud', u('brainCloud')], ['local', u('brainLocal')], ['offline', u('brainOff')]].map(([k, n]) => `<button data-b="${k}" class="${cfg.brain === k ? 'on' : ''}">${n}</button>`).join('')}</div>
-      <p class="small">${u('brainHelp')}</p>
+      <div class="seg brain">${[['cloud', u('brainCloud')], ['local', u('brainLocal')], ['wang', u('brainWang')], ['offline', u('brainOff')]].map(([k, n]) => `<button data-b="${k}" class="${cfg.brain === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+      <p class="small">${cfg.brain === 'wang' ? u('wangHelp') : u('brainHelp')}</p>
+      ${cfg.brain === 'wang' ? `<label class="small">${u('wangUrl')} <input type="url" class="wangurl" placeholder="http://localhost:8000" autocomplete="off" value="${esc(cfg.wangUrl)}"></label>
+      <div class="row"><button class="btn ghost sm wangtest">${u('wangTest')}</button><small class="wangres"></small></div>` : ''}
       <label class="small">${u('tutorModel')} <select class="cmodel">${CLOUD_MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.cloudModel ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <b>🧠 ${u('freeAI')}</b><p class="small">${u('freeAIHelp')}</p>
       ${hasGPU ? `<label class="small chk"><input type="checkbox" class="local" ${cfg.local ? 'checked' : ''}> ${u('freeAIOn')}</label>
@@ -758,7 +824,20 @@ ${small ? smallContext() : context()}`;
     s.querySelectorAll('.stl').forEach((b) => (b.onclick = () => avSet('style', b.dataset.v)));
     s.querySelector('.glasses').onchange = (e) => avSet('glasses', e.target.checked);
     s.querySelector('.vtest').onclick = () => { cfg.voiceName = s.querySelector('.vname').value; cfg.rate = +s.querySelector('.vrate').value; cfg.pitch = +s.querySelector('.vpitch').value; setState('speaking'); speak(u('voiceSample')); };
+    const wt = s.querySelector('.wangtest');
+    if (wt) wt.onclick = async () => {
+      const res = s.querySelector('.wangres');
+      cfg.wangUrl = s.querySelector('.wangurl').value.trim() || 'http://localhost:8000'; store.set('ai-wang-url', cfg.wangUrl);
+      res.textContent = '…';
+      try {
+        const hlt = await wangHealth();
+        wangOk = !!hlt.llm_configured;
+        res.textContent = hlt.llm_configured ? u('wangReady').replace('{model}', hlt.llm_model) : u('wangNoKey');
+      } catch { wangOk = false; res.innerHTML = wangErrorText({ wang: 'offline' }); }
+      refresh();
+    };
     s.querySelector('.save').onclick = () => {
+      const wu = s.querySelector('.wangurl'); if (wu) { cfg.wangUrl = wu.value.trim() || 'http://localhost:8000'; store.set('ai-wang-url', cfg.wangUrl); }
       cfg.key = s.querySelector('.key').value.trim(); cfg.model = s.querySelector('.model').value;
       cfg.voice = s.querySelector('.voice').value; cfg.speak = s.querySelector('.speak').checked; cfg.voiceName = s.querySelector('.vname').value; cfg.rate = +s.querySelector('.vrate').value; cfg.pitch = +s.querySelector('.vpitch').value;
       if (hasGPU) { cfg.local = s.querySelector('.local').checked; cfg.localModel = s.querySelector('.lmodel').value; if (cfg.local) cfg.brain = 'local'; }
@@ -791,7 +870,7 @@ ${small ? smallContext() : context()}`;
     return el;
   }
   function aiCard() {
-    if (engine() === 'claude' || engine() === 'cloud' || (engine() === 'local' && localEngine && !localLoading)) return null;
+    if (engine() === 'wang' || engine() === 'claude' || engine() === 'cloud' || (engine() === 'local' && localEngine && !localLoading)) return null;
     if (localLoading || engine() === 'local') {
       const pe = h(`<div class="ai-card"><b>🧠 ${u('freeAI')}</b><p class="small">${u('freeAIHelp')}</p><div class="ai-progress"><span></span><small>…</small></div></div>`);
       if (!localLoading) startLocal(pe.querySelector('.ai-progress'));
@@ -822,7 +901,7 @@ ${small ? smallContext() : context()}`;
     if (busy) { if (curHolder && curHolder.stream) { try { curHolder.stream.abort(); } catch { /* ignore */ } } return; }
     text = (text || '').trim(); if (!text) return;
     stopSpeaking();
-    const ta = panel.querySelector('textarea'); ta.value = '';
+    const ta = panel.querySelector('.tutor-form textarea'); ta.value = '';
     bubble('user', (viaVoice ? '🎙️ ' : '') + esc(text).replace(/\n/g, '<br>'));
     const box = panel.querySelector('.tutor-msgs');
     const out = bubble('bot', `<span class="typing">${engine() === 'local' && !localEngine ? '🧠 …' : u('thinking')}</span>`);
@@ -875,7 +954,7 @@ ${small ? smallContext() : context()}`;
     if (engine() === 'cloud') loadPuter().then(() => { if (panel) { refresh(); if (!history.length) drawMsgs(); } }).catch(() => {});
     if (!panel) build();
     panel.hidden = false; fab.classList.add('open'); refresh();
-    if (prefill) send(prefill); else panel.querySelector('textarea').focus();
+    if (prefill) send(prefill); else panel.querySelector('.tutor-form textarea').focus();
   }
   function close() { panel.hidden = true; fab.classList.remove('open'); stopSpeaking(); convo = false; drawConvo(); if (listening && rec) rec.stop(); }
   MLS.openTutor = openTutor;
@@ -1022,7 +1101,7 @@ ${small ? smallContext() : context()}`;
     if (panel && !panel.hidden) { panel.hidden = true; fab.classList.remove('open'); }
     stopSpeaking();
     const el = h(`<div class="call">
-      <div class="call-top"><span class="call-live">● LIVE</span><b>${esc(teacherName())}</b><span class="call-mode">${engine() === 'claude' ? u('tutorOnline') : engine() === 'local' ? '🧠 ' + u('modeLocal') : u('tutorOffline')}</span></div>
+      <div class="call-top"><span class="call-live">● LIVE</span><b>${esc(teacherName())}</b><span class="call-mode">${engine() === 'wang' ? u('brainWang') : engine() === 'claude' ? u('tutorOnline') : engine() === 'local' ? '🧠 ' + u('modeLocal') : u('tutorOffline')}</span></div>
       <div class="call-stage">
         <div class="call-avatar"><div class="call-face">${avatarSVG(cfg.look)}</div><div class="call-bc"></div></div>
         <div class="call-status"></div>

@@ -22,6 +22,26 @@ python -m http.server 8765
 
 The first time you press **▶ Run**, Python loads in the browser (10–30 seconds, needs internet).
 
+## 🤖 Use WANG AI as the tutor's brain
+
+The AI Teacher can answer through your own **WANG AI** server instead of a
+cloud account. The AI key stays on the server, so students don't need a key
+or a Puter account, and the teacher knows which lesson the student is on and
+the code they last ran.
+
+1. Start the WANG AI backend on your computer. Follow the steps in the
+   [WANG AI README](https://github.com/wangdencerpa12345-star/Doing-something-new/tree/claude/zealous-hypatia-9zr2yv#readme)
+   (add your AI key to `backend/.env`, then run `uvicorn app.main:app`).
+2. Open ML Sikshya, click **AI Teacher**, then **⚙️**.
+3. Under **AI brain** choose **🤖 WANG AI**. Leave the address as
+   `http://localhost:8000` and click **Test connection**. You should see
+   **✓ Connected**.
+4. Click **Save** and ask a question.
+
+Use the local copy (`Start ML Sikshya.bat`) or the online site. If Chrome
+asks to let the site access devices on your local network, click **Allow**:
+that is how the page reaches the server on your computer.
+
 ## 🗂️ Structure
 
 ```
