@@ -81,6 +81,9 @@
     search: { en: 'Search a term…', ne: 'शब्द खोज्नुहोस्…' },
     notFound: { en: 'Page not found.', ne: 'पृष्ठ भेटिएन।' },
     level: { en: 'Level', ne: 'तह' },
+    lab3d: { en: '3D Lab', ne: '3D ल्याब' },
+    datalab: { en: 'Data Lab', ne: 'डाटा ल्याब' },
+    tutor: { en: 'AI Tutor', ne: 'AI सहायक' },
   };
 
   // ---------- State ----------
@@ -190,6 +193,8 @@ def _mls_figs():
       if (err) outEl.appendChild(Object.assign(document.createElement('div'), { className: 'err', textContent: err }));
       imgs.forEach((b64) => { const im = document.createElement('img'); im.src = 'data:image/png;base64,' + b64; outEl.appendChild(im); });
       if (!text && !err && !imgs.length) outEl.appendChild(Object.assign(document.createElement('div'), { className: 'muted', textContent: u('noOutput') }));
+      MLS.lastRun = { code, text, err, at: Date.now() };
+      if (err) MLS.hooks.error.forEach((f) => { try { f(outEl, err, code); } catch (e) { console.error(e); } });
     };
     runQueue = runQueue.then(job, job);
     return runQueue;
@@ -242,7 +247,7 @@ def _mls_figs():
 
   // ---------- Layout pieces ----------
   function renderTop(route) {
-    const items = [['#/', 'home'], ['#/learn', 'learn'], ['#/projects', 'projects'], ['#/playground', 'playground'], ['#/glossary', 'glossary']];
+    const items = [['#/', 'home'], ['#/learn', 'learn'], ['#/projects', 'projects'], ['#/playground', 'playground'], ['#/lab3d', 'lab3d'], ['#/datalab', 'datalab'], ['#/glossary', 'glossary']];
     $('#topnav').innerHTML = items.map(([href, k]) => {
       const active = (k === 'home' && route === '') || (k === 'learn' && route === 'learn') || route === k || (k === 'projects' && route === 'project');
       return `<a href="${href}" class="${active ? 'active' : ''}">${u(k)}</a>`;
@@ -262,6 +267,9 @@ def _mls_figs():
         <a href="#/projects" class="${route.startsWith('project') ? 'active' : ''}">🧪 ${u('projects')}</a>
         <a href="#/playground" class="${route === 'playground' ? 'active' : ''}">⌨️ ${u('playground')}</a>
         <a href="#/glossary" class="${route === 'glossary' ? 'active' : ''}">📖 ${u('glossary')}</a>
+        <a href="#/lab3d" class="${route === 'lab3d' ? 'active' : ''}">🧊 ${u('lab3d')} <span class="new-badge">NEW</span></a>
+        <a href="#/datalab" class="${route === 'datalab' ? 'active' : ''}">📊 ${u('datalab')} <span class="new-badge">NEW</span></a>
+        <a href="#/" class="open-tutor">🤖 ${u('tutor')} <span class="new-badge">NEW</span></a>
       </div>`;
     LEVELS.forEach((lv, i) => {
       const ls = lessonsOf(lv.id);
@@ -272,6 +280,7 @@ def _mls_figs():
     const sb = $('#sidebar');
     sb.innerHTML = html;
     sb.querySelectorAll('.side-level-title').forEach((b) => (b.onclick = () => b.parentElement.classList.toggle('collapsed')));
+    sb.querySelectorAll('.open-tutor').forEach((a) => (a.onclick = (e) => { e.preventDefault(); MLS.openTutor && MLS.openTutor(); }));
     const act = $('.side-lesson.active', sb);
     if (act) act.scrollIntoView({ block: 'nearest' });
   }
@@ -320,6 +329,7 @@ def _mls_figs():
           <div class="muted" style="font-size:.84rem">${d} / ${ls.length} ${u('lessons')}</div></a>`;
       }).join('')}</div>
     </div>`);
+    MLS.hooks.home.forEach((f) => { try { f(el); } catch (e) { console.error(e); } });
     return el;
   }
 
@@ -351,6 +361,7 @@ def _mls_figs():
       if (firstBlock) firstBlock.insertAdjacentElement('afterend', h(`<div class="hint">${u('editHint')}</div>`));
     }
     if (L.quiz && L.quiz.length) body.after(quizBlock(L));
+    MLS.hooks.lesson.forEach((f) => { try { f(L, body, el); } catch (e) { console.error(e); } });
     $('#doneBtn', el).onclick = () => {
       S.done[L.id] = !S.done[L.id]; store.set('done', S.done);
       if (S.done[L.id]) toast(u('great'));
@@ -462,8 +473,11 @@ def _mls_figs():
     const parts = location.hash.replace(/^#\/?/, '').split('/');
     let route = parts[0] || '', arg = parts[1];
     if (route === 'learn' && !arg) { arg = nextLesson().id; }
+    MLS.hooks.beforeRender.forEach((f) => { try { f(); } catch (e) { console.error(e); } });
+    MLS.route = route; MLS.routeArg = arg;
     let view;
-    if (route === '') view = viewHome();
+    if (MLS.routes[route]) view = MLS.routes[route](arg);
+    else if (route === '') view = viewHome();
     else if (route === 'learn') view = viewLesson(arg);
     else if (route === 'projects') view = viewProjects();
     else if (route === 'project') view = viewProject(arg);
@@ -486,5 +500,13 @@ def _mls_figs():
   }));
   $('#themeBtn').onclick = () => { S.theme = S.theme === 'dark' ? 'light' : 'dark'; store.set('theme', S.theme); document.documentElement.dataset.theme = S.theme; renderTop(location.hash.replace(/^#\/?/, '').split('/')[0]); };
   $('#menuBtn').onclick = () => document.body.classList.toggle('menu-open');
-  render();
+
+  // ---------- Extension API (used by three-scenes.js, data-lab.js, ai-tutor.js) ----------
+  const MLS = window.MLS = {
+    S, UI, t, u, h, esc, $, toast, store, codeBlock, runPython, getPy, render, LEVELS,
+    routes: {}, lastRun: null, route: '', routeArg: null,
+    hooks: { lesson: [], home: [], error: [], beforeRender: [] },
+  };
+  // Render after every extension script has loaded and registered itself.
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render); else setTimeout(render);
 })();
