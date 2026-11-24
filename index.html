@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ML Sikshya — Learn Machine Learning | मेसिन लर्निङ सिक्नुहोस्</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+</head>
+<body>
+  <header class="topbar">
+    <button id="menuBtn" class="icon-btn" aria-label="Menu">☰</button>
+    <a href="#/" class="brand"><span class="logo">ML</span><span>ML Sikshya <small>शिक्षा</small></span></a>
+    <nav class="topnav" id="topnav"></nav>
+    <div class="spacer"></div>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button data-lang="en">EN</button>
+      <button data-lang="ne">नेपाली</button>
+    </div>
+    <button id="themeBtn" class="icon-btn" aria-label="Dark mode">🌙</button>
+  </header>
+  <div class="layout">
+    <aside id="sidebar"></aside>
+    <main id="main"></main>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    window.COURSE = { lessons: [], projects: [], glossary: [] };
+    const py = String.raw; // keeps backslashes in Python code exactly as written
+  </script>
+  <script src="content/01-foundations.js"></script>
+  <script src="content/02-supervised.js"></script>
+  <script src="content/03-unsupervised.js"></script>
+  <script src="content/04-practice.js"></script>
+  <script src="content/05-deep.js"></script>
+  <script src="content/06-pro.js"></script>
+  <script src="content/projects.js"></script>
+  <script src="content/glossary.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
