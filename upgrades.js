@@ -27,7 +27,6 @@
   // ---------- Site accent colour ----------
   const ACCENTS = [['', '#4f46e5'], ['royal', '#7c3aed'], ['ocean', '#0284c7'], ['forest', '#15803d'], ['sunset', '#ea580c'], ['rose', '#e11d48']];
   const applyAccent = (a) => { if (a) document.documentElement.dataset.accent = a; else delete document.documentElement.dataset.accent; };
-  applyAccent(store.get('accent', ''));
 
   // ---------- Activity tracking ----------
   const today = () => new Date().toISOString().slice(0, 10);
@@ -177,16 +176,6 @@
   // ---------- Top bar buttons (search + colour) ----------
   const lt = document.querySelector('.lang-toggle');
   const sBtn = h(`<button class="icon-btn" aria-label="Search" title="Search (Ctrl+K)">🔍</button>`);
-  const aWrap = h(`<div class="accent-wrap"><button class="icon-btn" aria-label="Colour" title="Colour">🎨</button></div>`);
-  lt.before(sBtn, aWrap);
+  lt.before(sBtn);
   sBtn.onclick = openSearch;
-  aWrap.querySelector('button').onclick = (e) => {
-    e.stopPropagation();
-    const old = aWrap.querySelector('.accent-pop'); if (old) { old.remove(); return; }
-    const cur = store.get('accent', '');
-    const pop = h(`<div class="accent-pop"><b>🎨 ${u('siteColor')}</b><div class="accent-dots">${ACCENTS.map(([k, c]) => `<button data-a="${k}" class="${k === cur ? 'on' : ''}" style="background:${c}"></button>`).join('')}</div></div>`);
-    pop.querySelectorAll('button').forEach((b) => (b.onclick = () => { store.set('accent', b.dataset.a); applyAccent(b.dataset.a); pop.remove(); }));
-    aWrap.appendChild(pop);
-  };
-  document.addEventListener('click', (e) => { if (!e.target.closest('.accent-wrap')) { const p = document.querySelector('.accent-pop'); if (p) p.remove(); } });
 })();

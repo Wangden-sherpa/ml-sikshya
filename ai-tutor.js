@@ -39,6 +39,17 @@
     seeCode: { en: 'Look at the code on the screen.', ne: 'स्क्रिनमा कोड हेर्नुहोस्।', zh: '请看屏幕上的代码。' },
   });
 
+
+  Object.assign(MLS.UI, {
+    aiTeacher: { en: 'AI Teacher', ne: 'AI शिक्षक', zh: 'AI 老师' },
+    avBuild: { en: 'Design your teacher', ne: 'आफ्नो शिक्षक डिजाइन गर्नुहोस्', zh: '设计你的老师' },
+    av_skin: { en: 'Skin', ne: 'छाला', zh: '肤色' }, av_hair: { en: 'Hair', ne: 'कपाल', zh: '发色' }, av_shirt: { en: 'Clothes', ne: 'लुगा', zh: '衣服' }, av_eyes: { en: 'Eyes', ne: 'आँखा', zh: '眼睛' },
+    av_style: { en: 'Hairstyle', ne: 'कपालको शैली', zh: '发型' }, av_glasses: { en: 'Glasses', ne: 'चस्मा', zh: '眼镜' },
+    st_short: { en: 'Short', ne: 'छोटो', zh: '短发' }, st_long: { en: 'Long', ne: 'लामो', zh: '长发' }, st_bun: { en: 'Bun', ne: 'जुरो', zh: '发髻' }, st_curly: { en: 'Curly', ne: 'घुम्रिएको', zh: '卷发' },
+    voiceTitle: { en: 'Voice', ne: 'आवाज', zh: '声音' }, voicePick: { en: 'Voice (pick a "Natural" one for the most human sound)', ne: 'आवाज (सबैभन्दा मानवीय आवाजका लागि "Natural" छान्नुहोस्)', zh: '声音（选择带 “Natural” 的最像真人）' },
+    voiceAuto: { en: 'Best available (automatic)', ne: 'उपलब्ध उत्तम (स्वचालित)', zh: '最佳可用（自动）' }, voiceSpeed: { en: 'Speed', ne: 'गति', zh: '语速' }, voicePitch: { en: 'Pitch', ne: 'स्वर', zh: '音调' }, voiceTest: { en: 'Test', ne: 'परीक्षण', zh: '试听' },
+    voiceSample: { en: 'Hi! I am your AI teacher. Ask me anything, and we will figure it out together.', ne: 'नमस्ते! म तपाईंको AI शिक्षक हुँ। जे पनि सोध्नुहोस्, हामी सँगै बुझौंला।', zh: '你好！我是你的 AI 老师。有什么问题尽管问，我们一起弄明白。' },
+  });
   // ---------- Error Doctor rules ----------
   const R = (en, ne, zh) => ({ en, ne, zh });
   const RULES = [
@@ -80,43 +91,86 @@
     outEl.appendChild(box);
   });
 
-  // ---------- Teachers (avatar looks) ----------
-  const LOOKS = {
-    feng: { name: 'Master Feng', photo: 'assets/tutors/feng-face.jpg', pitch: 0.92, rate: 0.98, bg: ['#dc2626', '#f59e0b'],
-      title: { en: 'Calm, professional mentor · business & finance examples', ne: 'शान्त, पेशेवर गुरु · व्यापार र वित्तका उदाहरण', zh: '沉稳专业的导师 · 擅长商业与金融案例' },
-      persona: 'Master Feng: a calm, wise and professional mentor with a business and finance background. Patient and precise, uses real business, economics and finance examples, and gives structured, step-by-step explanations. Fluent in Chinese and English.' },
-    wang: { name: 'Master Wang', photo: 'assets/tutors/wang-face.jpg', pitch: 1.08, rate: 1.04, bg: ['#16a34a', '#0ea5e9'],
-      title: { en: 'Friendly, energetic mentor · fun everyday examples', ne: 'मिलनसार, जोसिलो गुरु · रमाइला दैनिक उदाहरण', zh: '亲切活力的导师 · 用有趣的生活例子讲解' },
-      persona: 'Master Wang: a young, friendly and energetic mentor who feels like a helpful classmate. Uses fun everyday examples (sports, phones, games, food, travel in Nepal and Asia), keeps things light and motivating, and celebrates progress.' },
-    guru: { name: 'Guru', skin: '#f1c27d', hair: '#2d1b12', shirt: '#4f46e5', glasses: true, long: false, bg: ['#818cf8', '#ec4899'] },
-    asha: { name: 'Asha', skin: '#e0ac69', hair: '#111827', shirt: '#db2777', glasses: false, long: true, bg: ['#f472b6', '#f59e0b'] },
-    bikram: { name: 'Bikram', skin: '#c68642', hair: '#1f2937', shirt: '#059669', glasses: false, long: false, bg: ['#34d399', '#3b82f6'] },
-    laoshi: { name: 'Lǎoshī 老师', skin: '#f6d5b8', hair: '#0f0f0f', shirt: '#dc2626', glasses: true, long: true, bg: ['#f87171', '#fbbf24'] },
+  // ---------- Human avatar, drawn entirely in code (no photos) ----------
+  // Blinks, looks around, sways, and moves its lips in time with its speech (driven by the --mouth CSS variable).
+  const AV_OPTS = {
+    skin: ['#f6d7c3', '#eac09a', '#d9a679', '#c68642', '#a86b3c', '#7d4a2a'],
+    hair: ['#1c1917', '#3b2314', '#6b3e1f', '#a16207', '#9ca3af', '#7c2d12'],
+    style: ['short', 'long', 'bun', 'curly'],
+    shirt: ['#4f46e5', '#0f766e', '#be123c', '#334155', '#ca8a04', '#7c3aed'],
+    eyes: ['#3b2314', '#1e3a8a', '#166534', '#57534e'],
   };
-  const avatarSVG = (k, cls = '') => {
-    const L = LOOKS[k] || LOOKS.guru, id = 'g' + Math.random().toString(36).slice(2, 7);
-    if (L.photo) return `<div class="photo-av ${cls}" style="--ring1:${L.bg[0]};--ring2:${L.bg[1]}"><img src="${L.photo}" alt="${esc(L.name)}" draggable="false"><span class="eq"><i></i><i></i><i></i><i></i><i></i></span></div>`;
-    return `<svg viewBox="0 0 120 120" class="guru-svg ${cls}" aria-hidden="true">
-      <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${L.bg[0]}"/><stop offset="1" stop-color="${L.bg[1]}"/></linearGradient></defs>
-      <circle cx="60" cy="60" r="58" fill="url(#${id})"/>
-      ${L.long ? `<path d="M28 52 C26 84 34 98 44 100 L76 100 C86 98 94 84 92 52 Z" fill="${L.hair}"/>` : ''}
-      <path d="M18 120 C22 92 42 85 60 85 C78 85 98 92 102 120 Z" fill="${L.shirt}"/>
-      <path d="M50 84 L60 96 L70 84" fill="#fff" opacity=".9"/>
-      <rect x="52" y="70" width="16" height="15" rx="6" fill="${L.skin}"/>
-      <ellipse cx="60" cy="47" rx="31" ry="31" fill="${L.hair}"/>
-      <ellipse cx="34" cy="56" rx="4.5" ry="6.5" fill="${L.skin}"/><ellipse cx="86" cy="56" rx="4.5" ry="6.5" fill="${L.skin}"/>
-      <ellipse cx="60" cy="55" rx="26" ry="28" fill="${L.skin}"/>
-      <path d="M33 48 C35 25 85 22 87 48 C79 37 66 33 52 37 C44 40 38 44 33 48Z" fill="${L.hair}"/>
-      <path class="g-brows" d="M43 45 q6 -4 12 0 M65 45 q6 -4 12 0" stroke="#3f2a1d" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-      <g class="g-eyes"><ellipse class="g-eye" cx="50" cy="55" rx="3.2" ry="4" fill="#1f2937"/><ellipse class="g-eye" cx="70" cy="55" rx="3.2" ry="4" fill="#1f2937"/>
-        <circle cx="51" cy="53.6" r="1" fill="#fff"/><circle cx="71" cy="53.6" r="1" fill="#fff"/></g>
-      ${L.glasses ? '<g fill="none" stroke="#1f2937" stroke-width="1.8"><circle cx="50" cy="55" r="8"/><circle cx="70" cy="55" r="8"/><path d="M58 55 h4"/></g>' : ''}
-      <ellipse cx="43" cy="65" rx="4.5" ry="2.6" fill="#f472b6" opacity=".35"/><ellipse cx="77" cy="65" rx="4.5" ry="2.6" fill="#f472b6" opacity=".35"/>
-      <path class="g-smile" d="M51 67 q9 8 18 0" stroke="#7c2d12" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-      <ellipse class="g-mouth" cx="60" cy="69" rx="6" ry="4" fill="#7c2d12"/>
+  const AV_DEFAULT = { skin: '#eac09a', hair: '#1c1917', style: 'short', shirt: '#4f46e5', eyes: '#3b2314', glasses: true };
+  const shade = (hex, amt) => { const n = parseInt(hex.slice(1), 16); const c = (v) => Math.max(0, Math.min(255, Math.round(v + amt * 255))); return '#' + [c(n >> 16), c((n >> 8) & 255), c(n & 255)].map((v) => v.toString(16).padStart(2, '0')).join(''); };
+  const avatarSVG = (_k, cls = '') => {
+    const A = { ...AV_DEFAULT, ...cfg.av }, id = 'h' + Math.random().toString(36).slice(2, 8);
+    const hairBack = { long: `<path d="M50 88 C44 140 52 176 70 186 L130 186 C148 176 156 140 150 88 C150 52 128 34 100 34 C72 34 50 52 50 88Z" fill="url(#hr${id})"/>`, bun: `<circle cx="100" cy="30" r="17" fill="url(#hr${id})"/>`, curly: `<g fill="url(#hr${id})">${[[62, 62], [74, 46], [92, 38], [110, 38], [128, 46], [140, 62], [146, 82], [54, 82]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="16"/>`).join('')}</g>`, short: '' }[A.style] || '';
+    const hairFront = {
+      short: `<path d="M54 88 C52 54 74 38 100 38 C128 38 150 54 146 90 C140 72 128 62 112 60 C100 66 82 66 70 62 C62 68 57 76 54 88Z" fill="url(#hr${id})"/>`,
+      long: `<path d="M54 92 C52 54 74 38 100 38 C128 38 150 54 146 92 C138 70 120 58 100 58 C86 58 74 62 66 70 C60 76 56 84 54 92Z" fill="url(#hr${id})"/>`,
+      bun: `<path d="M55 86 C54 54 76 40 100 40 C126 40 148 54 145 86 C136 66 120 58 100 58 C80 58 64 66 55 86Z" fill="url(#hr${id})"/>`,
+      curly: `<path d="M56 86 C56 60 76 48 100 48 C124 48 144 60 144 86 C134 70 118 64 100 66 C84 64 66 70 56 86Z" fill="url(#hr${id})"/>`,
+    }[A.style];
+    return `<svg viewBox="0 0 200 200" class="hv ${cls}" aria-hidden="true">
+      <defs>
+        <radialGradient id="bg${id}" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="${shade(A.shirt, 0.42)}"/><stop offset="1" stop-color="${shade(A.shirt, 0.12)}"/></radialGradient>
+        <radialGradient id="sk${id}" cx="44%" cy="38%" r="70%"><stop offset="0" stop-color="${shade(A.skin, 0.08)}"/><stop offset=".72" stop-color="${A.skin}"/><stop offset="1" stop-color="${shade(A.skin, -0.12)}"/></radialGradient>
+        <linearGradient id="sh${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(A.shirt, 0.08)}"/><stop offset="1" stop-color="${shade(A.shirt, -0.14)}"/></linearGradient>
+        <linearGradient id="hr${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${shade(A.hair, 0.14)}"/><stop offset="1" stop-color="${shade(A.hair, -0.06)}"/></linearGradient>
+        <radialGradient id="ir${id}" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="${shade(A.eyes, 0.25)}"/><stop offset="1" stop-color="${A.eyes}"/></radialGradient>
+        <clipPath id="ce${id}"><circle cx="100" cy="100" r="100"/></clipPath>
+      </defs>
+      <g clip-path="url(#ce${id})">
+      <circle cx="100" cy="100" r="100" fill="url(#bg${id})"/>
+      <g class="hv-body">
+        ${hairBack}
+        <path d="M24 210 C28 168 58 152 100 152 C142 152 172 168 176 210Z" fill="url(#sh${id})"/>
+        <path d="M84 150 L100 176 L116 150" fill="${shade(A.skin, -0.06)}"/>
+        <path d="M80 152 L100 178 L92 152Z M120 152 L100 178 L108 152Z" fill="${shade(A.shirt, 0.25)}"/>
+        <path d="M86 122 L86 152 Q100 162 114 152 L114 122Z" fill="${shade(A.skin, -0.09)}"/>
+        <g class="hv-head">
+          <ellipse cx="55" cy="100" rx="7.5" ry="13" fill="${shade(A.skin, -0.05)}"/><ellipse cx="145" cy="100" rx="7.5" ry="13" fill="${shade(A.skin, -0.05)}"/>
+          <path d="M100 42 C131 42 147 64 147 94 C147 128 127 152 100 152 C73 152 53 128 53 94 C53 64 69 42 100 42Z" fill="url(#sk${id})"/>
+          <ellipse cx="74" cy="114" rx="10" ry="6" fill="#f472b6" opacity=".18"/><ellipse cx="126" cy="114" rx="10" ry="6" fill="#f472b6" opacity=".18"/>
+          ${hairFront}
+          <path class="hv-brows" d="M68 82 Q79 76 90 80 M110 80 Q121 76 132 82" stroke="${shade(A.hair, -0.02)}" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+          ${[79, 121].map((x) => `<g class="hv-eye">
+            <path d="M${x - 11} 96 Q${x} 87 ${x + 11} 96 Q${x} 103 ${x - 11} 96Z" fill="#fff"/>
+            <g class="hv-iris"><circle cx="${x}" cy="95.5" r="5.2" fill="url(#ir${id})"/><circle cx="${x}" cy="95.5" r="2.3" fill="#0b0b0b"/><circle cx="${x + 1.8}" cy="93.6" r="1.3" fill="#fff"/></g>
+            <path d="M${x - 11.5} 96 Q${x} 86.5 ${x + 11.5} 96" stroke="${shade(A.skin, -0.35)}" stroke-width="1.6" fill="none"/>
+            <path class="hv-lid" d="M${x - 12} 96 Q${x} 85 ${x + 12} 96 Q${x} 98 ${x - 12} 96Z" fill="${shade(A.skin, -0.03)}"/></g>`).join('')}
+          ${A.glasses ? `<g fill="rgba(255,255,255,.08)" stroke="${shade(A.hair, 0.05)}" stroke-width="2.2"><rect x="63" y="85" width="32" height="22" rx="9"/><rect x="105" y="85" width="32" height="22" rx="9"/><path d="M95 93 Q100 89 105 93" fill="none"/></g>` : ''}
+          <path d="M100 96 Q97 108 92 113 Q96 117 100 115 Q104 117 108 113" stroke="${shade(A.skin, -0.2)}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <g class="hv-mouth">
+            <path class="hv-open" d="M87 128 Q100 125 113 128 Q100 142 87 128Z" fill="#5b1a1a"/>
+            <path class="hv-teeth" d="M90 128.5 Q100 126.5 110 128.5 L109 130.5 Q100 129 91 130.5Z" fill="#fff"/>
+            <path d="M86 128 Q93 123.5 100 126 Q107 123.5 114 128 Q100 130 86 128Z" fill="${shade(A.skin, -0.28)}"/>
+            <path class="hv-lower" d="M87 129 Q100 138 113 129 Q100 134 87 129Z" fill="${shade(A.skin, -0.22)}"/>
+          </g>
+        </g>
+      </g></g>
     </svg>`;
   };
   MLS.avatarSVG = avatarSVG;
+
+  // Lip-sync & life: one animation loop drives every avatar on the page through CSS variables.
+  const mouthState = { target: 0, value: 0, talkingUntil: 0 };
+  const lipPulse = (strength = 1) => { mouthState.target = 0.45 + Math.random() * 0.55 * strength; mouthState.talkingUntil = performance.now() + 220; };
+  function lifeLoop() {
+    const now = performance.now(), root = document.documentElement.style;
+    const speakingNow = (synth && synth.speaking) || (typeof call !== 'undefined' && call && call.speaking);
+    if (speakingNow && now > mouthState.talkingUntil) mouthState.target = 0.15 + Math.abs(Math.sin(now / 85) * Math.sin(now / 47)) * 0.75;
+    if (!speakingNow && now > mouthState.talkingUntil) mouthState.target = 0;
+    mouthState.value += (mouthState.target - mouthState.value) * 0.35;
+    root.setProperty('--mouth', mouthState.value.toFixed(3));
+    if (!lifeLoop.next || now > lifeLoop.next) {
+      lifeLoop.next = now + 1500 + Math.random() * 2500;
+      root.setProperty('--lx', ((Math.random() - 0.5) * 4).toFixed(2) + 'px');
+      root.setProperty('--ly', ((Math.random() - 0.5) * 2).toFixed(2) + 'px');
+    }
+    requestAnimationFrame(lifeLoop);
+  }
+  setTimeout(lifeLoop, 0);
 
   // ---------- Settings ----------
   const MODELS = [
@@ -127,9 +181,9 @@
   const VOICES = [['auto', 'Auto (site language)'], ['en-US', 'English (US)'], ['en-IN', 'English (India)'], ['ne-NP', 'नेपाली'], ['hi-IN', 'हिन्दी'], ['zh-CN', '中文 (普通话)'], ['zh-TW', '中文 (台灣)'], ['ja-JP', '日本語'], ['ko-KR', '한국어'], ['es-ES', 'Español'], ['fr-FR', 'Français'], ['de-DE', 'Deutsch'], ['ar-SA', 'العربية'], ['ru-RU', 'Русский'], ['pt-BR', 'Português'], ['bn-IN', 'বাংলা']];
   const cfg = {
     key: store.get('ai-key', ''), model: store.get('ai-model', 'claude-opus-5-5'),
-    look: store.get('ai-look', 'feng'), voice: store.get('ai-voice', 'auto'), speak: store.get('ai-speak', true),
+    voice: store.get('ai-voice', 'auto'), speak: store.get('ai-speak', true), av: store.get('ai-avatar', {}), voiceName: store.get('ai-voiceName', ''), rate: store.get('ai-rate', 1), pitch: store.get('ai-pitch', 1),
   };
-  const teacherName = () => (LOOKS[cfg.look] || LOOKS.guru).name;
+  const teacherName = () => u('aiTeacher');
   let history = [];
 
   // ---------- Context ----------
@@ -153,7 +207,7 @@
     return parts.join('\n\n');
   }
   const SITE_LANG = { en: 'English', ne: 'Nepali (Devanagari script)', zh: 'Simplified Chinese' };
-  const persona = () => (LOOKS[cfg.look] && LOOKS[cfg.look].persona) || `${teacherName()}: a warm, patient and friendly teacher.`;
+  const persona = () => 'a warm, patient, encouraging human teacher who speaks naturally like a real person in a one-to-one class — friendly, curious, uses everyday examples, and is never robotic.';
   const SYSTEM = (voice, small) => `You are ${teacherName()}, a human-like AI teacher and personal assistant inside "ML Sikshya", a free learning website. Your personality — ${persona()}
 
 What you can help with: ANY question the learner asks — every school and university subject (maths, physics, chemistry, biology, history, geography, economics, accounting, languages, literature), programming in any language, computers and technology, careers and job applications, study skills, writing and translation, general knowledge and everyday life. You are ALSO an expert machine-learning, data-science and AI teacher, which is the main topic of this website. Never refuse or redirect a normal question just because it is not about machine learning — answer it fully and helpfully, like a brilliant private tutor. If you are not sure about a fact, say so honestly instead of guessing. Do not help with anything harmful or dangerous.
@@ -315,27 +369,51 @@ ${small ? smallContext() : context()}`;
     const v = cfg.voice !== 'auto' ? cfg.voice : 'en-US';
     return /^(zh|ne|hi|ja|ko|ar|ru|bn)/.test(v) ? 'en-US' : v;
   };
+  // Pick the most human-sounding voice available: neural / "Natural" / online voices first (Edge & Chrome ship very natural ones).
   function pickVoice(lang) {
     const vs = synth ? synth.getVoices() : [];
-    const base = lang.split('-')[0];
-    return vs.find((v) => v.lang === lang) || vs.find((v) => v.lang && v.lang.toLowerCase().startsWith(base)) || (base === 'ne' ? vs.find((v) => v.lang && v.lang.startsWith('hi')) : null) || null;
+    const base = lang.split('-')[0].toLowerCase();
+    const score = (v) => {
+      const l = (v.lang || '').toLowerCase(), n = v.name || '';
+      let s = 0;
+      if (l === lang.toLowerCase()) s += 30; else if (l.startsWith(base)) s += 20; else if (base === 'ne' && l.startsWith('hi')) s += 8; else return -1;
+      if (/natural|neural|wavenet|premium|enhanced/i.test(n)) s += 25;
+      if (/online/i.test(n)) s += 10;
+      if (/google/i.test(n)) s += 8;
+      if (!v.localService) s += 3;
+      if (/desktop|compact|espeak/i.test(n)) s -= 10;
+      if (cfg.voiceName && n === cfg.voiceName) s += 100;
+      return s;
+    };
+    return vs.map((v) => [score(v), v]).filter((x) => x[0] >= 0).sort((a, b) => b[0] - a[0]).map((x) => x[1])[0] || null;
   }
-  const speakable = (md) => md.replace(/```[\s\S]*?(```|$)/g, ' ' + u('seeCode') + ' ').replace(/<[^>]+>/g, ' ').replace(/[*#`_>|]/g, '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim().slice(0, 1800);
+  const speakable = (md) => md.replace(/```[\s\S]*?(```|$)/g, ' ' + u('seeCode') + ' ').replace(/<[^>]+>/g, ' ').replace(/[*#`_>|]/g, '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim().slice(0, 2400);
+  // Speak like a person: sentence by sentence, small natural pauses, slight changes in pace and pitch, lips moving on every word.
+  function humanUtterance(text, lang, voice) {
+    const ut = new SpeechSynthesisUtterance(text);
+    ut.lang = voice ? voice.lang : lang; if (voice) ut.voice = voice;
+    const baseRate = (lang.startsWith('zh') ? 0.95 : 0.98) * (cfg.rate || 1);
+    ut.rate = baseRate * (0.96 + Math.random() * 0.08);
+    ut.pitch = (cfg.pitch || 1) * (/\?\s*$/.test(text) ? 1.06 : 0.98 + Math.random() * 0.06);
+    ut.onboundary = (e) => { if (!e.name || e.name === 'word') lipPulse(1); };
+    return ut;
+  }
   let speakQueue = 0;
   function speak(text, onDone) {
     if (!synth || !cfg.speak || !text) { onDone && onDone(); return; }
     synth.cancel();
     const lang = detectLang(text), voice = pickVoice(lang);
-    const chunks = text.match(/[^.!?।。！？\n]+[.!?।。！？]?/g) || [text];
+    const chunks = (text.match(/[^.!?।。！？\n]+[.!?।。！？]?/g) || [text]).map((c) => c.trim()).filter(Boolean);
     const id = ++speakQueue;
     setState('speaking');
-    chunks.forEach((c, i) => {
-      const ut = new SpeechSynthesisUtterance(c.trim());
-      ut.lang = voice ? voice.lang : lang; if (voice) ut.voice = voice;
-      ut.rate = lang.startsWith('zh') ? 0.95 : 1; ut.pitch = 1.05;
-      if (i === chunks.length - 1) ut.onend = ut.onerror = () => { if (id === speakQueue) { setState('idle'); onDone && onDone(); } };
+    const next = (i) => {
+      if (id !== speakQueue) return;
+      if (i >= chunks.length) { setState('idle'); onDone && onDone(); return; }
+      const ut = humanUtterance(chunks[i], lang, voice);
+      ut.onend = ut.onerror = () => setTimeout(() => next(i + 1), /[.!?।。！？]$/.test(chunks[i]) ? 180 + Math.random() * 220 : 90);
       synth.speak(ut);
-    });
+    };
+    next(0);
   }
   function stopSpeaking() { if (synth) synth.cancel(); speakQueue++; setState('idle'); }
 
@@ -421,6 +499,7 @@ ${small ? smallContext() : context()}`;
     ch.innerHTML = chips.map(([k]) => `<button data-k="${k}">${u(k)}</button>`).join('');
     ch.querySelectorAll('button').forEach((b) => (b.onclick = () => send(u(b.dataset.k).replace(/^\S+\s/, ''))));
     const cb = h(`<button class="call-chip">${u('callBtn')}</button>`); cb.onclick = () => openCall(); ch.prepend(cb);
+    if (MLS.liveEnabled && MLS.liveEnabled()) { const lb = h(`<button class="call-chip live-chip">${u('liveBtn')}</button>`); lb.onclick = () => MLS.openLive(); ch.prepend(lb); }
     if (!history.length) drawMsgs();
   }
   Object.assign(MLS.UI, {
@@ -442,8 +521,13 @@ ${small ? smallContext() : context()}`;
   });
   function drawSettings() {
     const s = panel.querySelector('.tutor-settings');
-    s.innerHTML = `<b>🧑‍🏫 ${u('tutorLook')}</b>
-      <div class="looks">${Object.keys(LOOKS).map((k) => `<button class="look ${k === cfg.look ? 'on' : ''}" data-k="${k}">${avatarSVG(k)}<span>${LOOKS[k].name}</span></button>`).join('')}</div>
+    s.innerHTML = `<b>🧑 ${u('avBuild')}</b>
+      <div class="av-builder"><div class="av-preview">${avatarSVG()}</div><div class="av-rows">${['skin', 'hair', 'shirt', 'eyes'].map((k) => `<div class="av-row"><span>${u('av_' + k)}</span>${AV_OPTS[k].map((c) => `<button class="sw ${(cfg.av[k] || AV_DEFAULT[k]) === c ? 'on' : ''}" data-k="${k}" data-v="${c}" style="background:${c}"></button>`).join('')}</div>`).join('')}
+        <div class="av-row"><span>${u('av_style')}</span>${AV_OPTS.style.map((st) => `<button class="stl ${(cfg.av.style || AV_DEFAULT.style) === st ? 'on' : ''}" data-v="${st}">${u('st_' + st)}</button>`).join('')}</div>
+        <label class="small chk"><input type="checkbox" class="glasses" ${(cfg.av.glasses ?? AV_DEFAULT.glasses) ? 'checked' : ''}> ${u('av_glasses')}</label></div></div>
+      <b>🗣️ ${u('voiceTitle')}</b>
+      <label class="small">${u('voicePick')} <select class="vname"><option value="">${u('voiceAuto')}</option>${(synth ? synth.getVoices() : []).filter((v) => !cfg.voice || cfg.voice === 'auto' || v.lang.startsWith(cfg.voice.split('-')[0])).map((v) => `<option ${v.name === cfg.voiceName ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></label>
+      <div class="row small"><label>${u('voiceSpeed')} <input type="range" class="vrate" min="0.8" max="1.25" step="0.01" value="${cfg.rate || 1}"></label><label>${u('voicePitch')} <input type="range" class="vpitch" min="0.8" max="1.25" step="0.01" value="${cfg.pitch || 1}"></label><button class="btn ghost sm vtest">▶ ${u('voiceTest')}</button></div>
       <label class="small">${u('tutorVoice')} <select class="voice">${VOICES.map(([id, n]) => `<option value="${id}" ${id === cfg.voice ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label class="small chk"><input type="checkbox" class="speak" ${cfg.speak ? 'checked' : ''}> ${u('tutorSpeak')}</label>
       <p class="small muted">${u('voiceNote')}</p>
@@ -451,16 +535,23 @@ ${small ? smallContext() : context()}`;
       ${hasGPU ? `<label class="small chk"><input type="checkbox" class="local" ${cfg.local ? 'checked' : ''}> ${u('freeAIOn')}</label>
       <label class="small">${u('tutorModel')} <select class="lmodel">${LOCAL_MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.localModel ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <div class="ai-progress" hidden><span></span><small></small></div>` : `<p class="small warnline">${u('noGPU')}</p>`}
+      <b>🎥 ${u('liveOwner')}</b><p class="small">${u('liveOwnerHelp')}</p>
+      <label class="small chk"><input type="checkbox" class="liveowner" ${store.get('live-owner', false) ? 'checked' : ''}> ${u('liveOwnerOn')}</label>
       <b>🔑 ${u('tutorSettings')}</b><p class="small">${u('tutorKeyHelp')}</p>
       <input type="password" class="key" placeholder="sk-ant-..." autocomplete="off" value="${esc(cfg.key)}">
       <label class="small">${u('tutorModel')} <select class="model">${MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.model ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <div class="row"><button class="btn sm save">${u('tutorSave')}</button>${cfg.key ? `<button class="btn ghost sm forget">${u('tutorForget')}</button>` : ''}</div>`;
-    s.querySelectorAll('.look').forEach((b) => (b.onclick = () => { cfg.look = b.dataset.k; store.set('ai-look', cfg.look); store.set('ai-chosen', true); refresh(); drawSettings(); }));
+    const avSet = (k, v) => { cfg.av = { ...cfg.av, [k]: v }; store.set('ai-avatar', cfg.av); refresh(); drawSettings(); };
+    s.querySelectorAll('.sw').forEach((b) => (b.onclick = () => avSet(b.dataset.k, b.dataset.v)));
+    s.querySelectorAll('.stl').forEach((b) => (b.onclick = () => avSet('style', b.dataset.v)));
+    s.querySelector('.glasses').onchange = (e) => avSet('glasses', e.target.checked);
+    s.querySelector('.vtest').onclick = () => { cfg.voiceName = s.querySelector('.vname').value; cfg.rate = +s.querySelector('.vrate').value; cfg.pitch = +s.querySelector('.vpitch').value; setState('speaking'); speak(u('voiceSample')); };
     s.querySelector('.save').onclick = () => {
       cfg.key = s.querySelector('.key').value.trim(); cfg.model = s.querySelector('.model').value;
-      cfg.voice = s.querySelector('.voice').value; cfg.speak = s.querySelector('.speak').checked;
+      cfg.voice = s.querySelector('.voice').value; cfg.speak = s.querySelector('.speak').checked; cfg.voiceName = s.querySelector('.vname').value; cfg.rate = +s.querySelector('.vrate').value; cfg.pitch = +s.querySelector('.vpitch').value;
       if (hasGPU) { cfg.local = s.querySelector('.local').checked; cfg.localModel = s.querySelector('.lmodel').value; }
-      ['key', 'model', 'voice', 'speak', 'local'].forEach((k) => store.set('ai-' + k, cfg[k]));
+      ['key', 'model', 'voice', 'speak', 'local', 'voiceName', 'rate', 'pitch'].forEach((k) => store.set('ai-' + k, cfg[k]));
+      store.set('live-owner', s.querySelector('.liveowner').checked);
       store.set('ai-local-model', cfg.localModel);
       if (engine() === 'local') startLocal(s.querySelector('.ai-progress'));
       else { s.hidden = true; }
@@ -481,7 +572,7 @@ ${small ? smallContext() : context()}`;
     return bub;
   }
   function chooserCard() {
-    if (store.get('ai-chosen', false)) return null;
+    return null;
     const el = h(`<div class="chooser"><b>✨ ${u('chooseT')}</b><div class="chooser-grid">${['feng', 'wang'].map((k) => `<button class="choose" data-k="${k}">${avatarSVG(k)}<b>${LOOKS[k].name}</b><span>${esc(t(LOOKS[k].title))}</span></button>`).join('')}</div><small class="muted">${u('chooseMore')}</small></div>`);
     el.querySelectorAll('.choose').forEach((b) => (b.onclick = () => { cfg.look = b.dataset.k; store.set('ai-look', cfg.look); store.set('ai-chosen', true); refresh(); drawMsgs(); }));
     return el;
@@ -560,6 +651,7 @@ ${small ? smallContext() : context()}`;
   }
   function close() { panel.hidden = true; fab.classList.remove('open'); stopSpeaking(); convo = false; drawConvo(); if (listening && rec) rec.stop(); }
   MLS.openTutor = openTutor;
+  MLS.closeTutorPanel = () => { if (panel && !panel.hidden) close(); };
 
   // ---------- 📹 Face-to-face call: real-time, full-duplex style conversation ----------
   // Always listening; you can interrupt while the teacher talks; the avatar nods and reacts while you speak;
@@ -586,9 +678,8 @@ ${small ? smallContext() : context()}`;
     call.speaking = true; call.cur = s; face('talking', true); caption('bot', s);
     if (!synth || !cfg.speak) { setTimeout(() => { if (call && call.cur === s) cNext(); }, 55 * s.length + 400); return; }
     const lang = detectLang(s), v = pickVoice(lang);
-    const ut = new SpeechSynthesisUtterance(s);
-    ut.lang = v ? v.lang : lang; if (v) ut.voice = v; ut.rate = lang.startsWith('zh') ? 0.95 : 1.02; ut.pitch = 1.05;
-    ut.onend = ut.onerror = () => { if (call && call.cur === s) cNext(); };
+    const ut = humanUtterance(s, lang, v);
+    ut.onend = ut.onerror = () => { if (call && call.cur === s) setTimeout(() => { if (call && call.cur === s) cNext(); }, /[.!?。！？।]$/.test(s) ? 160 + Math.random() * 200 : 80); };
     synth.speak(ut);
   }
   function cHush() { if (!call) return; call.queue = []; call.cur = ''; if (synth) synth.cancel(); call.speaking = false; face('talking', false); }
@@ -720,8 +811,7 @@ ${small ? smallContext() : context()}`;
     document.removeEventListener('keydown', escCall);
   }
   MLS.openCall = openCall;
-  MLS.tutorLooks = LOOKS;
-  MLS.setTutor = (k) => { if (!LOOKS[k]) return; cfg.look = k; store.set('ai-look', k); store.set('ai-chosen', true); if (!panel) build(); refresh(); if (!history.length) drawMsgs(); };
+  MLS.setTutor = () => { if (!panel) build(); refresh(); };
 
   // ---------- Select any text on the page → "Ask Master Feng" ----------
   let selBtn = null;
