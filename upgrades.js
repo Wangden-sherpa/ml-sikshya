@@ -57,7 +57,7 @@
     const lessons = C.lessons.filter((l) => S.done[l.id]).length * 100;
     const quiz = Math.round(Object.values(S.quiz).reduce((a, b) => a + b, 0) * 50);
     const runs = Math.min(store.get('runs', 0), 150) * 2;
-    const extra = (store.get('datalab', false) ? 150 : 0) + store.get('seen3d', []).length * 20;
+    const extra = (store.get('datalab', false) ? 150 : 0) + store.get('seen3d', []).length * 20 + store.get('missions-done', []).length * 250;
     return lessons + quiz + runs + extra;
   }
   function levelOf(x) {
@@ -77,6 +77,8 @@
     { id: '3d', icon: '🧊', name: { en: '3D explorer', ne: '3D अन्वेषक', zh: '3D 探索者' }, how: { en: 'Open 5 models in 3D Lab', ne: '3D ल्याबमा ५ मोडेल', zh: '在 3D 实验室打开 5 个模型' }, ok: () => store.get('seen3d', []).length >= 5 },
     { id: 's3', icon: '🔥', name: { en: 'On fire', ne: 'जोसिलो', zh: '火力全开' }, how: { en: '3-day streak', ne: '३ दिन लगातार', zh: '连续学习 3 天' }, ok: () => streak() >= 3 },
     { id: 's7', icon: '⚡', name: { en: 'Unstoppable', ne: 'नरोकिने', zh: '势不可挡' }, how: { en: '7-day streak', ne: '७ दिन लगातार', zh: '连续学习 7 天' }, ok: () => streak() >= 7 },
+    { id: 'mission1', icon: '🌍', name: { en: 'Real-world hero', ne: 'वास्तविक संसारको नायक', zh: '实战英雄' }, how: { en: 'Complete a real-world mission', ne: 'एउटा वास्तविक मिसन पूरा', zh: '完成 1 个真实任务' }, ok: () => store.get('missions-done', []).length >= 1 },
+    { id: 'mission4', icon: '🏆', name: { en: 'Data professional', ne: 'डाटा पेशेवर', zh: '数据专家' }, how: { en: 'Complete 4 missions', ne: '४ मिसन पूरा', zh: '完成 4 个任务' }, ok: () => store.get('missions-done', []).length >= 4 },
     { id: 'grad', icon: '🎓', name: { en: 'Graduate', ne: 'स्नातक', zh: '毕业生' }, how: { en: 'Finish all 28 lessons', ne: 'सबै २८ पाठ पूरा', zh: '完成全部 28 课' }, ok: () => C.lessons.every((l) => S.done[l.id]) },
   ];
   let checking = false;

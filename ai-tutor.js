@@ -82,6 +82,12 @@
 
   // ---------- Teachers (avatar looks) ----------
   const LOOKS = {
+    feng: { name: 'Master Feng', photo: 'assets/tutors/feng-face.jpg', pitch: 0.92, rate: 0.98, bg: ['#dc2626', '#f59e0b'],
+      title: { en: 'Calm, professional mentor · business & finance examples', ne: 'शान्त, पेशेवर गुरु · व्यापार र वित्तका उदाहरण', zh: '沉稳专业的导师 · 擅长商业与金融案例' },
+      persona: 'Master Feng: a calm, wise and professional mentor with a business and finance background. Patient and precise, uses real business, economics and finance examples, and gives structured, step-by-step explanations. Fluent in Chinese and English.' },
+    wang: { name: 'Master Wang', photo: 'assets/tutors/wang-face.jpg', pitch: 1.08, rate: 1.04, bg: ['#16a34a', '#0ea5e9'],
+      title: { en: 'Friendly, energetic mentor · fun everyday examples', ne: 'मिलनसार, जोसिलो गुरु · रमाइला दैनिक उदाहरण', zh: '亲切活力的导师 · 用有趣的生活例子讲解' },
+      persona: 'Master Wang: a young, friendly and energetic mentor who feels like a helpful classmate. Uses fun everyday examples (sports, phones, games, food, travel in Nepal and Asia), keeps things light and motivating, and celebrates progress.' },
     guru: { name: 'Guru', skin: '#f1c27d', hair: '#2d1b12', shirt: '#4f46e5', glasses: true, long: false, bg: ['#818cf8', '#ec4899'] },
     asha: { name: 'Asha', skin: '#e0ac69', hair: '#111827', shirt: '#db2777', glasses: false, long: true, bg: ['#f472b6', '#f59e0b'] },
     bikram: { name: 'Bikram', skin: '#c68642', hair: '#1f2937', shirt: '#059669', glasses: false, long: false, bg: ['#34d399', '#3b82f6'] },
@@ -89,6 +95,7 @@
   };
   const avatarSVG = (k, cls = '') => {
     const L = LOOKS[k] || LOOKS.guru, id = 'g' + Math.random().toString(36).slice(2, 7);
+    if (L.photo) return `<div class="photo-av ${cls}" style="--ring1:${L.bg[0]};--ring2:${L.bg[1]}"><img src="${L.photo}" alt="${esc(L.name)}" draggable="false"><span class="eq"><i></i><i></i><i></i><i></i><i></i></span></div>`;
     return `<svg viewBox="0 0 120 120" class="guru-svg ${cls}" aria-hidden="true">
       <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${L.bg[0]}"/><stop offset="1" stop-color="${L.bg[1]}"/></linearGradient></defs>
       <circle cx="60" cy="60" r="58" fill="url(#${id})"/>
@@ -120,7 +127,7 @@
   const VOICES = [['auto', 'Auto (site language)'], ['en-US', 'English (US)'], ['en-IN', 'English (India)'], ['ne-NP', 'नेपाली'], ['hi-IN', 'हिन्दी'], ['zh-CN', '中文 (普通话)'], ['zh-TW', '中文 (台灣)'], ['ja-JP', '日本語'], ['ko-KR', '한국어'], ['es-ES', 'Español'], ['fr-FR', 'Français'], ['de-DE', 'Deutsch'], ['ar-SA', 'العربية'], ['ru-RU', 'Русский'], ['pt-BR', 'Português'], ['bn-IN', 'বাংলা']];
   const cfg = {
     key: store.get('ai-key', ''), model: store.get('ai-model', 'claude-opus-5-5'),
-    look: store.get('ai-look', 'guru'), voice: store.get('ai-voice', 'auto'), speak: store.get('ai-speak', true),
+    look: store.get('ai-look', 'feng'), voice: store.get('ai-voice', 'auto'), speak: store.get('ai-speak', true),
   };
   const teacherName = () => (LOOKS[cfg.look] || LOOKS.guru).name;
   let history = [];
@@ -146,20 +153,74 @@
     return parts.join('\n\n');
   }
   const SITE_LANG = { en: 'English', ne: 'Nepali (Devanagari script)', zh: 'Simplified Chinese' };
-  const SYSTEM = (voice) => `You are ${teacherName()}, a warm, patient human-like machine-learning teacher inside "ML Sikshya", a website (English / Nepali / Chinese) that teaches ML from beginner to professional. Speak like a friendly teacher in a one-to-one class. Learners run Python in the browser with Pyodide: numpy, pandas, matplotlib, scikit-learn and scipy are available; PyTorch/TensorFlow are not. Uploaded files are at /data/<name> and loaded as DATA["<name>"] (a pandas DataFrame).
+  const persona = () => (LOOKS[cfg.look] && LOOKS[cfg.look].persona) || `${teacherName()}: a warm, patient and friendly teacher.`;
+  const SYSTEM = (voice, small) => `You are ${teacherName()}, a human-like AI teacher and personal assistant inside "ML Sikshya", a free learning website. Your personality — ${persona()}
 
-Language: always reply in the same language as the learner's latest message — they may use English, Nepali, Chinese, Hindi or any other language, including romanized Nepali (then reply in Nepali). If you can't tell, use ${SITE_LANG[MLS.S.lang] || 'English'}. Keep standard technical terms (e.g. "overfitting", "DataFrame") in English when that is clearer.
+What you can help with: ANY question the learner asks — every school and university subject (maths, physics, chemistry, biology, history, geography, economics, accounting, languages, literature), programming in any language, computers and technology, careers and job applications, study skills, writing and translation, general knowledge and everyday life. You are ALSO an expert machine-learning, data-science and AI teacher, which is the main topic of this website. Never refuse or redirect a normal question just because it is not about machine learning — answer it fully and helpfully, like a brilliant private tutor. If you are not sure about a fact, say so honestly instead of guessing. Do not help with anything harmful or dangerous.
+
+Language: always reply in the same language as the learner's latest message — English, Nepali, Chinese, Hindi or any other language; romanized Nepali gets a reply in Nepali. If you can't tell, use ${MLS.extLang ? MLS.extLang.name : SITE_LANG[MLS.S.lang] || 'English'}. Keep standard technical terms in English when that is clearer.
 
 How to teach:
-- Intuition or an everyday analogy first, then the exact concept, then how and where to use it.
-- When you show code, give complete, runnable Python in \`\`\`python blocks using the libraries above, and keep it short.
-- For errors: what the error means, why it happened in their code, and the corrected code.
-- When a lesson on this site covers the topic, mention it by name.
-- Be encouraging. Ask a short check-your-understanding question at the end when it helps.
-${voice ? '- The learner is talking to you by voice and will HEAR your reply: answer in short, natural spoken sentences (about 3–6 sentences), no tables, minimal formatting. Only include code if they ask for it.' : '- Use short paragraphs and lists.'}
+- Answer the question directly first, then explain. Use an everyday analogy for hard ideas, then the exact concept, then how and where it is used.
+- Code: complete, runnable examples in \`\`\`python blocks (or the language asked). On this site, Python runs in the browser with numpy, pandas, matplotlib, scikit-learn and scipy (no PyTorch/TensorFlow). Uploaded files are DATA["<name>"] or /data/<name>.
+- For errors: what it means, why it happened, and the corrected code.
+- When a lesson or real-world mission on this site fits, mention it by name.
+- Be encouraging and human. ${small ? 'Keep answers focused (under about 250 words).' : 'Ask a short check-your-understanding question at the end when it helps.'}
+${voice ? '- The learner is TALKING to you by voice and will HEAR your reply: answer like a person in a video call — short, natural spoken sentences (about 3–6), no tables or lists, minimal formatting, no code unless asked.' : '- Use short paragraphs, lists and headings where they help.'}
 
 Current context:
-${context()}`;
+${small ? smallContext() : context()}`;
+  function smallContext() {
+    const parts = [];
+    if (MLS.route === 'learn') { const L = window.COURSE.lessons.find((l) => l.id === MLS.routeArg); if (L) parts.push(`The learner is studying the lesson "${L.title.en}".`); }
+    if (MLS.lastRun && MLS.lastRun.err && Date.now() - MLS.lastRun.at < 30 * 60 * 1000) parts.push(`Their last code failed with: ${MLS.lastRun.err.split('\n').slice(-2).join(' ').slice(0, 300)}`);
+    return parts.join('\n') || 'General conversation.';
+  }
+
+  // ---------- Free AI that runs on the learner's own device (WebLLM + WebGPU, no key, works for everyone) ----------
+  const LOCAL_MODELS = [
+    ['Qwen2.5-1.5B-Instruct-q4f16_1-MLC', 'Qwen 2.5 · 1.5B — balanced, multilingual (~1 GB)'],
+    ['Qwen2.5-0.5B-Instruct-q4f16_1-MLC', 'Qwen 2.5 · 0.5B — fastest, smallest (~0.4 GB)'],
+    ['Qwen2.5-3B-Instruct-q4f16_1-MLC', 'Qwen 2.5 · 3B — smartest, needs a strong GPU (~2 GB)'],
+    ['Llama-3.2-1B-Instruct-q4f16_1-MLC', 'Llama 3.2 · 1B (~0.9 GB)'],
+  ];
+  const hasGPU = !!navigator.gpu;
+  cfg.local = store.get('ai-local', false);
+  cfg.localModel = store.get('ai-local-model', LOCAL_MODELS[0][0]);
+  const engine = () => (cfg.key ? 'claude' : cfg.local && hasGPU ? 'local' : 'offline');
+  let localEngine = null, localLoading = null, localModelLoaded = null;
+  let lastProg = null;
+  function localProgress(p) {
+    lastProg = p;
+    const pct = Math.round((p.progress || 0) * 100);
+    document.querySelectorAll('.ai-progress').forEach((el) => { el.hidden = pct >= 100; el.querySelector('span').style.width = pct + '%'; el.querySelector('small').textContent = `${pct}% · ${(p.text || '').slice(0, 90)}`; });
+    if (typeof cStatus === 'function' && call) cStatus(`🧠 ${pct}%`);
+  }
+  function loadLocal() {
+    if (localEngine && localModelLoaded === cfg.localModel) return Promise.resolve(localEngine);
+    if (!localLoading) {
+      localLoading = (async () => {
+        const webllm = await import('https://esm.run/@mlc-ai/web-llm');
+        if (localEngine) { try { await localEngine.unload(); } catch { /* ignore */ } }
+        localEngine = await webllm.CreateMLCEngine(cfg.localModel, { initProgressCallback: localProgress });
+        localModelLoaded = cfg.localModel;
+        localProgress({ progress: 1, text: 'ready' });
+        refresh();
+        return localEngine;
+      })().finally(() => { localLoading = null; });
+    }
+    return localLoading;
+  }
+  async function askLocal(onText, voice, holder) {
+    const eng = await loadLocal();
+    const msgs = [{ role: 'system', content: SYSTEM(voice, true) }, ...history.slice(-10)];
+    const chunks = await eng.chat.completions.create({ messages: msgs, stream: true, temperature: 0.6, max_tokens: 1500 });
+    if (holder) holder.stream = { abort: () => eng.interruptGenerate() };
+    let full = '';
+    for await (const c of chunks) { const d = (c.choices[0] && c.choices[0].delta && c.choices[0].delta.content) || ''; if (d) { full += d; onText(d); } }
+    return full;
+  }
+  const askAI = (onText, voice, holder) => (engine() === 'claude' ? askClaude(onText, voice, holder) : askLocal(onText, voice, holder));
 
   // ---------- Claude (official SDK, browser build) ----------
   let sdkP = null;
@@ -280,7 +341,7 @@ ${context()}`;
 
   // ---------- Voice: speech recognition (listen) ----------
   let rec = null, listening = false, convo = false;
-  const recLang = () => (cfg.voice !== 'auto' ? cfg.voice : { en: 'en-US', ne: 'ne-NP', zh: 'zh-CN' }[MLS.S.lang] || 'en-US');
+  const recLang = () => (cfg.voice !== 'auto' ? cfg.voice : MLS.extLang ? MLS.extLang.speech : { en: 'en-US', ne: 'ne-NP', zh: 'zh-CN' }[MLS.S.lang] || 'en-US');
   function listen() {
     if (!SpeechRec) { toast(u('noMic')); return; }
     if (listening) { rec && rec.stop(); return; }
@@ -349,7 +410,7 @@ ${context()}`;
     const av = panel.querySelector('.tutor-avatar'), cls = av.className;
     av.innerHTML = avatarSVG(cfg.look); av.className = cls;
     panel.querySelector('.tt').textContent = `${teacherName()} · ${u('tutor')}`;
-    panel.querySelector('.mode').innerHTML = cfg.key ? `<i class="dot on"></i>${u('tutorOnline')}` : `<i class="dot"></i>${u('tutorOffline')}`;
+    panel.querySelector('.mode').innerHTML = engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
     if (!panel.querySelector('.tutor-state').textContent) panel.querySelector('.tutor-state').textContent = u('stReady');
     panel.querySelector('.spk').textContent = cfg.speak ? '🔊' : '🔇';
     panel.querySelector('textarea').placeholder = u('tutorPh');
@@ -362,6 +423,23 @@ ${context()}`;
     const cb = h(`<button class="call-chip">${u('callBtn')}</button>`); cb.onclick = () => openCall(); ch.prepend(cb);
     if (!history.length) drawMsgs();
   }
+  Object.assign(MLS.UI, {
+    freeAI: { en: 'Free AI brain (runs on your device)', ne: 'निःशुल्क AI दिमाग (तपाईंकै उपकरणमा चल्छ)', zh: '免费 AI 大脑（在你的设备上运行）' },
+    freeAIHelp: { en: 'A real AI model is downloaded once into your browser and then answers any question for free, privately, even offline. Needs Chrome or Edge with WebGPU (most computers from the last few years). Small on-device models can make mistakes — double-check important facts, or connect Claude for the smartest answers.', ne: 'वास्तविक AI मोडेल एक पटक ब्राउजरमा डाउनलोड हुन्छ, त्यसपछि जुनसुकै प्रश्नको उत्तर निःशुल्क, गोप्य रूपमा, अफलाइनमा पनि दिन्छ। WebGPU भएको Chrome वा Edge चाहिन्छ। साना मोडेलले गल्ती गर्न सक्छन् — महत्त्वपूर्ण तथ्य दोहोर्याएर जाँच्नुहोस्, वा सबैभन्दा स्मार्ट उत्तरका लागि Claude जोड्नुहोस्।', zh: '真正的 AI 模型只需下载一次到浏览器中，之后就能免费、私密地回答任何问题，甚至离线也行。需要支持 WebGPU 的 Chrome 或 Edge。小型本地模型可能会出错——重要事实请再核实，或连接 Claude 获得最聪明的回答。' },
+    freeAIOn: { en: 'Use the free on-device AI', ne: 'निःशुल्क उपकरण-भित्रको AI प्रयोग गर्नुहोस्', zh: '使用免费的本地 AI' },
+    noGPU: { en: '⚠️ This browser has no WebGPU, so the free on-device AI can\'t run here. Use the latest Chrome or Edge on a computer — or connect Claude below.', ne: '⚠️ यो ब्राउजरमा WebGPU छैन, त्यसैले निःशुल्क AI यहाँ चल्दैन। कम्प्युटरमा नयाँ Chrome वा Edge प्रयोग गर्नुहोस् — वा तल Claude जोड्नुहोस्।', zh: '⚠️ 此浏览器不支持 WebGPU，无法运行免费本地 AI。请在电脑上使用最新版 Chrome 或 Edge——或在下方连接 Claude。' },
+    aiCardT: { en: 'Turn on a real AI that answers ANY question', ne: 'जुनसुकै प्रश्नको उत्तर दिने वास्तविक AI सुरु गर्नुहोस्', zh: '开启能回答任何问题的真正 AI' },
+    aiCardP: { en: 'Right now I\'m in simple offline mode. Choose one: 🧠 free AI on your device (one-time download ~1 GB, private) — or 🔑 Claude with your API key (smartest, any language).', ne: 'अहिले म साधारण अफलाइन मोडमा छु। एउटा छान्नुहोस्: 🧠 तपाईंको उपकरणमा निःशुल्क AI (एक पटक ~१ GB डाउनलोड, गोप्य) — वा 🔑 तपाईंको API key सहित Claude (सबैभन्दा स्मार्ट, जुनसुकै भाषा)।', zh: '我现在处于简单的离线模式。请选择：🧠 在你设备上运行的免费 AI（一次性下载约 1 GB，保护隐私）——或 🔑 使用你的 API 密钥连接 Claude（最聪明，支持任何语言）。' },
+    aiCardBtn: { en: 'Download & turn on free AI', ne: 'निःशुल्क AI डाउनलोड गरेर सुरु गर्नुहोस्', zh: '下载并开启免费 AI' },
+    aiCardClaude: { en: 'Connect Claude', ne: 'Claude जोड्नुहोस्', zh: '连接 Claude' },
+    aiReady: { en: '🧠 Free AI is ready — ask me anything!', ne: '🧠 निःशुल्क AI तयार छ — जे पनि सोध्नुहोस्!', zh: '🧠 免费 AI 已就绪——尽管问吧！' },
+    aiFail: { en: 'The free AI could not start on this device', ne: 'निःशुल्क AI यो उपकरणमा सुरु हुन सकेन', zh: '免费 AI 无法在此设备上启动' },
+    modeLocal: { en: 'Free AI (on your device)', ne: 'निःशुल्क AI (उपकरणमा)', zh: '免费 AI（本地）' },
+    chooseT: { en: 'Choose your teacher', ne: 'आफ्नो शिक्षक छान्नुहोस्', zh: '选择你的老师' },
+    chooseMore: { en: 'More teachers in ⚙️ settings', ne: '⚙️ सेटिङमा थप शिक्षक', zh: '在 ⚙️ 设置中还有更多老师' },
+    askSel: { en: 'Ask', ne: 'सोध्नुहोस्', zh: '问' },
+    explainSel: { en: 'Explain this in simple words', ne: 'यसलाई सरल शब्दमा बुझाउनुहोस्', zh: '用简单的话解释这一段' },
+  });
   function drawSettings() {
     const s = panel.querySelector('.tutor-settings');
     s.innerHTML = `<b>🧑‍🏫 ${u('tutorLook')}</b>
@@ -369,18 +447,31 @@ ${context()}`;
       <label class="small">${u('tutorVoice')} <select class="voice">${VOICES.map(([id, n]) => `<option value="${id}" ${id === cfg.voice ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label class="small chk"><input type="checkbox" class="speak" ${cfg.speak ? 'checked' : ''}> ${u('tutorSpeak')}</label>
       <p class="small muted">${u('voiceNote')}</p>
+      <b>🧠 ${u('freeAI')}</b><p class="small">${u('freeAIHelp')}</p>
+      ${hasGPU ? `<label class="small chk"><input type="checkbox" class="local" ${cfg.local ? 'checked' : ''}> ${u('freeAIOn')}</label>
+      <label class="small">${u('tutorModel')} <select class="lmodel">${LOCAL_MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.localModel ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+      <div class="ai-progress" hidden><span></span><small></small></div>` : `<p class="small warnline">${u('noGPU')}</p>`}
       <b>🔑 ${u('tutorSettings')}</b><p class="small">${u('tutorKeyHelp')}</p>
       <input type="password" class="key" placeholder="sk-ant-..." autocomplete="off" value="${esc(cfg.key)}">
       <label class="small">${u('tutorModel')} <select class="model">${MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.model ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <div class="row"><button class="btn sm save">${u('tutorSave')}</button>${cfg.key ? `<button class="btn ghost sm forget">${u('tutorForget')}</button>` : ''}</div>`;
-    s.querySelectorAll('.look').forEach((b) => (b.onclick = () => { cfg.look = b.dataset.k; store.set('ai-look', cfg.look); refresh(); drawSettings(); }));
+    s.querySelectorAll('.look').forEach((b) => (b.onclick = () => { cfg.look = b.dataset.k; store.set('ai-look', cfg.look); store.set('ai-chosen', true); refresh(); drawSettings(); }));
     s.querySelector('.save').onclick = () => {
       cfg.key = s.querySelector('.key').value.trim(); cfg.model = s.querySelector('.model').value;
       cfg.voice = s.querySelector('.voice').value; cfg.speak = s.querySelector('.speak').checked;
-      ['key', 'model', 'voice', 'speak'].forEach((k) => store.set('ai-' + k, cfg[k]));
-      s.hidden = true; refresh(); toast('✓');
+      if (hasGPU) { cfg.local = s.querySelector('.local').checked; cfg.localModel = s.querySelector('.lmodel').value; }
+      ['key', 'model', 'voice', 'speak', 'local'].forEach((k) => store.set('ai-' + k, cfg[k]));
+      store.set('ai-local-model', cfg.localModel);
+      if (engine() === 'local') startLocal(s.querySelector('.ai-progress'));
+      else { s.hidden = true; }
+      refresh(); toast('✓');
     };
     const f = s.querySelector('.forget'); if (f) f.onclick = () => { cfg.key = ''; store.set('ai-key', ''); s.hidden = true; refresh(); };
+  }
+  function startLocal(progEl) {
+    if (progEl) progEl.hidden = false;
+    loadLocal().then(() => { toast(u('aiReady')); const s = panel.querySelector('.tutor-settings'); s.hidden = true; history.length || drawMsgs(); })
+      .catch((e) => { console.error(e); cfg.local = false; store.set('ai-local', false); toast(`${u('aiFail')}: ${e.message || e}`); refresh(); });
   }
   function bubble(role, html) {
     const b = h(`<div class="msg ${role}">${role === 'bot' ? `<div class="msg-av">${avatarSVG(cfg.look)}</div>` : ''}<div class="bub"></div></div>`);
@@ -389,43 +480,77 @@ ${context()}`;
     panel.querySelector('.tutor-msgs').appendChild(b);
     return bub;
   }
+  function chooserCard() {
+    if (store.get('ai-chosen', false)) return null;
+    const el = h(`<div class="chooser"><b>✨ ${u('chooseT')}</b><div class="chooser-grid">${['feng', 'wang'].map((k) => `<button class="choose" data-k="${k}">${avatarSVG(k)}<b>${LOOKS[k].name}</b><span>${esc(t(LOOKS[k].title))}</span></button>`).join('')}</div><small class="muted">${u('chooseMore')}</small></div>`);
+    el.querySelectorAll('.choose').forEach((b) => (b.onclick = () => { cfg.look = b.dataset.k; store.set('ai-look', cfg.look); store.set('ai-chosen', true); refresh(); drawMsgs(); }));
+    return el;
+  }
+  function aiCard() {
+    if (engine() === 'claude' || (engine() === 'local' && localEngine && !localLoading)) return null;
+    if (localLoading || engine() === 'local') {
+      const pe = h(`<div class="ai-card"><b>🧠 ${u('freeAI')}</b><p class="small">${u('freeAIHelp')}</p><div class="ai-progress"><span></span><small>…</small></div></div>`);
+      if (!localLoading) startLocal(pe.querySelector('.ai-progress'));
+      if (lastProg) setTimeout(() => localProgress(lastProg));
+      return pe;
+    }
+    const el = h(`<div class="ai-card"><b>⚡ ${u('aiCardT')}</b><p>${u('aiCardP')}</p>
+      <div class="row">${hasGPU ? `<button class="btn sm turn-on">🧠 ${u('aiCardBtn')}</button>` : ''}<button class="btn ghost sm use-claude">🔑 ${u('aiCardClaude')}</button></div>
+      ${hasGPU ? '' : `<p class="small warnline">${u('noGPU')}</p>`}<div class="ai-progress" hidden><span></span><small></small></div></div>`);
+    const on = el.querySelector('.turn-on');
+    if (on) on.onclick = () => { cfg.local = true; store.set('ai-local', true); on.disabled = true; refresh(); startLocal(el.querySelector('.ai-progress')); };
+    el.querySelector('.use-claude').onclick = () => { const s = panel.querySelector('.tutor-settings'); s.hidden = false; drawSettings(); s.querySelector('.key').focus(); };
+    return el;
+  }
   function drawMsgs() {
     const box = panel.querySelector('.tutor-msgs'); box.innerHTML = '';
+    const ch = chooserCard(); if (ch) box.appendChild(ch);
     bubble('bot', esc(u('tutorHi').replace('{name}', teacherName())));
+    const card = aiCard(); if (card) box.appendChild(card);
     history.forEach((m) => { if (m.role === 'user') bubble('user', esc(m.content).replace(/\n/g, '<br>')); else render(m.content, bubble('bot', '')); });
     box.scrollTop = box.scrollHeight;
   }
-  let busy = false;
+  const liveFmt = (s) => esc(s).replace(/```[\s\S]*?(```|$)/g, (m) => `<pre class="md-pre">${m.replace(/```\w*\n?/g, '')}</pre>`).replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>').replace(/`([^`\n]+)`/g, '<code>$1</code>').replace(/\n/g, '<br>');
+  let busy = false, curHolder = null;
+  function setSendBtn(on) { const s = panel.querySelector('.send'); s.textContent = on ? '⏹' : '➤'; s.classList.toggle('stop', on); s.title = on ? 'Stop' : 'Send'; }
   async function send(text, viaVoice = false) {
-    text = (text || '').trim(); if (!text || busy) return;
+    if (busy) { if (curHolder && curHolder.stream) { try { curHolder.stream.abort(); } catch { /* ignore */ } } return; }
+    text = (text || '').trim(); if (!text) return;
     stopSpeaking();
     const ta = panel.querySelector('textarea'); ta.value = '';
     bubble('user', (viaVoice ? '🎙️ ' : '') + esc(text).replace(/\n/g, '<br>'));
     const box = panel.querySelector('.tutor-msgs');
-    const out = bubble('bot', `<span class="typing">${u('thinking')}</span>`);
+    const out = bubble('bot', `<span class="typing">${engine() === 'local' && !localEngine ? '🧠 …' : u('thinking')}</span>`);
     box.scrollTop = box.scrollHeight;
     const after = () => { if (convo && SpeechRec) setTimeout(listen, 350); };
-    if (!cfg.key) {
+    if (engine() === 'offline') {
       out.innerHTML = offlineAnswer(text); box.scrollTop = box.scrollHeight;
       speak(speakable(out.innerText.replace(u('offlineNote'), '')), after);
       return;
     }
-    busy = true; setState('thinking');
+    busy = true; setSendBtn(true); setState('thinking');
     history.push({ role: 'user', content: text });
-    let acc = '', A = null;
+    const holder = (curHolder = {});
+    let acc = '', A = null, last = 0;
     try {
-      A = await sdk();
-      const full = await askClaude((d) => { acc += d; out.innerHTML = esc(acc).replace(/\n/g, '<br>'); box.scrollTop = box.scrollHeight; }, viaVoice || convo);
+      if (engine() === 'claude') A = await sdk();
+      const full = await askAI((d) => {
+        acc += d;
+        const now = Date.now(); if (now - last > 80) { last = now; out.innerHTML = liveFmt(acc); box.scrollTop = box.scrollHeight; }
+      }, viaVoice || convo, holder);
       history.push({ role: 'assistant', content: full });
       render(full, out);
-      busy = false;
       speak(speakable(full), after);
     } catch (e) {
-      console.error(e);
-      history.pop();
-      out.innerHTML = `<p>${apiErrorText(e, A)}</p>` + offlineAnswer(text);
-      busy = false; setState('idle');
+      const aborted = /abort/i.test(String(e && (e.name + e.message)));
+      if (aborted && acc) { history.push({ role: 'assistant', content: acc }); render(acc, out); }
+      else {
+        console.error(e); history.pop();
+        out.innerHTML = `<p>${apiErrorText(e, A)}</p>` + offlineAnswer(text);
+        setState('idle');
+      }
     }
+    busy = false; setSendBtn(false); if (!synth || !synth.speaking) setState('idle');
     box.scrollTop = box.scrollHeight;
   }
   function openTutor(prefill) {
@@ -504,7 +629,7 @@ ${context()}`;
     if (call.holder && call.holder.stream) { try { call.holder.stream.abort(); } catch { /* ignore */ } }
     cHush(); face('thinking', true); cStatus(u('stThinking'));
     setTimeout(() => { if (call && call.turn === turn) caption('you', ''); }, 2500);
-    if (!cfg.key) {
+    if (engine() === 'offline') {
       const d = document.createElement('div'); d.innerHTML = offlineAnswer(text);
       face('thinking', false); cStatus('');
       const say = d.innerText.replace(u('offlineNote'), '');
@@ -525,7 +650,7 @@ ${context()}`;
       }
     };
     try {
-      const full = await askClaude((d) => {
+      const full = await askAI((d) => {
         if (!call || call.turn !== turn) return;
         if (!started) { started = true; face('thinking', false); cStatus(''); }
         acc += d; pump(false);
@@ -559,7 +684,7 @@ ${context()}`;
     if (panel && !panel.hidden) { panel.hidden = true; fab.classList.remove('open'); }
     stopSpeaking();
     const el = h(`<div class="call">
-      <div class="call-top"><span class="call-live">● LIVE</span><b>${esc(teacherName())}</b><span class="call-mode">${cfg.key ? u('tutorOnline') : u('tutorOffline')}</span></div>
+      <div class="call-top"><span class="call-live">● LIVE</span><b>${esc(teacherName())}</b><span class="call-mode">${engine() === 'claude' ? u('tutorOnline') : engine() === 'local' ? '🧠 ' + u('modeLocal') : u('tutorOffline')}</span></div>
       <div class="call-stage">
         <div class="call-avatar"><div class="call-face">${avatarSVG(cfg.look)}</div><div class="call-bc"></div></div>
         <div class="call-status"></div>
@@ -595,6 +720,25 @@ ${context()}`;
     document.removeEventListener('keydown', escCall);
   }
   MLS.openCall = openCall;
+  MLS.tutorLooks = LOOKS;
+  MLS.setTutor = (k) => { if (!LOOKS[k]) return; cfg.look = k; store.set('ai-look', k); store.set('ai-chosen', true); if (!panel) build(); refresh(); if (!history.length) drawMsgs(); };
+
+  // ---------- Select any text on the page → "Ask Master Feng" ----------
+  let selBtn = null;
+  document.addEventListener('mouseup', (e) => {
+    if (e.target.closest('.tutor, .call, .sel-ask, textarea, input')) return;
+    setTimeout(() => {
+      const sel = window.getSelection(), txt = sel ? sel.toString().trim() : '';
+      if (selBtn) { selBtn.remove(); selBtn = null; }
+      if (txt.length < 3 || txt.length > 1200 || !sel.rangeCount) return;
+      const r = sel.getRangeAt(0).getBoundingClientRect();
+      selBtn = h(`<button class="sel-ask">${avatarSVG(cfg.look)}<span>${u('askSel')} ${esc(teacherName())}</span></button>`);
+      selBtn.style.top = `${window.scrollY + r.top - 46}px`; selBtn.style.left = `${window.scrollX + r.left + r.width / 2}px`;
+      selBtn.onmousedown = (ev) => ev.preventDefault();
+      selBtn.onclick = () => { const q = `${u('explainSel')}:\n"${txt}"`; selBtn.remove(); selBtn = null; openTutor(q); };
+      document.body.appendChild(selBtn);
+    }, 10);
+  });
   MLS.hooks.beforeRender.push(() => { /* keep the call running across pages */ });
 
   MLS.hooks.beforeRender.push(() => setTimeout(refresh));

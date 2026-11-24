@@ -108,6 +108,45 @@ html[data-accent] .logo { background: linear-gradient(135deg, var(--primary), va
 .certificate p { margin: 0; font-size: clamp(.75rem, 1.5vw, 1.05rem); }
 .certificate .foot { display: flex; justify-content: space-between; margin-top: 2%; font-size: clamp(.65rem, 1.2vw, .9rem); color: #6b7280; }
 .cert-locked { padding: 16px 20px; border-radius: 12px; background: var(--warn-soft); font-weight: 600; }
+/* ---------- Photo tutors (Master Feng, Master Wang) ---------- */
+.photo-av { width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden; background: linear-gradient(135deg, var(--ring1), var(--ring2)); padding: 3px; }
+.photo-av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; transform-origin: 50% 70%; transition: transform .4s; animation: breathe 5s ease-in-out infinite; user-select: none; }
+@keyframes breathe { 50% { transform: scale(1.025); } }
+.photo-av .eq { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); display: none; gap: 2px; align-items: flex-end; height: 16%; padding: 2px 6px; border-radius: 99px; background: rgba(0,0,0,.45); }
+.photo-av .eq i { width: 3px; border-radius: 2px; background: #fde68a; height: 30%; animation: eqb .5s ease-in-out infinite alternate; }
+.photo-av .eq i:nth-child(2) { animation-delay: .1s; } .photo-av .eq i:nth-child(3) { animation-delay: .2s; } .photo-av .eq i:nth-child(4) { animation-delay: .3s; } .photo-av .eq i:nth-child(5) { animation-delay: .15s; }
+@keyframes eqb { to { height: 100%; } }
+.talking .photo-av .eq { display: flex; }
+.talking .photo-av img { animation: photoTalk .45s ease-in-out infinite alternate; }
+@keyframes photoTalk { from { transform: scale(1.02) translateY(0) rotate(-.4deg); } to { transform: scale(1.045) translateY(-1.5%) rotate(.4deg); } }
+.thinking .photo-av img { transform: scale(1.03) rotate(-2deg); filter: saturate(.9); }
+.nod .photo-av img { animation: photoNod .9s ease-in-out; }
+@keyframes photoNod { 30% { transform: translateY(4%) scale(1.03); } 60% { transform: translateY(-1%); } }
+.happy .photo-av { box-shadow: 0 0 0 4px #fde68a; }
+.concerned .photo-av img { filter: saturate(.85) brightness(.97); }
+.call-face .photo-av { padding: 6px; }
+.call-face .photo-av .eq { height: 9%; bottom: 6%; }
+.tutor-fab .fab-av .photo-av { padding: 2px; }
+.look .photo-av { width: 52px; height: 52px; }
+.sel-ask { position: absolute; z-index: 110; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 5px 14px 5px 5px; border-radius: 99px; border: 0; color: #fff; font-weight: 700; font-size: .88rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2)); box-shadow: 0 10px 30px rgba(79,70,229,.4); animation: dropIn .25s ease-out; }
+.sel-ask .photo-av, .sel-ask .guru-svg { width: 30px; height: 30px; padding: 1px; }
+.chooser { padding: 14px; border-radius: 16px; background: linear-gradient(135deg, var(--primary-soft), var(--surface-2)); display: grid; gap: 10px; text-align: center; }
+.chooser-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choose { border: 2px solid var(--border); background: var(--surface); color: var(--text); border-radius: 16px; padding: 12px 8px; display: grid; justify-items: center; gap: 6px; transition: transform .2s, border-color .2s; }
+.choose:hover { transform: translateY(-3px) perspective(500px) rotateX(6deg); border-color: var(--primary); }
+.choose .photo-av { width: 84px; height: 84px; }
+.choose span { font-size: .75rem; color: var(--muted); line-height: 1.35; }
+.ai-card { padding: 14px; border-radius: 16px; border: 1px dashed var(--primary); background: var(--surface); display: grid; gap: 8px; font-size: .9rem; }
+.ai-card p { margin: 0; }
+.ai-card .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.ai-progress { display: grid; gap: 4px; }
+.ai-progress span { display: block; height: 8px; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--primary), var(--primary-2)); transition: width .3s; }
+.ai-progress small { color: var(--muted); font-size: .75rem; }
+.warnline { color: var(--warn); }
+.tutor-form .send.stop { background: #ef4444; }
+.tutor-head .tutor-avatar .photo-av { padding: 2px; }
+
 /* ---------- Face-to-face call ---------- */
 .call { position: fixed; inset: 0; z-index: 140; display: flex; flex-direction: column; color: #fff;
   background: radial-gradient(ellipse at 50% 30%, #3b2a7a 0%, #141032 55%, #07061a 100%); animation: fadeIn .3s; }

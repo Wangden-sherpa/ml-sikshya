@@ -84,6 +84,7 @@
     lab3d: { en: '3D Lab', ne: '3D ल्याब' },
     datalab: { en: 'Data Lab', ne: 'डाटा ल्याब' },
     tutor: { en: 'AI Tutor', ne: 'AI सहायक' },
+    realworld: { en: 'Real-World', ne: 'वास्तविक संसार', zh: '真实项目' },
   };
 
   // ---------- State ----------
@@ -255,7 +256,7 @@ def _mls_figs():
 
   // ---------- Layout pieces ----------
   function renderTop(route) {
-    const items = [['#/', 'home'], ['#/learn', 'learn'], ['#/projects', 'projects'], ['#/playground', 'playground'], ['#/lab3d', 'lab3d'], ['#/datalab', 'datalab'], ['#/glossary', 'glossary']];
+    const items = [['#/', 'home'], ['#/learn', 'learn'], ['#/projects', 'projects'], ['#/playground', 'playground'], ['#/realworld', 'realworld'], ['#/lab3d', 'lab3d'], ['#/datalab', 'datalab'], ['#/glossary', 'glossary']];
     $('#topnav').innerHTML = items.map(([href, k]) => {
       const active = (k === 'home' && route === '') || (k === 'learn' && route === 'learn') || route === k || (k === 'projects' && route === 'project');
       return `<a href="${href}" class="${active ? 'active' : ''}">${u(k)}</a>`;
@@ -275,6 +276,7 @@ def _mls_figs():
         <a href="#/projects" class="${route.startsWith('project') ? 'active' : ''}">🧪 ${u('projects')}</a>
         <a href="#/playground" class="${route === 'playground' ? 'active' : ''}">⌨️ ${u('playground')}</a>
         <a href="#/glossary" class="${route === 'glossary' ? 'active' : ''}">📖 ${u('glossary')}</a>
+        <a href="#/realworld" class="${route === 'realworld' || route === 'mission' ? 'active' : ''}">🌍 ${u('realworld')} <span class="new-badge">NEW</span></a>
         <a href="#/lab3d" class="${route === 'lab3d' ? 'active' : ''}">🧊 ${u('lab3d')} <span class="new-badge">NEW</span></a>
         <a href="#/datalab" class="${route === 'datalab' ? 'active' : ''}">📊 ${u('datalab')} <span class="new-badge">NEW</span></a>
         <a href="#/" class="open-tutor">🤖 ${u('tutor')} <span class="new-badge">NEW</span></a>

@@ -13,7 +13,7 @@
     openLesson: { en: 'Open the lesson →', ne: 'पाठ खोल्नुहोस् →' },
     homeShowTitle: { en: 'New: explore ML in 3D, with your own data and an AI tutor', ne: 'नयाँ: 3D मा ML, आफ्नै डाटा र AI सहायकसहित' },
     homeShowSub: { en: 'This is a real neural network firing signals — drag it to look around.', ne: 'यो सिग्नल पठाउँदै गरेको वास्तविक न्युरल नेटवर्क हो — तानेर वरिपरि हेर्नुहोस्।' },
-    feat3d: { en: '12 interactive 3D models: loss surfaces, clusters, kernels, CNNs, attention…', ne: '१२ अन्तरक्रियात्मक 3D मोडेल: loss surface, cluster, kernel, CNN, attention…' },
+    feat3d: { en: '17 interactive 3D models: loss surfaces, clusters, kernels, CNNs, attention…', ne: '१७ अन्तरक्रियात्मक 3D मोडेल: loss surface, cluster, kernel, CNN, attention…' },
     featData: { en: 'Upload your own CSV / Excel files — explore, chart, and train models on real data.', ne: 'आफ्नै CSV / Excel फाइल अपलोड गर्नुहोस् — वास्तविक डाटामा अन्वेषण, चार्ट र मोडेल तालिम।' },
     featAI: { en: 'Stuck? The AI tutor explains errors and gives suggestions in English or नेपाली.', ne: 'अड्कनुभयो? AI सहायकले error बुझाउँछ र अंग्रेजी वा नेपालीमा सुझाव दिन्छ।' },
     try: { en: 'Try it', ne: 'प्रयास गर्नुहोस्', zh: '试一试' },
@@ -517,6 +517,212 @@
       gen();
     },
 
+    async tree(s, ctrl) {
+      const { THREE, scene } = s;
+      const N = {
+        root: { p: [0, 5, 0], q: 'petal length < 2.45?' },
+        a: { p: [-3.2, 3.1, -0.8], leaf: 0, n: 50 },
+        b: { p: [3.2, 3.1, 0.8], q: 'petal width < 1.75?' },
+        c: { p: [1.2, 1.2, -0.6], q: 'petal length < 4.95?' },
+        d: { p: [5.2, 1.2, 1.2], leaf: 2, n: 46 },
+        e: { p: [-0.4, -0.7, -1.2], leaf: 1, n: 48 },
+        f: { p: [2.8, -0.7, 0], leaf: 2, n: 6 },
+      };
+      const kids = { root: ['a', 'b'], b: ['c', 'd'], c: ['e', 'f'] };
+      const names = ['setosa', 'versicolor', 'virginica'];
+      Object.entries(N).forEach(([k, v]) => {
+        const leaf = v.leaf !== undefined;
+        const m = new THREE.Mesh(leaf ? new THREE.SphereGeometry(0.45, 28, 18) : new THREE.BoxGeometry(0.9, 0.6, 0.6), new THREE.MeshStandardMaterial({ color: leaf ? PAL[v.leaf] : 0xe2e8f0, emissive: leaf ? PAL[v.leaf] : 0x334155, emissiveIntensity: 0.35, roughness: 0.3 }));
+        m.position.set(...v.p); scene.add(m); v.mesh = m;
+        const lb = label(THREE, leaf ? `${names[v.leaf]} (${v.n})` : v.q, { size: 0.32, color: leaf ? '#fff' : '#c7d2fe', bg: 'rgba(15,23,42,.65)' });
+        lb.position.set(v.p[0], v.p[1] + (leaf ? 0.8 : 0.7), v.p[2]); scene.add(lb);
+      });
+      const pts = [];
+      Object.entries(kids).forEach(([k, [l, r]]) => [l, r].forEach((c) => pts.push(new THREE.Vector3(...N[k].p), new THREE.Vector3(...N[c].p))));
+      scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x94a3b8 })));
+      Object.entries(kids).forEach(([k, [l, r]]) => {
+        const y = label(THREE, t({ en: 'yes', ne: 'हो', zh: '是' }), { size: 0.26, color: '#86efac' }), n = label(THREE, t({ en: 'no', ne: 'होइन', zh: '否' }), { size: 0.26, color: '#fca5a5' });
+        y.position.set(...N[k].p.map((v, i) => (v + N[l].p[i]) / 2)); n.position.set(...N[k].p.map((v, i) => (v + N[r].p[i]) / 2)); scene.add(y, n);
+      });
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.18, 18, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: CACC, emissiveIntensity: 0.8 }));
+      scene.add(ball);
+      const paths = [['root', 'a'], ['root', 'b', 'c', 'e'], ['root', 'b', 'c', 'f'], ['root', 'b', 'd']];
+      let path = paths[1], seg = 0, k = 0;
+      const status = h('<span class="v3-status"></span>');
+      s.onFrame((dt) => {
+        k += dt * 1.1;
+        if (k >= 1) { k = 0; seg++; if (seg >= path.length - 1) { const leaf = N[path[path.length - 1]]; status.innerHTML = `🌸 → <b>${names[leaf.leaf]}</b>`; leaf.mesh.scale.setScalar(1.35); path = paths[Math.floor(Math.random() * paths.length)]; seg = 0; } }
+        const a = N[path[seg]].p, b = N[path[Math.min(seg + 1, path.length - 1)]].p;
+        ball.position.set(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k + 0.1, a[2] + (b[2] - a[2]) * k);
+        Object.values(N).forEach((v) => v.mesh.scale.lerp(new THREE.Vector3(1, 1, 1), 0.05));
+      });
+      ctrl.innerHTML = `<span class="v3-status">${t({ en: 'A flower falls down the tree, answering one yes/no question at each box, until it reaches a leaf — the prediction.', ne: 'फूल ट्रीबाट तल झर्छ, हरेक बाकसमा एउटा हो/होइन प्रश्नको उत्तर दिँदै, पात (अनुमान) मा नपुगुन्जेल।', zh: '一朵花沿着树往下落，在每个方框回答一个“是/否”问题，直到到达叶子——也就是预测结果。' })}</span>`;
+      ctrl.appendChild(status);
+    },
+
+    async gaussians(s, ctrl) {
+      const { THREE, scene } = s;
+      axes(s, 3.4, ['x₁', 'P(x | class)', 'x₂']);
+      const mus = [[-1.6, -1.2], [1.6, -0.8], [0, 1.8]];
+      let sig = 0.8;
+      const g = new THREE.PlaneGeometry(7, 7, 90, 90); g.rotateX(-Math.PI / 2);
+      g.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 3), 3));
+      scene.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.45, transparent: true, opacity: 0.9 })));
+      const cols = PAL.slice(0, 3).map((c) => new THREE.Color(c));
+      const upd = () => {
+        const p = g.attributes.position, c = g.attributes.color;
+        for (let i = 0; i < p.count; i++) {
+          const x = p.getX(i), z = p.getZ(i);
+          const ds = mus.map(([mx, mz]) => Math.exp(-((x - mx) ** 2 + (z - mz) ** 2) / (2 * sig * sig)));
+          const best = ds.indexOf(Math.max(...ds)), tot = ds.reduce((a, b) => a + b, 0);
+          p.setY(i, tot * 2.2);
+          const col = cols[best].clone().lerp(new THREE.Color(0x0f172a), 1 - Math.min(1, ds[best] * 1.4 + 0.15));
+          c.setXYZ(i, col.r, col.g, col.b);
+        }
+        p.needsUpdate = true; c.needsUpdate = true; g.computeVertexNormals();
+      };
+      const r = mulberry(31), P = [], Cc = [];
+      mus.forEach(([mx, mz], j) => { for (let i = 0; i < 45; i++) { P.push([mx + randn(r) * 0.7, 0.03, mz + randn(r) * 0.7]); Cc.push(PAL[j]); } });
+      points(s, P, Cc, 0.18);
+      upd();
+      ctrl.innerHTML = `<label>σ <input type="range" min="0.35" max="1.6" step="0.05" value="0.8"></label><span class="v3-status">${t({ en: 'Each class is a probability mountain. Naive Bayes picks the class whose mountain is highest at a point — the colours show the decision regions.', ne: 'हरेक वर्ग सम्भाव्यताको पहाड हो। Naive Bayes ले कुनै बिन्दुमा सबैभन्दा अग्लो पहाड भएको वर्ग छान्छ — रङले निर्णय क्षेत्र देखाउँछ।', zh: '每个类别都是一座概率之山。朴素贝叶斯在某一点选择山最高的那个类别——颜色显示了决策区域。' })}</span>`;
+      ctrl.querySelector('input').oninput = (e) => { sig = +e.target.value; upd(); };
+    },
+
+    async dbscan(s, ctrl) {
+      const { THREE } = s;
+      axes(s, 3.4, []);
+      const r = mulberry(8), P = [];
+      for (let i = 0; i < 130; i++) { const a = Math.PI * r(); P.push([Math.cos(a) * 2 - 1 + randn(r) * 0.12, 1.5 + randn(r) * 0.15, Math.sin(a) * 2 - 0.8 + randn(r) * 0.12]); }
+      for (let i = 0; i < 130; i++) { const a = Math.PI * r(); P.push([1 - Math.cos(a) * 2 + randn(r) * 0.12, 1.5 + randn(r) * 0.15, 0.8 - Math.sin(a) * 2 + randn(r) * 0.12]); }
+      for (let i = 0; i < 70; i++) P.push([randn(r) * 0.35, 3.3 + randn(r) * 0.3, randn(r) * 0.35]);
+      for (let i = 0; i < 25; i++) P.push([(r() - 0.5) * 6.5, r() * 4.5, (r() - 0.5) * 6.5]);
+      const pt = points(s, P, P.map(() => 0x64748b), 0.17);
+      let eps = 0.5, order = [], lab = [], step = 0, acc = 0;
+      const status = h('<span class="v3-status"></span>');
+      const d2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+      const run = () => {
+        const n = P.length, nb = P.map((p) => P.map((q, j) => (d2(p, q) <= eps * eps ? j : -1)).filter((j) => j >= 0));
+        lab = new Array(n).fill(-2); order = []; let c = -1;
+        for (let i = 0; i < n; i++) {
+          if (lab[i] !== -2) continue;
+          if (nb[i].length < 5) { lab[i] = -1; continue; }
+          c++; lab[i] = c; order.push(i); const q = [...nb[i]];
+          while (q.length) { const j = q.shift(); if (lab[j] === -1) { lab[j] = c; order.push(j); } if (lab[j] !== -2) continue; lab[j] = c; order.push(j); if (nb[j].length >= 5) q.push(...nb[j]); }
+        }
+        P.forEach((_, i) => setColor(pt, i, 0x64748b, THREE)); pt.geometry.attributes.color.needsUpdate = true;
+        step = 0; status.textContent = '…';
+        status.dataset.k = String(c + 1);
+      };
+      s.onFrame((dt) => {
+        acc += dt; if (acc < 0.02 || step > order.length) return; acc = 0;
+        for (let k = 0; k < 4 && step < order.length; k++, step++) { const i = order[step]; setColor(pt, i, PAL[lab[i] % PAL.length], THREE); }
+        if (step === order.length) { P.forEach((_, i) => { if (lab[i] === -1) setColor(pt, i, 0xff2d55, THREE); }); step++; status.innerHTML = `${t({ en: 'Clusters found', ne: 'भेटिएका क्लस्टर', zh: '发现的簇' })}: <b>${status.dataset.k}</b> · ${t({ en: 'noise (red)', ne: 'noise (रातो)', zh: '噪声（红色）' })}: <b>${lab.filter((x) => x === -1).length}</b>`; }
+        pt.geometry.attributes.color.needsUpdate = true;
+      });
+      ctrl.innerHTML = `<label>eps <input type="range" min="0.25" max="1" step="0.05" value="0.5"></label>${btn('▶ ' + t({ en: 'Run DBSCAN again', ne: 'फेरि DBSCAN चलाउनुहोस्', zh: '再次运行 DBSCAN' }), 'primary')}`;
+      ctrl.appendChild(status);
+      ctrl.querySelector('input').oninput = (e) => { eps = +e.target.value; run(); };
+      ctrl.querySelector('.v3-btn').onclick = run;
+      run();
+    },
+
+    async embeddings(s, ctrl) {
+      const { THREE, scene } = s;
+      const groups = [
+        { c: [-2.6, 2.6, -1.5], words: ['dog', 'cat', 'कुकुर', '猫', 'horse', '马'] },
+        { c: [2.5, 2.9, -1.2], words: ['momo', 'rice', 'दाल भात', '米饭', 'noodles', '面条'] },
+        { c: [-1.8, 0.7, 2.4], words: ['Python', 'computer', 'कम्प्युटर', '电脑', 'AI', '数据'] },
+        { c: [2.4, 0.9, 2.2], words: ['Nepal', 'China', 'नेपाल', '中国', 'India', 'Japan'] },
+      ];
+      const r = mulberry(12);
+      groups.forEach((gp, gi) => {
+        gp.words.forEach((w) => {
+          const p = gp.c.map((v) => v + (r() - 0.5) * 1.6);
+          const m = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), new THREE.MeshStandardMaterial({ color: PAL[gi], emissive: PAL[gi], emissiveIntensity: 0.6 }));
+          m.position.set(...p); scene.add(m);
+          const lb = label(THREE, w, { size: 0.34, color: '#' + new THREE.Color(PAL[gi]).getHexString() }); lb.position.set(p[0], p[1] + 0.3, p[2]); scene.add(lb);
+        });
+      });
+      const K = { king: [-0.6, 4.6, 0.2], queen: [0.9, 4.6, 1.0], man: [-0.9, 3.4, -0.4], woman: [0.6, 3.4, 0.4] };
+      const arrows = new THREE.Group(); arrows.visible = false; scene.add(arrows);
+      Object.entries(K).forEach(([w, p]) => { const lb = label(THREE, w, { size: 0.36, color: '#fde68a' }); lb.position.set(p[0], p[1] + 0.3, p[2]); scene.add(lb); const m = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), new THREE.MeshStandardMaterial({ color: 0xfde68a, emissive: 0xfde68a, emissiveIntensity: 0.6 })); m.position.set(...p); scene.add(m); });
+      const arrow = (a, b, col) => { const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A); arrows.add(new THREE.ArrowHelper(d.clone().normalize(), A, d.length(), col, 0.22, 0.12)); };
+      arrow(K.man, K.woman, CACC); arrow(K.king, K.queen, CACC); arrow(K.man, K.king, 0x94a3b8); arrow(K.woman, K.queen, 0x94a3b8);
+      ctrl.innerHTML = `${btn('➗ ' + t({ en: 'Show: king − man + woman ≈ queen', ne: 'देखाउनुहोस्: king − man + woman ≈ queen', zh: '演示：king − man + woman ≈ queen' }), 'primary')}<span class="v3-status">${t({ en: 'Words become points. Words with similar meaning — even in different languages — sit close together. Directions carry meaning too!', ne: 'शब्दहरू बिन्दु बन्छन्। मिल्दो अर्थका शब्द — फरक भाषामा भए पनि — नजिकै बस्छन्। दिशाले पनि अर्थ बोक्छ!', zh: '词语变成了点。意思相近的词——即使语言不同——会挨得很近。方向也带有含义！' })}</span>`;
+      ctrl.querySelector('.v3-btn').onclick = () => { arrows.visible = !arrows.visible; };
+    },
+
+    async dartboard(s, ctrl) {
+      const { THREE, scene } = s;
+      const boards = [
+        { p: [-2.4, 3.3, 0], bias: 0, vr: 0.12, n: { en: 'Low bias · low variance ✅', ne: 'कम bias · कम variance ✅', zh: '低偏差 · 低方差 ✅' } },
+        { p: [2.4, 3.3, 0], bias: 0, vr: 0.55, n: { en: 'Low bias · high variance (overfit)', ne: 'कम bias · उच्च variance (overfit)', zh: '低偏差 · 高方差（过拟合）' } },
+        { p: [-2.4, 0.4, 0], bias: 0.75, vr: 0.12, n: { en: 'High bias · low variance (underfit)', ne: 'उच्च bias · कम variance (underfit)', zh: '高偏差 · 低方差（欠拟合）' } },
+        { p: [2.4, 0.4, 0], bias: 0.75, vr: 0.55, n: { en: 'High bias · high variance ❌', ne: 'उच्च bias · उच्च variance ❌', zh: '高偏差 · 高方差 ❌' } },
+      ];
+      const darts = [];
+      boards.forEach((b) => {
+        [1.2, 0.85, 0.5, 0.18].forEach((rad, i) => { const m = new THREE.Mesh(new THREE.CircleGeometry(rad, 48), new THREE.MeshStandardMaterial({ color: i === 3 ? 0xef4444 : i % 2 ? 0xf8fafc : 0x1e293b, side: THREE.DoubleSide })); m.position.set(b.p[0], b.p[1], b.p[2] + i * 0.002); scene.add(m); });
+        const lb = label(THREE, t(b.n), { size: 0.3, bg: 'rgba(15,23,42,.7)' }); lb.position.set(b.p[0], b.p[1] - 1.5, 0.1); scene.add(lb);
+      });
+      const coneG = new THREE.ConeGeometry(0.05, 0.4, 8);
+      const throwAll = () => {
+        darts.forEach((d) => scene.remove(d.m)); darts.length = 0;
+        const r = mulberry(Math.floor(Math.random() * 1e6));
+        boards.forEach((b) => { const ang = r() * Math.PI * 2; for (let i = 0; i < 8; i++) { const x = b.p[0] + Math.cos(ang) * b.bias + randn(r) * b.vr * 0.6, y = b.p[1] + Math.sin(ang) * b.bias + randn(r) * b.vr * 0.6; const m = new THREE.Mesh(coneG, new THREE.MeshStandardMaterial({ color: CACC, emissive: CACC, emissiveIntensity: 0.5 })); m.rotation.x = -Math.PI / 2; m.position.set(x, y, 4); scene.add(m); darts.push({ m, z: 0.2, delay: i * 0.12 }); } });
+      };
+      s.onFrame((dt) => darts.forEach((d) => { if (d.delay > 0) { d.delay -= dt; return; } d.m.position.z += (d.z - d.m.position.z) * 0.15; }));
+      ctrl.innerHTML = `${btn('🎯 ' + t({ en: 'Throw again (train on new data)', ne: 'फेरि हान्नुहोस् (नयाँ डाटामा तालिम)', zh: '再投一次（在新数据上训练）' }), 'primary')}<span class="v3-status">${t({ en: 'Each dart = a model trained on a different sample. Bias = how far from the centre on average; variance = how scattered.', ne: 'हरेक dart = फरक नमुनामा तालिम पाएको मोडेल। Bias = औसतमा केन्द्रबाट कति टाढा; variance = कति छरिएको।', zh: '每支飞镖 = 在不同样本上训练出的一个模型。偏差 = 平均离靶心多远；方差 = 有多分散。' })}</span>`;
+      ctrl.querySelector('.v3-btn').onclick = throwAll;
+      throwAll();
+    },
+
+    async backprop(s, ctrl) {
+      const { THREE, scene } = s;
+      const layers = [3, 5, 5, 2], nodes = [];
+      layers.forEach((n, li) => {
+        const arr = []; for (let i = 0; i < n; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.26, 24, 16), new THREE.MeshStandardMaterial({ color: 0x818cf8, emissive: 0x6366f1, emissiveIntensity: 0.3 })); m.position.set((li - 1.5) * 2.8, (i - (n - 1) / 2) * 1.05 + 2.2, 0); scene.add(m); arr.push(m); }
+        nodes.push(arr);
+      });
+      const edges = [];
+      for (let l = 0; l < layers.length - 1; l++) nodes[l].forEach((a) => nodes[l + 1].forEach((b) => {
+        const g = new THREE.BufferGeometry().setFromPoints([a.position, b.position]);
+        const line = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.35 })); scene.add(line); edges.push({ a, b, l, line, w: Math.random() });
+      }));
+      const lossLb = label(THREE, 'loss', { size: 0.4, color: '#fca5a5' }); lossLb.position.set(6, 2.2, 0); scene.add(lossLb);
+      const pg = new THREE.SphereGeometry(0.08, 10, 8), fm = new THREE.MeshBasicMaterial({ color: CACC }), bm = new THREE.MeshBasicMaterial({ color: 0xff4d6d });
+      let phase = 'fwd', layer = 0, k = 0, epoch = 0, loss = 2.3, dropout = false, dropped = new Set();
+      let pulses = [];
+      const status = h('<span class="v3-status"></span>');
+      const spawn = () => {
+        pulses.forEach((p) => scene.remove(p.m)); pulses = [];
+        const es = edges.filter((e) => (phase === 'fwd' ? e.l === layer : e.l === layer) && !dropped.has(e.a) && !dropped.has(e.b));
+        es.forEach((e) => { const m = new THREE.Mesh(pg, phase === 'fwd' ? fm : bm); scene.add(m); pulses.push({ m, e }); });
+      };
+      const newEpoch = () => {
+        dropped = new Set(); nodes.forEach((arr, li) => arr.forEach((n) => { const off = dropout && li > 0 && li < layers.length - 1 && Math.random() < 0.35; if (off) dropped.add(n); n.material.color.set(off ? 0x334155 : 0x818cf8); n.material.emissiveIntensity = off ? 0 : 0.3; }));
+        phase = 'fwd'; layer = 0; k = 0; spawn();
+      };
+      s.onFrame((dt) => {
+        k += dt * 1.4;
+        pulses.forEach((p) => { const [from, to] = phase === 'fwd' ? [p.e.a, p.e.b] : [p.e.b, p.e.a]; p.m.position.lerpVectors(from.position, to.position, Math.min(k, 1)); });
+        if (k < 1) return;
+        k = 0;
+        if (phase === 'fwd') { layer++; if (layer >= layers.length - 1) { phase = 'bwd'; layer = layers.length - 2; } }
+        else {
+          edges.filter((e) => e.l === layer && !dropped.has(e.a) && !dropped.has(e.b)).forEach((e) => { e.w = Math.min(1, e.w + (Math.random() - 0.3) * 0.25); e.line.material.color.copy(heat(THREE, e.w)); e.line.material.opacity = 0.25 + e.w * 0.6; });
+          layer--;
+          if (layer < 0) { epoch++; loss = Math.max(0.05, loss * 0.82 + (Math.random() - 0.5) * 0.05); status.innerHTML = `${t({ en: 'Epoch', ne: 'Epoch', zh: '轮次' })} <b>${epoch}</b> · loss <b>${loss.toFixed(3)}</b>`; newEpoch(); return; }
+        }
+        spawn();
+      });
+      ctrl.innerHTML = `<label class="chk"><input type="checkbox" class="dp"> Dropout</label><span class="v3-status">${t({ en: 'Yellow = forward pass (predict). Red = backward pass (gradients flow back and the weights change colour). Turn on dropout to see neurons randomly switched off.', ne: 'पहेँलो = forward pass (अनुमान)। रातो = backward pass (gradient पछाडि बग्छ र weight को रङ बदलिन्छ)। Dropout सुरु गरेर न्युरोन random बन्द भएको हेर्नुहोस्।', zh: '黄色 = 前向传播（预测）。红色 = 反向传播（梯度向回流动，权重随之变色）。打开 dropout，可以看到神经元被随机关闭。' })}</span>`;
+      ctrl.appendChild(status);
+      ctrl.querySelector('.dp').onchange = (e) => { dropout = e.target.checked; };
+      newEpoch();
+    },
+
     async scatter(s, ctrl, opts) {
       const { THREE } = s;
       const pts = opts.points || [];
@@ -546,6 +752,12 @@
     pca: { icon: '📉', lessons: ['pca'], title: { en: 'PCA: finding the best directions', ne: 'PCA: उत्तम दिशा खोज्ने' }, desc: { en: 'Arrows show the principal components. Project the cloud from 3-D to 2-D and see how little is lost.', ne: 'तीरले principal component देखाउँछ। बादललाई 3-D बाट 2-D मा प्रक्षेपण गरेर कति थोरै हराउँछ हेर्नुहोस्।' } },
     cnn: { icon: '🖼️', lessons: ['cnn'], cam: [1, 4, 10], target: [0, 1.5, 0], title: { en: 'Inside a CNN', ne: 'CNN भित्र' }, desc: { en: 'An image of a "7" flows through convolution and pooling layers to the answer.', ne: '"७" को फोटो convolution र pooling layer हुँदै उत्तरसम्म पुग्छ।' } },
     attention: { icon: '🔦', lessons: ['transformers'], cam: [6, 7, 7], title: { en: 'Transformer attention', ne: 'ट्रान्सफर्मर attention' }, desc: { en: 'Each bar shows how much one word attends to another. Different heads learn different patterns.', ne: 'हरेक बारले एउटा शब्दले अर्कोमा कति ध्यान दिन्छ देखाउँछ। फरक head ले फरक ढाँचा सिक्छन्।' } },
+    tree: { icon: '🌳', lessons: ['decision-trees'], cam: [2, 3.5, 11], target: [1, 2, 0], title: { en: 'A decision tree in action', ne: 'काम गर्दै डिसिजन ट्री', zh: '决策树实战' }, desc: { en: 'Watch a flower fall through the tree — one yes/no question per box — until it lands on a prediction.', ne: 'फूल ट्रीबाट झरेको हेर्नुहोस् — हरेक बाकसमा एउटा हो/होइन प्रश्न — अनुमानमा नपुगुन्जेल।', zh: '看一朵花穿过决策树——每个方框一个“是/否”问题——直到得到预测。' } },
+    gaussians: { icon: '🏔️', lessons: ['naive-bayes'], cam: [7, 7, 8], title: { en: 'Naive Bayes probability mountains', ne: 'Naive Bayes सम्भाव्यताका पहाड', zh: '朴素贝叶斯概率之山' }, desc: { en: 'Each class is a probability mountain; the tallest mountain at a point wins. Change σ to reshape them.', ne: 'हरेक वर्ग सम्भाव्यताको पहाड हो; कुनै बिन्दुमा सबैभन्दा अग्लो पहाड जित्छ। σ बदलेर आकार परिवर्तन गर्नुहोस्।', zh: '每个类别是一座概率之山；某一点上最高的山获胜。调整 σ 改变山的形状。' } },
+    dbscan: { icon: '🌌', lessons: ['anomaly-detection'], title: { en: 'DBSCAN spreading through dense regions', ne: 'घना क्षेत्रमा फैलिँदै DBSCAN', zh: 'DBSCAN 在密集区域中扩散' }, desc: { en: 'Clusters grow from dense core points like ink spreading; lonely points stay red as noise.', ne: 'क्लस्टरहरू घना केन्द्र बिन्दुबाट मसी फैलिएझैं बढ्छन्; एक्ला बिन्दु रातो noise रहन्छन्।', zh: '簇像墨水一样从密集的核心点扩散开来；孤立的点保持红色，成为噪声。' } },
+    embeddings: { icon: '🔤', lessons: ['transformers'], cam: [0, 3, 10], target: [0, 2.2, 0], title: { en: 'Word embedding space', ne: 'शब्द embedding स्पेस', zh: '词嵌入空间' }, desc: { en: 'Words in English, नेपाली and 中文 become points; similar meanings cluster together, and directions carry meaning.', ne: 'अंग्रेजी, नेपाली र 中文 का शब्द बिन्दु बन्छन्; मिल्दो अर्थ सँगै हुन्छन्, र दिशाले अर्थ बोक्छ।', zh: '英文、尼泊尔文和中文的词变成点；含义相近的聚在一起，方向也有含义。' } },
+    dartboard: { icon: '🎯', lessons: ['overfitting'], cam: [0, 2, 10], target: [0, 1.8, 0], autoRotate: false, title: { en: 'Bias vs variance dartboards', ne: 'Bias बनाम variance डार्टबोर्ड', zh: '偏差与方差飞镖靶' }, desc: { en: 'Four kinds of models throwing darts: accurate, scattered (overfit), consistently off (underfit), or both.', ne: 'चार प्रकारका मोडेलले dart हान्छन्: सही, छरिएको (overfit), लगातार चुक्ने (underfit), वा दुवै।', zh: '四种模型在投飞镖：准确的、分散的（过拟合）、一直偏的（欠拟合），或两者都有。' } },
+    backprop: { icon: '🔁', lessons: ['training-deep'], cam: [0, 3, 12], target: [0, 2.2, 0], title: { en: 'Backpropagation & dropout', ne: 'ब्याकप्रोपागेसन र dropout', zh: '反向传播与 Dropout' }, desc: { en: 'Forward pass, loss, then gradients flow backwards and update the weights — epoch after epoch.', ne: 'Forward pass, loss, अनि gradient पछाडि बग्छ र weight update हुन्छ — epoch पछि epoch।', zh: '前向传播、计算损失，然后梯度反向流动并更新权重——一轮接一轮。' } },
   };
 
   function addStars(s) {
@@ -569,7 +781,7 @@
     el.querySelector('.th').onchange = (e) => { themeKey = e.target.value; MLS.store.set('3d-theme', themeKey); mount(el, name, opts); };
     el.querySelector('.bgsel').onchange = (e) => { bgKey = e.target.value; MLS.store.set('3d-bg', bgKey); mount(el, name, opts); };
     try {
-      const s = await stage(canvas, { height: opts.height || 420, cam: opts.cam || info.cam, target: opts.target || info.target, autoRotate: opts.autoRotate });
+      const s = await stage(canvas, { height: opts.height || 420, cam: opts.cam || info.cam, target: opts.target || info.target, autoRotate: opts.autoRotate !== undefined ? opts.autoRotate : info.autoRotate });
       el._stage = s;
       if (!document.body.contains(el)) { s.dispose(); return; }
       const FOG = { night: 0x0b1020, space: 0x000000, dusk: 0x2a1033, sea: 0x031c2e, studio: 0x2b2f36 };
