@@ -227,34 +227,38 @@ def _mls_sample(kind):
 
   // ---------- Suggestions (rule-based, bilingual) ----------
   function suggestions(P) {
-    const out = [], add = (en, ne, code) => out.push({ en, ne, code });
+    const out = [], add = (en, ne, zh, code) => out.push({ en, ne, zh, code });
     const missCols = P.columns.filter((c) => c.missing > 0);
     const totalMiss = P.columns.reduce((a, c) => a + c.missing, 0);
-    if (!totalMiss) add('No missing values — great, the data is complete.', 'कुनै मान हराएको छैन — उत्कृष्ट, डाटा पूरा छ।');
+    if (!totalMiss) add('No missing values — great, the data is complete.', 'कुनै मान हराएको छैन — उत्कृष्ट, डाटा पूरा छ।', '没有缺失值——很好，数据是完整的。');
     missCols.forEach((c) => {
-      const pct = (c.missing / P.rows) * 100;
-      if (pct > 40) add(`<b>${esc(c.name)}</b> is ${pct.toFixed(0)}% missing — consider dropping this column.`, `<b>${esc(c.name)}</b> ${pct.toFixed(0)}% हराएको छ — यो column हटाउने विचार गर्नुहोस्।`, `df = df.drop(columns=[${pyStr(c.name)}])`);
-      else add(`<b>${esc(c.name)}</b> has ${c.missing} missing values (${pct.toFixed(1)}%) — fill them with the ${c.kind === 'num' ? 'median' : 'most frequent value'}.`, `<b>${esc(c.name)}</b> मा ${c.missing} मान हराएका छन् (${pct.toFixed(1)}%) — ${c.kind === 'num' ? 'median' : 'सबैभन्दा धेरै आउने मान'} ले भर्नुहोस्।`,
+      const pct = (c.missing / P.rows) * 100, n = `<b>${esc(c.name)}</b>`;
+      if (pct > 40) add(`${n} is ${pct.toFixed(0)}% missing — consider dropping this column.`, `${n} ${pct.toFixed(0)}% हराएको छ — यो column हटाउने विचार गर्नुहोस्।`, `${n} 缺失了 ${pct.toFixed(0)}%——可以考虑删除这一列。`, `df = df.drop(columns=[${pyStr(c.name)}])`);
+      else add(`${n} has ${c.missing} missing values (${pct.toFixed(1)}%) — fill them with the ${c.kind === 'num' ? 'median' : 'most frequent value'}.`, `${n} मा ${c.missing} मान हराएका छन् (${pct.toFixed(1)}%) — ${c.kind === 'num' ? 'median' : 'सबैभन्दा धेरै आउने मान'} ले भर्नुहोस्।`, `${n} 有 ${c.missing} 个缺失值（${pct.toFixed(1)}%）——用${c.kind === 'num' ? '中位数' : '最常见的值'}填充。`,
         c.kind === 'num' ? `df[${pyStr(c.name)}] = df[${pyStr(c.name)}].fillna(df[${pyStr(c.name)}].median())` : `df[${pyStr(c.name)}] = df[${pyStr(c.name)}].fillna(df[${pyStr(c.name)}].mode()[0])`);
     });
-    if (P.dup) add(`There are <b>${P.dup}</b> duplicate rows — remove them before training.`, `<b>${P.dup}</b> दोहोरिएका row छन् — तालिम अघि हटाउनुहोस्।`, 'df = df.drop_duplicates()');
+    if (P.dup) add(`There are <b>${P.dup}</b> duplicate rows — remove them before training.`, `<b>${P.dup}</b> दोहोरिएका row छन् — तालिम अघि हटाउनुहोस्।`, `有 <b>${P.dup}</b> 行重复数据——训练前请删除。`, 'df = df.drop_duplicates()');
     P.columns.forEach((c) => {
+      const n = `<b>${esc(c.name)}</b>`;
       const idLike = /(^|[_\s])(id|uuid)$/i.test(c.name) || (c.unique === P.rows && P.rows > 20 && c.kind === 'cat');
-      if (idLike) add(`<b>${esc(c.name)}</b> has a different value in every row (like an ID or a name) — drop it; it can't help predictions.`, `<b>${esc(c.name)}</b> हरेक row मा फरक छ (ID वा नाम जस्तो) — हटाउनुहोस्; यसले अनुमानमा मद्दत गर्दैन।`, `df = df.drop(columns=[${pyStr(c.name)}])`);
-      else if (c.unique <= 1) add(`<b>${esc(c.name)}</b> has only one value — it carries no information, drop it.`, `<b>${esc(c.name)}</b> मा एउटै मान छ — कुनै जानकारी छैन, हटाउनुहोस्।`, `df = df.drop(columns=[${pyStr(c.name)}])`);
-      else if (c.kind === 'numtext') add(`<b>${esc(c.name)}</b> contains numbers stored as text — convert it to numbers.`, `<b>${esc(c.name)}</b> मा text को रूपमा राखिएका संख्या छन् — संख्यामा बदल्नुहोस्।`, `df[${pyStr(c.name)}] = pd.to_numeric(df[${pyStr(c.name)}].astype(str).str.replace(",", ""), errors="coerce")`);
-      else if (c.kind === 'date') add(`<b>${esc(c.name)}</b> looks like a date — convert it and extract year / month / weekday features.`, `<b>${esc(c.name)}</b> मिति जस्तो देखिन्छ — रूपान्तरण गरेर वर्ष / महिना / बार feature निकाल्नुहोस्।`, `df[${pyStr(c.name)}] = pd.to_datetime(df[${pyStr(c.name)}], errors="coerce")\ndf[${pyStr(c.name + '_month')}] = df[${pyStr(c.name)}].dt.month`);
-      else if (c.kind === 'cat' && c.unique > 50) add(`<b>${esc(c.name)}</b> is text with ${c.unique} different values — too many for one-hot encoding; group rare values or drop it.`, `<b>${esc(c.name)}</b> मा ${c.unique} फरक text मान छन् — one-hot का लागि धेरै; दुर्लभ मान समूह बनाउनुहोस् वा हटाउनुहोस्।`);
-      else if (c.kind === 'cat') add(`<b>${esc(c.name)}</b> is a category (${c.unique} values) — use one-hot encoding before training.`, `<b>${esc(c.name)}</b> श्रेणी हो (${c.unique} मान) — तालिम अघि one-hot encoding प्रयोग गर्नुहोस्।`, `df = pd.get_dummies(df, columns=[${pyStr(c.name)}], dtype=int)`);
-      else if (c.kind === 'num' && Math.abs(c.skew || 0) > 2 && (c.min ?? 0) >= 0) add(`<b>${esc(c.name)}</b> is very skewed (skew ${c.skew.toFixed(1)}) — a log transform often helps.`, `<b>${esc(c.name)}</b> धेरै असमान छ (skew ${c.skew.toFixed(1)}) — log रूपान्तरणले प्रायः मद्दत गर्छ।`, `df[${pyStr(c.name + '_log')}] = np.log1p(df[${pyStr(c.name)}])`);
+      if (idLike) add(`${n} has a different value in every row (like an ID or a name) — drop it; it can't help predictions.`, `${n} हरेक row मा फरक छ (ID वा नाम जस्तो) — हटाउनुहोस्; यसले अनुमानमा मद्दत गर्दैन।`, `${n} 每一行的值都不同（像编号或姓名）——删除它，它对预测没有帮助。`, `df = df.drop(columns=[${pyStr(c.name)}])`);
+      else if (c.unique <= 1) add(`${n} has only one value — it carries no information, drop it.`, `${n} मा एउटै मान छ — कुनै जानकारी छैन, हटाउनुहोस्।`, `${n} 只有一个值——没有信息量，删除它。`, `df = df.drop(columns=[${pyStr(c.name)}])`);
+      else if (c.kind === 'numtext') add(`${n} contains numbers stored as text — convert it to numbers.`, `${n} मा text को रूपमा राखिएका संख्या छन् — संख्यामा बदल्नुहोस्।`, `${n} 里的数字是以文本形式保存的——把它转换成数字。`, `df[${pyStr(c.name)}] = pd.to_numeric(df[${pyStr(c.name)}].astype(str).str.replace(",", ""), errors="coerce")`);
+      else if (c.kind === 'date') add(`${n} looks like a date — convert it and extract year / month / weekday features.`, `${n} मिति जस्तो देखिन्छ — रूपान्तरण गरेर वर्ष / महिना / बार feature निकाल्नुहोस्।`, `${n} 看起来是日期——转换后提取年 / 月 / 星期等特征。`, `df[${pyStr(c.name)}] = pd.to_datetime(df[${pyStr(c.name)}], errors="coerce")\ndf[${pyStr(c.name + '_month')}] = df[${pyStr(c.name)}].dt.month`);
+      else if (c.kind === 'cat' && c.unique > 50) add(`${n} is text with ${c.unique} different values — too many for one-hot encoding; group rare values or drop it.`, `${n} मा ${c.unique} फरक text मान छन् — one-hot का लागि धेरै; दुर्लभ मान समूह बनाउनुहोस् वा हटाउनुहोस्।`, `${n} 有 ${c.unique} 种不同的文本值——太多，不适合独热编码；把少见的值合并或删除这一列。`);
+      else if (c.kind === 'cat') add(`${n} is a category (${c.unique} values) — use one-hot encoding before training.`, `${n} श्रेणी हो (${c.unique} मान) — तालिम अघि one-hot encoding प्रयोग गर्नुहोस्।`, `${n} 是类别特征（${c.unique} 个值）——训练前使用独热编码（one-hot）。`, `df = pd.get_dummies(df, columns=[${pyStr(c.name)}], dtype=int)`);
+      else if (c.kind === 'num' && Math.abs(c.skew || 0) > 2 && (c.min ?? 0) >= 0) add(`${n} is very skewed (skew ${c.skew.toFixed(1)}) — a log transform often helps.`, `${n} धेरै असमान छ (skew ${c.skew.toFixed(1)}) — log रूपान्तरणले प्रायः मद्दत गर्छ।`, `${n} 分布非常偏斜（偏度 ${c.skew.toFixed(1)}）——对数变换通常有帮助。`, `df[${pyStr(c.name + '_log')}] = np.log1p(df[${pyStr(c.name)}])`);
     });
-    P.corr.forEach(([a, b, v]) => add(`<b>${esc(a)}</b> and <b>${esc(b)}</b> are almost identical (correlation ${v}) — you can keep just one.`, `<b>${esc(a)}</b> र <b>${esc(b)}</b> लगभग उस्तै छन् (correlation ${v}) — एउटा मात्र राखे पुग्छ।`));
+    P.corr.forEach(([a, b, v]) => add(`<b>${esc(a)}</b> and <b>${esc(b)}</b> are almost identical (correlation ${v}) — you can keep just one.`, `<b>${esc(a)}</b> र <b>${esc(b)}</b> लगभग उस्तै छन् (correlation ${v}) — एउटा मात्र राखे पुग्छ।`, `<b>${esc(a)}</b> 和 <b>${esc(b)}</b> 几乎一样（相关系数 ${v}）——只保留一个即可。`));
     const numCount = P.columns.filter((c) => c.kind === 'num').length;
-    if (numCount > 1) add('Numeric columns are on different scales — use StandardScaler for KNN, SVM, logistic regression and neural networks (trees don\'t need it).', 'संख्यात्मक column फरक scale मा छन् — KNN, SVM, logistic regression र न्युरल नेटवर्कका लागि StandardScaler प्रयोग गर्नुहोस् (ट्रीलाई चाहिँदैन)।');
-    if (P.rows < 300) add(`Only ${P.rows} rows — use cross-validation and simple models to avoid overfitting.`, `${P.rows} row मात्र — overfitting बाट बच्न cross-validation र सरल मोडेल प्रयोग गर्नुहोस्।`);
-    if (P.rows > 50000) add(`${P.rows.toLocaleString()} rows is big for a browser — the quick model samples 20,000 rows to stay fast.`, `${P.rows.toLocaleString()} row ब्राउजरका लागि ठूलो हो — छिटो होस् भनेर quick model ले २०,००० row नमुना लिन्छ।`);
+    if (numCount > 1) add('Numeric columns are on different scales — use StandardScaler for KNN, SVM, logistic regression and neural networks (trees don\'t need it).', 'संख्यात्मक column फरक scale मा छन् — KNN, SVM, logistic regression र न्युरल नेटवर्कका लागि StandardScaler प्रयोग गर्नुहोस् (ट्रीलाई चाहिँदैन)।', '数值列的量纲不同——KNN、SVM、逻辑回归和神经网络要用 StandardScaler 标准化（树模型不需要）。');
+    if (P.rows < 300) add(`Only ${P.rows} rows — use cross-validation and simple models to avoid overfitting.`, `${P.rows} row मात्र — overfitting बाट बच्न cross-validation र सरल मोडेल प्रयोग गर्नुहोस्।`, `只有 ${P.rows} 行——用交叉验证和简单模型来避免过拟合。`);
+    if (P.rows > 50000) add(`${P.rows.toLocaleString()} rows is big for a browser — the quick model samples 20,000 rows to stay fast.`, `${P.rows.toLocaleString()} row ब्राउजरका लागि ठूलो हो — छिटो होस् भनेर quick model ले २०,००० row नमुना लिन्छ।`, `${P.rows.toLocaleString()} 行对浏览器来说很大——快速模型会抽样 20,000 行以保持速度。`);
     const last = P.columns[P.columns.length - 1];
-    if (last) add(`Possible target to predict: <b>${esc(last.name)}</b> → ${guessTask(last) === 'classification' ? 'a classification problem' : 'a regression problem'}. Try it in "Train a model" below.`, `अनुमान गर्न सकिने target: <b>${esc(last.name)}</b> → ${guessTask(last) === 'classification' ? 'classification समस्या' : 'regression समस्या'}। तल "मोडेल तालिम" मा प्रयास गर्नुहोस्।`);
+    if (last) {
+      const cls = guessTask(last) === 'classification';
+      add(`Possible target to predict: <b>${esc(last.name)}</b> → ${cls ? 'a classification problem' : 'a regression problem'}. Try it in "Train a model" below.`, `अनुमान गर्न सकिने target: <b>${esc(last.name)}</b> → ${cls ? 'classification समस्या' : 'regression समस्या'}। तल "मोडेल तालिम" मा प्रयास गर्नुहोस्।`, `可以预测的目标：<b>${esc(last.name)}</b> → ${cls ? '分类问题' : '回归问题'}。在下面的“训练模型”中试试。`);
+    }
     return out;
   }
   const guessTask = (c) => (c.kind === 'num' && c.unique > 15 ? 'regression' : 'classification');
@@ -412,7 +416,7 @@ plt.show()`;
           <div class="card stat"><b>${fmtBytes(P.mem)}</b><span>${u('dlMem')}</span></div>
         </div>
         <div class="card dl-sec"><h2>${u('dlSuggest')}</h2>
-          <ul class="sugg">${sug.map((s, i) => `<li><span>${S_lang() === 'ne' ? s.ne : s.en}</span>${s.code ? `<button class="btn ghost sm" data-i="${i}">⚡ ${t({ en: 'Apply', ne: 'लागू' })}</button>` : ''}</li>`).join('')}</ul>
+          <ul class="sugg">${sug.map((s, i) => `<li><span>${t(s)}</span>${s.code ? `<button class="btn ghost sm" data-i="${i}">⚡ ${t({ en: 'Apply', ne: 'लागू', zh: '应用' })}</button>` : ''}</li>`).join('')}</ul>
           <button class="btn sm ask-ai">${u('dlAskAI')}</button></div>
         <div class="card dl-sec"><h2>${u('dlColumns')}</h2><div class="table-wrap"><table class="dl-table"><tr><th>${t({ en: 'Column', ne: 'Column' })}</th><th>${t({ en: 'Type', ne: 'प्रकार' })}</th><th>${t({ en: 'Missing', ne: 'हराएको' })}</th><th>${t({ en: 'Unique', ne: 'फरक मान' })}</th><th>${t({ en: 'Summary', ne: 'सारांश' })}</th></tr>
           ${P.columns.map((c) => `<tr><td><b>${esc(c.name)}</b></td><td><span class="pill kind-${c.kind}">${c.kind}</span></td><td>${c.missing ? `<span class="miss">${((c.missing / P.rows) * 100).toFixed(1)}%</span>` : '—'}</td><td>${c.unique}</td><td class="small">${c.kind === 'num' ? `mean ${fmt(c.mean)} · min ${fmt(c.min)} · max ${fmt(c.max)}` : (c.top || []).map(([k, v]) => `${esc(k)} (${v})`).join(', ')}</td></tr>`).join('')}</table></div></div>

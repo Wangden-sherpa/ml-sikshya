@@ -16,7 +16,7 @@
     feat3d: { en: '12 interactive 3D models: loss surfaces, clusters, kernels, CNNs, attention…', ne: '१२ अन्तरक्रियात्मक 3D मोडेल: loss surface, cluster, kernel, CNN, attention…' },
     featData: { en: 'Upload your own CSV / Excel files — explore, chart, and train models on real data.', ne: 'आफ्नै CSV / Excel फाइल अपलोड गर्नुहोस् — वास्तविक डाटामा अन्वेषण, चार्ट र मोडेल तालिम।' },
     featAI: { en: 'Stuck? The AI tutor explains errors and gives suggestions in English or नेपाली.', ne: 'अड्कनुभयो? AI सहायकले error बुझाउँछ र अंग्रेजी वा नेपालीमा सुझाव दिन्छ।' },
-    try: { en: 'Try it', ne: 'प्रयास गर्नुहोस्' },
+    try: { en: 'Try it', ne: 'प्रयास गर्नुहोस्', zh: '试一试' },
   });
 
   // ---------- Three.js loading & stage ----------
@@ -28,7 +28,22 @@
   const active = new Set();
   MLS.hooks.beforeRender.push(() => { active.forEach((s) => s.dispose()); active.clear(); });
 
-  const PAL = [0x6366f1, 0xec4899, 0x10b981, 0xf59e0b, 0x0ea5e9, 0x8b5cf6, 0xef4444, 0x14b8a6, 0xf97316, 0x84cc16];
+  // ---------- Colour themes (chosen by the learner, saved in the browser) ----------
+  const THEMES = {
+    aurora: { name: { en: 'Aurora', ne: 'अरोरा', zh: '极光' }, a: 0xef4444, b: 0x3b82f6, acc: 0xfde047, grad: ['#3b4cc0', '#2fd17a', '#ef4444'], pal: [0x6366f1, 0xec4899, 0x10b981, 0xf59e0b, 0x0ea5e9, 0x8b5cf6, 0xef4444, 0x14b8a6, 0xf97316, 0x84cc16] },
+    ocean: { name: { en: 'Ocean', ne: 'समुद्र', zh: '海洋' }, a: 0x22d3ee, b: 0x6366f1, acc: 0xa5f3fc, grad: ['#0c1a5b', '#0ea5e9', '#e0f2fe'], pal: [0x0ea5e9, 0x22d3ee, 0x6366f1, 0x14b8a6, 0x38bdf8, 0x818cf8, 0x2dd4bf, 0x60a5fa, 0xa5f3fc, 0x3b82f6] },
+    sunset: { name: { en: 'Sunset', ne: 'सूर्यास्त', zh: '日落' }, a: 0xf97316, b: 0xa855f7, acc: 0xfde68a, grad: ['#4c1d95', '#ec4899', '#fbbf24'], pal: [0xf97316, 0xec4899, 0xa855f7, 0xfbbf24, 0xef4444, 0xf472b6, 0xfb923c, 0xc084fc, 0xfde68a, 0xdb2777] },
+    forest: { name: { en: 'Forest', ne: 'वन', zh: '森林' }, a: 0x84cc16, b: 0x0d9488, acc: 0xfef08a, grad: ['#064e3b', '#22c55e', '#fef08a'], pal: [0x22c55e, 0x84cc16, 0x0d9488, 0xeab308, 0x15803d, 0xa3e635, 0x10b981, 0xca8a04, 0x65a30d, 0x14b8a6] },
+    neon: { name: { en: 'Neon', ne: 'नियोन', zh: '霓虹' }, a: 0xff2bd6, b: 0x00e5ff, acc: 0xb6ff00, grad: ['#3a00ff', '#ff2bd6', '#b6ff00'], pal: [0xff2bd6, 0x00e5ff, 0xb6ff00, 0xffe600, 0x8b5cf6, 0xff6b00, 0x00ff9d, 0xff0055, 0x7c3aed, 0x00b3ff] },
+    mono: { name: { en: 'Monochrome', ne: 'एकरङ', zh: '单色' }, a: 0xf8fafc, b: 0x64748b, acc: 0xfacc15, grad: ['#1e293b', '#94a3b8', '#ffffff'], pal: [0xf8fafc, 0x94a3b8, 0xcbd5e1, 0x64748b, 0xe2e8f0, 0x475569, 0xfacc15, 0x334155, 0xd1d5db, 0x9ca3af] },
+  };
+  const BGS = { night: { en: 'Night', ne: 'रात', zh: '夜空' }, space: { en: 'Deep space ✨', ne: 'अन्तरिक्ष ✨', zh: '深空 ✨' }, dusk: { en: 'Dusk', ne: 'साँझ', zh: '黄昏' }, sea: { en: 'Deep sea', ne: 'गहिरो समुद्र', zh: '深海' }, studio: { en: 'Studio grey', ne: 'स्टुडियो खैरो', zh: '影棚灰' } };
+  let themeKey = MLS.store.get('3d-theme', 'aurora'), bgKey = MLS.store.get('3d-bg', 'night');
+  if (!THEMES[themeKey]) themeKey = 'aurora';
+  if (!BGS[bgKey]) bgKey = 'night';
+  let PAL, CA, CB, CACC, GRAD;
+  const applyTheme = () => { const T = THEMES[themeKey]; PAL = T.pal; CA = T.a; CB = T.b; CACC = T.acc; GRAD = T.grad; };
+  applyTheme();
   const mulberry = (a) => () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let x = Math.imul(a ^ (a >>> 15), 1 | a); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
   const randn = (r) => { let a = 0; while (!a) a = r(); return Math.sqrt(-2 * Math.log(a)) * Math.cos(2 * Math.PI * r()); };
 
@@ -140,7 +155,11 @@
     const grid = new THREE.GridHelper(len * 2, 12, 0x3b4a6b, 0x1f2a44); grid.material.transparent = true; grid.material.opacity = 0.5;
     scene.add(grid);
   }
-  const heat = (THREE, v) => new THREE.Color().setHSL(0.66 - 0.66 * Math.max(0, Math.min(1, v)), 0.85, 0.55);
+  const heat = (THREE, v) => {
+    v = Math.max(0, Math.min(1, v));
+    const [a, b] = v < 0.5 ? [GRAD[0], GRAD[1]] : [GRAD[1], GRAD[2]];
+    return new THREE.Color(a).lerp(new THREE.Color(b), v < 0.5 ? v * 2 : (v - 0.5) * 2);
+  };
   const btn = (label, cls = '') => `<button class="v3-btn ${cls}">${label}</button>`;
 
   // ---------- Scenes ----------
@@ -196,11 +215,11 @@
       g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); g.computeVertexNormals();
       scene.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.55, metalness: 0.1 })));
       scene.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.05 })));
-      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 16), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfde047, emissiveIntensity: 0.6 }));
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 16), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: CACC, emissiveIntensity: 0.6 }));
       scene.add(ball);
       const MAXT = 500, trailPos = new Float32Array(MAXT * 3);
       const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.BufferAttribute(trailPos, 3)); tg.setDrawRange(0, 0);
-      scene.add(new THREE.Line(tg, new THREE.LineBasicMaterial({ color: 0xfde047 })));
+      scene.add(new THREE.Line(tg, new THREE.LineBasicMaterial({ color: CACC })));
       let x, z, n, lr = 1.0, acc = 0, done = false;
       const status = h(`<span class="v3-status"></span>`);
       const drop = () => { x = (Math.random() - 0.5) * 8.5; z = (Math.random() - 0.5) * 8.5; n = 0; done = false; tg.setDrawRange(0, 0); };
@@ -267,7 +286,7 @@
         p.needsUpdate = true; c.needsUpdate = true; g.computeVertexNormals();
       };
       const r = mulberry(7), P = [], C = [];
-      for (let i = 0; i < 160; i++) { const x = (r() - 0.5) * 6, z = (r() - 0.5) * 6; const yes = x + 0.7 * z + randn(r) * 0.6 > 0; P.push([x, yes ? 3.05 : 0.05, z]); C.push(yes ? 0xef4444 : 0x3b82f6); }
+      for (let i = 0; i < 160; i++) { const x = (r() - 0.5) * 6, z = (r() - 0.5) * 6; const yes = x + 0.7 * z + randn(r) * 0.6 > 0; P.push([x, yes ? 3.05 : 0.05, z]); C.push(yes ? CA : CB); }
       points(s, P, C, 0.22);
       upd();
       ctrl.innerHTML = `<label>${t({ en: 'Weight size (steepness)', ne: 'Weight आकार (ठाडोपन)' })} <input type="range" min="0.2" max="8" step="0.1" value="1.5"></label><span class="v3-status">${t({ en: 'Blue dots = class 0 (bottom), red dots = class 1 (top). The surface is the predicted probability; where it crosses 0.5 is the decision boundary.', ne: 'नीलो = वर्ग 0 (तल), रातो = वर्ग 1 (माथि)। सतह अनुमानित सम्भाव्यता हो; 0.5 पार गर्ने ठाउँ decision boundary हो।' })}</span>`;
@@ -278,8 +297,8 @@
       const { THREE, scene } = s;
       axes(s, 3.2, ['x₁', 'x₁² + x₂²', 'x₂']);
       const r = mulberry(11), base = [], C = [];
-      for (let i = 0; i < 110; i++) { const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 1.05; base.push([Math.cos(a) * d, Math.sin(a) * d]); C.push(0xef4444); }
-      for (let i = 0; i < 170; i++) { const a = r() * Math.PI * 2, d = 1.75 + r() * 0.95; base.push([Math.cos(a) * d, Math.sin(a) * d]); C.push(0x3b82f6); }
+      for (let i = 0; i < 110; i++) { const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 1.05; base.push([Math.cos(a) * d, Math.sin(a) * d]); C.push(CA); }
+      for (let i = 0; i < 170; i++) { const a = r() * Math.PI * 2, d = 1.75 + r() * 0.95; base.push([Math.cos(a) * d, Math.sin(a) * d]); C.push(CB); }
       const p = points(s, base.map(([x, z]) => [x, 0.02, z]), C, 0.2);
       const plane = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ color: 0xa3e635, transparent: true, opacity: 0, side: THREE.DoubleSide }));
       plane.rotateX(-Math.PI / 2); scene.add(plane);
@@ -315,7 +334,7 @@
       const status = h('<span class="v3-status"></span>');
       const vote = () => {
         const pA = 0.25 + Math.random() * 0.5; let a = 0;
-        trees.forEach((tr) => { const isA = Math.random() < pA; if (isA) a++; tr.orb.material.color.set(isA ? 0xef4444 : 0x3b82f6); tr.orb.material.emissive.set(isA ? 0xef4444 : 0x3b82f6); });
+        trees.forEach((tr) => { const isA = Math.random() < pA; if (isA) a++; tr.orb.material.color.set(isA ? CA : CB); tr.orb.material.emissive.set(isA ? CA : CB); });
         const b = trees.length - a;
         status.innerHTML = `🔴 ${t({ en: 'Class A', ne: 'वर्ग A' })}: <b>${a}</b> · 🔵 ${t({ en: 'Class B', ne: 'वर्ग B' })}: <b>${b}</b> → 🌲 ${t({ en: 'Forest predicts', ne: 'फरेस्टको अनुमान' })} <b>${a >= b ? 'A' : 'B'}</b>`;
       };
@@ -373,12 +392,12 @@
       const r = mulberry(4), P = [], Y = [];
       for (let i = 0; i < 120; i++) { P.push([-1.1 + randn(r) * 0.95, 1.5 + randn(r) * 0.8, -0.6 + randn(r) * 0.95]); Y.push(0); }
       for (let i = 0; i < 120; i++) { P.push([1.1 + randn(r) * 0.95, 1.7 + randn(r) * 0.8, 0.7 + randn(r) * 0.95]); Y.push(1); }
-      points(s, P, Y.map((y) => (y ? 0xef4444 : 0x3b82f6)), 0.17);
+      points(s, P, Y.map((y) => (y ? CA : CB)), 0.17);
       const q = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 16), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.4 }));
       scene.add(q);
       let k = 7, moving = true;
       const lp = new Float32Array(15 * 6), lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(lp, 3));
-      scene.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0xfde047 })));
+      scene.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: CACC })));
       const status = h('<span class="v3-status"></span>');
       let tt = 0;
       s.onFrame((dt) => {
@@ -389,7 +408,7 @@
         d.forEach(([, i], j) => { lp.set([q.position.x, q.position.y, q.position.z, ...P[i]], j * 6); red += Y[i]; });
         lg.setDrawRange(0, k * 2); lg.attributes.position.needsUpdate = true;
         const cls = red > k / 2 ? 1 : 0;
-        q.material.emissive.set(cls ? 0xef4444 : 0x3b82f6);
+        q.material.emissive.set(cls ? CA : CB);
         status.innerHTML = `k = ${k} → 🔴 ${red} · 🔵 ${k - red} → ${t({ en: 'prediction', ne: 'अनुमान' })}: <b>${cls ? '🔴' : '🔵'}</b>`;
       });
       ctrl.innerHTML = `<label>k <input type="range" min="1" max="15" step="2" value="7"></label>${btn('⏯ ' + t({ en: 'Pause / move', ne: 'रोक्ने / चलाउने' }))}`;
@@ -448,11 +467,11 @@
       });
       const dense = []; for (let i = 0; i < 16; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.22), new THREE.MeshStandardMaterial({ color: 0xa78bfa, emissive: 0x7c3aed, emissiveIntensity: 0.3 })); m.position.set(3.2, 0.5 + i * 0.25, 0); scene.add(m); dense.push(m); }
       const dl = label(THREE, t({ en: 'Dense', ne: 'Dense' }), { size: 0.3 }); dl.position.set(3.2, -0.2, 0); scene.add(dl);
-      const outs = []; for (let i = 0; i < 10; i++) { const on = i === 7; const m = new THREE.Mesh(new THREE.SphereGeometry(on ? 0.2 : 0.14, 18, 12), new THREE.MeshStandardMaterial({ color: on ? 0xfde047 : 0x64748b, emissive: on ? 0xfde047 : 0x000000, emissiveIntensity: 0.7 })); m.position.set(5, 0.5 + i * 0.4, 0); scene.add(m); outs.push(m); const l = label(THREE, String(i), { size: 0.26, color: on ? '#fde047' : '#94a3b8' }); l.position.set(5.45, 0.5 + i * 0.4, 0); scene.add(l); }
+      const outs = []; for (let i = 0; i < 10; i++) { const on = i === 7; const m = new THREE.Mesh(new THREE.SphereGeometry(on ? 0.2 : 0.14, 18, 12), new THREE.MeshStandardMaterial({ color: on ? CACC : 0x64748b, emissive: on ? CACC : 0x000000, emissiveIntensity: 0.7 })); m.position.set(5, 0.5 + i * 0.4, 0); scene.add(m); outs.push(m); const l = label(THREE, String(i), { size: 0.26, color: on ? '#fde047' : '#94a3b8' }); l.position.set(5.45, 0.5 + i * 0.4, 0); scene.add(l); }
       const ol = label(THREE, t({ en: 'Output: it is a 7!', ne: 'आउटपुट: यो ७ हो!' }), { size: 0.3, color: '#fde047' }); ol.position.set(5, -0.2, 0); scene.add(ol);
-      const kern = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.3, 0.3), new THREE.MeshBasicMaterial({ color: 0xfde047, wireframe: true })); scene.add(kern);
+      const kern = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.3, 0.3), new THREE.MeshBasicMaterial({ color: CACC, wireframe: true })); scene.add(kern);
       const lg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
-      scene.add(new THREE.Line(lg, new THREE.LineBasicMaterial({ color: 0xfde047 })));
+      scene.add(new THREE.Line(lg, new THREE.LineBasicMaterial({ color: CACC })));
       let k = 0;
       s.onFrame((dt, tm) => {
         k += dt * 6; const steps = 9, i = Math.floor(k) % (steps * steps), row = Math.floor(i / steps), col = i % steps;
@@ -510,7 +529,7 @@
       else cols = pts.map(() => 0x818cf8);
       points(s, pts.map((p) => [norm[0](p[0]), norm[1](p[1]) + 3, norm[2](p[2])]), cols, pts.length > 1500 ? 0.12 : 0.18);
       if (opts.colorKind === 'cat') ctrl.innerHTML = '<span class="v3-legend">' + opts.cats.slice(0, 12).map((c, i) => `<i style="background:#${PAL[i % PAL.length].toString(16).padStart(6, '0')}"></i>${esc(c)}`).join(' ') + '</span>';
-      else if (opts.colorKind === 'num') ctrl.innerHTML = `<span class="v3-legend">${esc(opts.names[3] || '')}: <span class="v3-grad"></span> ${t({ en: 'low → high', ne: 'कम → बढी' })}</span>`;
+      else if (opts.colorKind === 'num') ctrl.innerHTML = `<span class="v3-legend">${esc(opts.names[3] || '')}: <span class="v3-grad" style="background:linear-gradient(90deg,${GRAD.join(',')})"></span> ${t({ en: 'low → high', ne: 'कम → बढी' })}</span>`;
     },
   };
 
@@ -529,14 +548,33 @@
     attention: { icon: '🔦', lessons: ['transformers'], cam: [6, 7, 7], title: { en: 'Transformer attention', ne: 'ट्रान्सफर्मर attention' }, desc: { en: 'Each bar shows how much one word attends to another. Different heads learn different patterns.', ne: 'हरेक बारले एउटा शब्दले अर्कोमा कति ध्यान दिन्छ देखाउँछ। फरक head ले फरक ढाँचा सिक्छन्।' } },
   };
 
+  function addStars(s) {
+    const { THREE } = s, r = mulberry(77), pos = [];
+    for (let i = 0; i < 900; i++) { const th = r() * Math.PI * 2, ph = Math.acos(2 * r() - 1), d = 30 + r() * 25; pos.push(d * Math.sin(ph) * Math.cos(th), d * Math.cos(ph), d * Math.sin(ph) * Math.sin(th)); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    const st = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 0.18, map: dot(THREE), transparent: true, depthWrite: false, fog: false }));
+    s.scene.add(st);
+    s.onFrame((dt) => { st.rotation.y += dt * 0.01; });
+  }
   async function mount(el, name, opts = {}) {
     const info = INFO[name] || {};
-    el.innerHTML = `<div class="viz3d"><div class="viz3d-canvas"><div class="viz3d-loading">${u('loading3d')}</div></div>
-      <div class="viz3d-hint">🖱️ ${u('drag3d')}</div><div class="viz3d-controls"></div></div>`;
+    if (el._stage) { el._stage.dispose(); el._stage = null; }
+    applyTheme();
+    el.innerHTML = `<div class="viz3d bg-${bgKey}"><div class="viz3d-canvas"><div class="viz3d-loading">${u('loading3d')}</div></div>
+      <div class="viz3d-hint">🖱️ ${u('drag3d')}</div>
+      <div class="viz3d-theme">🎨 <select class="th">${Object.keys(THEMES).map((k) => `<option value="${k}" ${k === themeKey ? 'selected' : ''}>${t(THEMES[k].name)}</option>`).join('')}</select>
+        <select class="bgsel">${Object.keys(BGS).map((k) => `<option value="${k}" ${k === bgKey ? 'selected' : ''}>${t(BGS[k])}</option>`).join('')}</select></div>
+      <div class="viz3d-controls"></div></div>`;
     const canvas = el.querySelector('.viz3d-canvas'), ctrl = el.querySelector('.viz3d-controls');
+    el.querySelector('.th').onchange = (e) => { themeKey = e.target.value; MLS.store.set('3d-theme', themeKey); mount(el, name, opts); };
+    el.querySelector('.bgsel').onchange = (e) => { bgKey = e.target.value; MLS.store.set('3d-bg', bgKey); mount(el, name, opts); };
     try {
       const s = await stage(canvas, { height: opts.height || 420, cam: opts.cam || info.cam, target: opts.target || info.target, autoRotate: opts.autoRotate });
+      el._stage = s;
       if (!document.body.contains(el)) { s.dispose(); return; }
+      const FOG = { night: 0x0b1020, space: 0x000000, dusk: 0x2a1033, sea: 0x031c2e, studio: 0x2b2f36 };
+      s.scene.fog.color.setHex(FOG[bgKey]);
+      if (bgKey === 'space') addStars(s);
       await SCENES[name](s, ctrl, opts);
     } catch (e) {
       console.error(e);

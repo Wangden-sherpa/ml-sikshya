@@ -98,7 +98,14 @@
     quiz: store.get('quiz', {}),
   };
 
-  const t = (x) => (x == null ? '' : typeof x === 'string' || Array.isArray(x) ? x : (x[S.lang] ?? x.en));
+  // Translate {en, ne, zh} objects. In Chinese, strings without a zh version are looked up in the MLS_ZH phrase map (i18n-zh.js), then fall back to English.
+  const t = (x) => {
+    if (x == null) return '';
+    if (typeof x === 'string' || Array.isArray(x)) return x;
+    if (x[S.lang] != null) return x[S.lang];
+    if (S.lang === 'zh' && window.MLS_ZH && typeof x.en === 'string' && window.MLS_ZH[x.en]) return window.MLS_ZH[x.en];
+    return x.en;
+  };
   const u = (k) => t(UI[k]);
   const $ = (sel, el = document) => el.querySelector(sel);
   const h = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; };
@@ -194,6 +201,7 @@ def _mls_figs():
       imgs.forEach((b64) => { const im = document.createElement('img'); im.src = 'data:image/png;base64,' + b64; outEl.appendChild(im); });
       if (!text && !err && !imgs.length) outEl.appendChild(Object.assign(document.createElement('div'), { className: 'muted', textContent: u('noOutput') }));
       MLS.lastRun = { code, text, err, at: Date.now() };
+      MLS.hooks.run.forEach((f) => { try { f(code, !err); } catch (e) { console.error(e); } });
       if (err) MLS.hooks.error.forEach((f) => { try { f(outEl, err, code); } catch (e) { console.error(e); } });
     };
     runQueue = runQueue.then(job, job);
@@ -436,7 +444,7 @@ def _mls_figs():
 
   function viewPlayground() {
     const samples = [{ title: { en: 'Blank', ne: 'खाली' }, code: '# Write your Python code here\nprint("Namaste, Machine Learning! 🙏")\n' }];
-    C.lessons.forEach((l) => (l.code || []).forEach((c) => samples.push({ title: { en: t(l.title) + ' — ' + (c.title?.en || c.title), ne: (l.title.ne || l.title.en) + ' — ' + (c.title?.ne || c.title?.en || c.title) }, code: c.code })));
+    C.lessons.forEach((l) => (l.code || []).forEach((c) => samples.push({ title: { en: t(l.title) + ' — ' + (c.title?.en || c.title), ne: (l.title.ne || l.title.en) + ' — ' + (c.title?.ne || c.title?.en || c.title), zh: (l.title.zh || l.title.en) + ' — ' + (c.title?.zh || c.title?.en || c.title) }, code: c.code })));
     const el = h(`<div class="container"><h1>⌨️ ${u('playground')}</h1><p class="muted">${u('pgIntro')}</p>
       <div class="toolbar"><span>${u('sample')}</span><select>${samples.map((s, i) => `<option value="${i}">${esc(t(s.title))}</option>`).join('')}</select></div>
       <div class="pg-slot"></div></div>`);
@@ -456,9 +464,9 @@ def _mls_figs():
     const draw = () => {
       const q = input.value.trim().toLowerCase();
       list.innerHTML = C.glossary
-        .filter((g) => !q || (g.term + g.ne + g.def.en + g.def.ne).toLowerCase().includes(q))
+        .filter((g) => !q || (g.term + g.ne + (g.zh || '') + g.def.en + g.def.ne + (g.def.zh || '')).toLowerCase().includes(q))
         .sort((a, b) => a.term.localeCompare(b.term))
-        .map((g) => `<div class="card"><h3>${g.term}<span>${g.ne}</span></h3><p>${t(g.def)}</p></div>`).join('');
+        .map((g) => `<div class="card"><h3>${g.term}<span>${S.lang === 'zh' ? (g.zh || g.ne) : g.ne}</span></h3><p>${t(g.def)}</p></div>`).join('');
     };
     input.oninput = draw; draw();
     return el;
@@ -490,6 +498,7 @@ def _mls_figs():
     renderTop(route);
     renderSidebar(route === 'learn' ? arg : null, route);
     document.body.classList.remove('menu-open');
+    MLS.hooks.afterRender.forEach((f) => { try { f(route, arg); } catch (e) { console.error(e); } });
   }
 
   window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
@@ -505,7 +514,7 @@ def _mls_figs():
   const MLS = window.MLS = {
     S, UI, t, u, h, esc, $, toast, store, codeBlock, runPython, getPy, render, LEVELS,
     routes: {}, lastRun: null, route: '', routeArg: null,
-    hooks: { lesson: [], home: [], error: [], beforeRender: [] },
+    hooks: { lesson: [], home: [], error: [], beforeRender: [], run: [], afterRender: [] },
   };
   // Render after every extension script has loaded and registered itself.
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render); else setTimeout(render);
