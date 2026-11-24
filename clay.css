@@ -1,0 +1,109 @@
+/* ML Sikshya — Claymorphism design system (from UI UX Pro Max: "Educational apps" → Claymorphism,
+   palette "progress teal + achievement orange", Poppins / Nunito Sans, accessibility checklist). */
+
+:root {
+  --bg: #f0fdfa; --surface: #ffffff; --surface-2: #e8f6f3; --text: #134e4a; --muted: #475569;
+  --border: #b7efe4; --clay-border: #ccf5ec;
+  --primary: #0f766e; --primary-2: #2dd4bf; --primary-soft: #ccfbf1;
+  --cta: #c2410c; --cta-2: #ea580c; --accent: #ea580c;
+  --success: #15803d; --warn: #b45309; --danger: #dc2626;
+  --radius: 20px;
+  --font: "Nunito Sans", "Noto Sans Devanagari", "Noto Sans SC", system-ui, sans-serif;
+  --font-head: "Poppins", "Noto Sans Devanagari", "Noto Sans SC", system-ui, sans-serif;
+  --clay-shadow: 0 12px 28px rgba(15, 118, 110, .12), inset -4px -4px 10px rgba(15, 118, 110, .06), inset 4px 4px 10px rgba(255, 255, 255, .9);
+  --clay-shadow-hover: 0 18px 36px rgba(15, 118, 110, .18), inset -4px -4px 10px rgba(15, 118, 110, .06), inset 4px 4px 10px rgba(255, 255, 255, .9);
+  --bounce: cubic-bezier(.34, 1.56, .64, 1);
+}
+[data-theme="dark"] {
+  --bg: #04201e; --surface: #0b2b29; --surface-2: #0f3633; --text: #ccfbf1; --muted: #94b8b3;
+  --border: #1d4d48; --clay-border: #1d4d48; --primary: #2dd4bf; --primary-2: #5eead4; --primary-soft: #0f3f3b;
+  --clay-shadow: 0 12px 28px rgba(0, 0, 0, .35), inset -4px -4px 10px rgba(0, 0, 0, .25), inset 4px 4px 10px rgba(255, 255, 255, .04);
+  --clay-shadow-hover: 0 18px 36px rgba(0, 0, 0, .45), inset -4px -4px 10px rgba(0, 0, 0, .25), inset 4px 4px 10px rgba(255, 255, 255, .05);
+}
+
+/* ---------- Aesthetic backgrounds ---------- */
+body { background: var(--bg) url("assets/bg/clay-blobs.svg") center / cover fixed no-repeat; }
+[data-theme="dark"] body { background: var(--bg) url("assets/bg/night.svg") center / cover fixed no-repeat; }
+body::before, body::after { display: none; }
+#sidebar { background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(14px); border-right: 3px solid var(--clay-border); }
+.topbar { background: color-mix(in srgb, var(--surface) 78%, transparent); border-bottom: 3px solid var(--clay-border); }
+
+/* ---------- Typography ---------- */
+body { font-family: var(--font); color: var(--text); }
+h1, h2, h3, .brand, .hero h1, .section-title h2, .lesson-head h1 { font-family: var(--font-head); letter-spacing: -.01em; }
+.lesson-head h1 { background: none; -webkit-background-clip: initial; background-clip: initial; color: var(--text); }
+
+/* ---------- Clay surfaces ---------- */
+.card, .teachers, .apply-card, .see3d, .xp-card, .badge, .apply-item, .lab3d-item, .feat, .side-progress, .quiz, .mission-data, .task-list label, .sugg li, .stat {
+  border: 3px solid var(--clay-border) !important; border-radius: var(--radius); box-shadow: var(--clay-shadow);
+}
+.card:hover, .apply-item:hover, .level-card:hover, .project-card:hover, .badge:hover, .lab3d-item:hover { box-shadow: var(--clay-shadow-hover); }
+.level-card, .project-card, .apply-item, .badge, .lab3d-item, .teacher-card, .choose { transition: transform .25s var(--bounce), box-shadow .25s ease, border-color .2s; }
+.level-card:hover, .project-card:hover { transform: translateY(-6px) rotate(-.4deg); }
+.level-card .emoji, .mh-ic, .steps3 .n { border-radius: 18px; background: linear-gradient(145deg, #ccfbf1, #99f6e4); box-shadow: inset -3px -3px 8px rgba(15,118,110,.18), inset 3px 3px 8px rgba(255,255,255,.9), 0 6px 14px rgba(15,118,110,.15); }
+[data-theme="dark"] .level-card .emoji, [data-theme="dark"] .mh-ic { background: linear-gradient(145deg, #134e4a, #0f3f3b); }
+.box { border-radius: 18px; border: 3px solid transparent; }
+.box.analogy { background: #e0f7f2; } .box.tip { background: #ecfdf3; } .box.warn { background: #fff4e6; }
+[data-theme="dark"] .box.analogy { background: #0f3633; } [data-theme="dark"] .box.tip { background: #0f2f22; } [data-theme="dark"] .box.warn { background: #33240f; }
+
+/* ---------- Buttons: chunky, soft press ---------- */
+.btn, .v3-btn.primary, .samples button, .filters button, .seg button, .persona-pick button, .chip { cursor: pointer; }
+.btn:not(.ghost):not(.success) {
+  background: linear-gradient(180deg, var(--cta-2), var(--cta)) !important; color: #fff !important; border: 0;
+  border-radius: 16px; box-shadow: 0 6px 0 #9a3412, 0 12px 20px rgba(194, 65, 12, .25) !important; font-weight: 800;
+  transition: transform .2s var(--bounce), box-shadow .2s ease;
+}
+.btn:not(.ghost):not(.success):hover { transform: translateY(-2px); filter: none; }
+.btn:not(.ghost):not(.success):active { transform: translateY(4px); box-shadow: 0 2px 0 #9a3412, 0 6px 10px rgba(194, 65, 12, .2) !important; }
+.btn.ghost { border: 3px solid var(--clay-border) !important; border-radius: 16px; background: var(--surface); box-shadow: 0 4px 0 var(--clay-border); }
+.btn.ghost:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--clay-border); }
+.hero .btn:not(.ghost):not(.success) { background: linear-gradient(180deg, #ffffff, #f0fdfa) !important; color: var(--primary) !important; box-shadow: 0 6px 0 #99f6e4, 0 12px 24px rgba(4, 47, 46, .3) !important; }
+.hero .btn.ghost { background: rgba(255,255,255,.16); color: #fff; border-color: rgba(255,255,255,.55) !important; box-shadow: 0 4px 0 rgba(255,255,255,.25); }
+.icon-btn { border-radius: 14px; border: 3px solid var(--clay-border); box-shadow: 0 3px 0 var(--clay-border); display: inline-grid; place-items: center; cursor: pointer; }
+.icon-btn:active { transform: translateY(2px); box-shadow: none; }
+.icon-btn svg, .side-links svg, .nav-ic { width: 20px; height: 20px; flex-shrink: 0; }
+.lang-toggle { border: 3px solid var(--clay-border); }
+.lang-toggle button.on { background: var(--primary); }
+
+/* ---------- Hero with Himalaya artwork ---------- */
+.hero {
+  background: linear-gradient(100deg, rgba(4, 47, 46, .78) 0%, rgba(15, 118, 110, .45) 45%, rgba(15, 118, 110, 0) 75%), url("assets/bg/himalaya.svg") center 70% / cover no-repeat !important;
+  animation: none; border: 3px solid rgba(255,255,255,.4); box-shadow: 0 24px 60px rgba(4, 47, 46, .28); min-height: 330px;
+}
+.hero h1 { font-size: clamp(1.8rem, 3.6vw, 2.7rem); }
+.hero > div:last-child svg { display: none; }
+.hero > div:last-child { background: url("assets/bg/clay-shapes.svg") center / contain no-repeat; min-height: 260px; animation: floatAv 7s ease-in-out infinite; }
+.hero-particles { opacity: .35; }
+
+/* ---------- Page heroes get the artwork too ---------- */
+.lab3d-hero, .data-hero, .rw-hero { background: linear-gradient(100deg, rgba(4,47,46,.85), rgba(15,118,110,.55) 60%, rgba(15,118,110,.2)), url("assets/bg/himalaya.svg") center 75% / cover no-repeat !important; border: 3px solid rgba(255,255,255,.35); }
+
+/* ---------- Sidebar & nav ---------- */
+.side-links a, .side-lesson { border-radius: 14px; cursor: pointer; }
+.side-links a.active, .side-lesson.active { background: var(--primary-soft); color: var(--primary); box-shadow: inset 0 0 0 2px var(--clay-border); }
+.side-lesson.done .dot { background: var(--success); border-color: var(--success); }
+.topnav a { border-radius: 12px; cursor: pointer; }
+.topnav a.active { background: var(--primary-soft); color: var(--primary); }
+.bar { height: 10px; border-radius: 99px; background: var(--surface-2); box-shadow: inset 0 2px 4px rgba(15,118,110,.12); }
+.bar > span { background: linear-gradient(90deg, var(--primary), var(--primary-2)); }
+
+/* ---------- Tutor & chat in clay ---------- */
+.tutor { border: 3px solid var(--clay-border); border-radius: 26px; }
+.tutor-head { background: linear-gradient(135deg, #0f766e, #14b8a6 60%, #2dd4bf); }
+.tutor-fab { background: linear-gradient(135deg, #0f766e, #14b8a6) !important; box-shadow: 0 6px 0 #0b5a54, 0 14px 30px rgba(15, 118, 110, .4) !important; }
+.msg.user .bub { background: linear-gradient(135deg, #0f766e, #14b8a6); }
+.msg.bot .bub { border: 2px solid var(--clay-border); }
+
+/* ---------- Accessibility checklist ---------- */
+:focus-visible { outline: 3px solid var(--cta-2); outline-offset: 3px; border-radius: 10px; }
+a, button, [role="button"], label.chk, .opt { cursor: pointer; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; scroll-behavior: auto !important; }
+}
+@media (max-width: 1000px) {
+  .hero { background-position: 70% 70% !important; }
+}
+
+html[data-cz-bg] body { background-image: none; }
+.brand > span, .lang-toggle button { white-space: nowrap; }
+@media (max-width: 640px) { .brand > span:not(.logo) { display: none; } .topbar { gap: 8px; padding: 0 10px; } }

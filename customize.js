@@ -16,6 +16,7 @@
   });
 
   const FONTS = {
+    clay: ['Poppins + Nunito', '"Nunito Sans", "Noto Sans Devanagari", "Noto Sans SC", system-ui, sans-serif'],
     inter: ['Inter', '"Inter", "Noto Sans Devanagari", "Noto Sans SC", system-ui, sans-serif'],
     system: ['System', 'system-ui, -apple-system, "Segoe UI", "Noto Sans Devanagari", "Microsoft YaHei", sans-serif'],
     rounded: ['Rounded', '"Nunito", "Noto Sans Devanagari", "Noto Sans SC", system-ui, sans-serif'],
@@ -24,10 +25,10 @@
   };
   const BGS = { default: ['', ''], warm: ['#fbf6ef', '#1b1611'], cool: ['#eef4fb', '#0c1422'], mint: ['#eefaf5', '#0b1a16'], lavender: ['#f5f2fd', '#14111f'], paper: ['#ffffff', '#000000'] };
   const PRESETS = [
-    { n: 'Indigo', a: '#4f46e5', b: '#7c3aed' }, { n: 'Ocean', a: '#0284c7', b: '#0d9488' }, { n: 'Forest', a: '#15803d', b: '#65a30d' },
+    { n: 'Clay Teal', a: '#0f766e', b: '#2dd4bf' }, { n: 'Indigo', a: '#4f46e5', b: '#7c3aed' }, { n: 'Ocean', a: '#0284c7', b: '#0d9488' }, { n: 'Forest', a: '#15803d', b: '#65a30d' },
     { n: 'Sunset', a: '#ea580c', b: '#db2777' }, { n: 'Rose', a: '#e11d48', b: '#c026d3' }, { n: 'Gold', a: '#b45309', b: '#ca8a04' }, { n: 'Mono', a: '#334155', b: '#64748b' },
   ];
-  const DEF = { accent: '#4f46e5', accent2: '#7c3aed', bg: 'default', bright: 100, contrast: 100, sat: 100, text: 100, font: 'inter', radius: 14, width: 'normal', motion: true, glow: true };
+  const DEF = { accent: '#0f766e', accent2: '#2dd4bf', bg: 'default', bright: 100, contrast: 100, sat: 100, text: 100, font: 'clay', radius: 20, width: 'normal', motion: true, glow: true };
   let C = { ...DEF, ...store.get('design', {}) };
   if (!store.get('design', null)) { const old = { ocean: 1, forest: 2, sunset: 3, rose: 4 }[store.get('accent', '')]; if (old) { C.accent = PRESETS[old].a; C.accent2 = PRESETS[old].b; } }
 
@@ -39,7 +40,7 @@
     st.setProperty('--primary-2', C.accent2);
     st.setProperty('--primary-soft', `color-mix(in srgb, ${C.accent} ${dark ? 22 : 11}%, ${dark ? '#161a29' : '#ffffff'})`);
     const bg = BGS[C.bg] || BGS.default;
-    if (bg[0]) st.setProperty('--bg', dark ? bg[1] : bg[0]); else st.removeProperty('--bg');
+    if (bg[0]) { st.setProperty('--bg', dark ? bg[1] : bg[0]); r.dataset.czBg = C.bg; } else { st.removeProperty('--bg'); delete r.dataset.czBg; }
     st.setProperty('--cz-filter', `brightness(${C.bright / 100}) contrast(${C.contrast / 100}) saturate(${C.sat / 100})`);
     st.setProperty('--cz-zoom', C.text / 100);
     st.setProperty('--font', FONTS[C.font] ? FONTS[C.font][1] : FONTS.inter[1]);

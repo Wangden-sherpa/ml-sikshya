@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 420">
+  <defs>
+    <radialGradient id="s1" cx="35%" cy="30%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset=".25" stop-color="#5eead4"/><stop offset="1" stop-color="#0d9488"/></radialGradient>
+    <radialGradient id="s2" cx="35%" cy="30%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset=".25" stop-color="#fdba74"/><stop offset="1" stop-color="#ea580c"/></radialGradient>
+    <radialGradient id="s3" cx="35%" cy="30%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="#c4b5fd"/><stop offset="1" stop-color="#7c3aed"/></radialGradient>
+    <linearGradient id="cube" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ccfbf1"/><stop offset="1" stop-color="#14b8a6"/></linearGradient>
+    <linearGradient id="pill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#f59e0b"/></linearGradient>
+    <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#134e4a" flood-opacity=".28"/></filter>
+  </defs>
+  <!-- network lines -->
+  <g stroke="#ffffff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round">
+    <path d="M140 130 L300 90"/><path d="M140 130 L250 270"/><path d="M300 90 L400 220"/><path d="M250 270 L400 220"/><path d="M250 270 L120 330"/>
+  </g>
+  <g filter="url(#sh)">
+    <rect x="330" y="250" width="120" height="120" rx="30" fill="url(#cube)" transform="rotate(12 390 310)"/>
+    <rect x="352" y="272" width="76" height="22" rx="11" fill="#ffffff" opacity=".45" transform="rotate(12 390 310)"/>
+    <circle cx="140" cy="130" r="62" fill="url(#s1)"/>
+    <circle cx="300" cy="90" r="44" fill="url(#s2)"/>
+    <circle cx="400" cy="220" r="36" fill="url(#s3)"/>
+    <circle cx="250" cy="270" r="54" fill="url(#s1)"/>
+    <rect x="60" y="300" width="130" height="54" rx="27" fill="url(#pill)" transform="rotate(-18 125 327)"/>
+    <ellipse cx="460" cy="70" rx="40" ry="16" fill="none" stroke="#fb923c" stroke-width="14" transform="rotate(-20 460 70)"/>
+  </g>
+</svg>

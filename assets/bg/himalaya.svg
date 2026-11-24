@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f766e"/>
+      <stop offset=".45" stop-color="#14b8a6"/>
+      <stop offset=".78" stop-color="#99f6e4"/>
+      <stop offset="1" stop-color="#fed7aa"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fff7ed"/>
+      <stop offset=".35" stop-color="#fdba74"/>
+      <stop offset="1" stop-color="#fb923c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#2dd4bf"/></linearGradient>
+    <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14b8a6"/><stop offset="1" stop-color="#0d9488"/></linearGradient>
+    <linearGradient id="m3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f766e"/><stop offset="1" stop-color="#115e59"/></linearGradient>
+    <linearGradient id="m4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#134e4a"/><stop offset="1" stop-color="#042f2e"/></linearGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#f0fdfa" stop-opacity=".55"/></linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+  </defs>
+  <rect width="1600" height="640" fill="url(#sky)"/>
+  <circle cx="1180" cy="300" r="230" fill="url(#sun)"/>
+  <circle cx="1180" cy="300" r="62" fill="#fff7ed" opacity=".95"/>
+  <g fill="#ffffff" opacity=".55">
+    <ellipse cx="260" cy="120" rx="120" ry="16" filter="url(#soft)"/>
+    <ellipse cx="760" cy="90" rx="160" ry="14" filter="url(#soft)"/>
+    <ellipse cx="1400" cy="150" rx="140" ry="16" filter="url(#soft)"/>
+  </g>
+  <!-- far range with snow caps -->
+  <path d="M0 420 L120 330 L210 370 L330 250 L420 320 L520 230 L640 330 L760 200 L880 310 L980 240 L1100 330 L1220 260 L1340 340 L1460 280 L1600 360 L1600 640 L0 640Z" fill="url(#m1)" opacity=".85"/>
+  <path d="M330 250 L300 285 L322 280 L338 296 L356 276 L372 286Z M520 230 L492 268 L514 262 L528 276 L548 258 L560 266Z M760 200 L724 248 L750 240 L766 258 L790 236 L806 248Z M980 240 L950 278 L974 272 L990 288 L1008 270 L1022 278Z M1220 260 L1192 294 L1214 290 L1228 304 L1246 286 L1262 296Z" fill="#ffffff" opacity=".9"/>
+  <rect y="300" width="1600" height="160" fill="url(#mist)"/>
+  <!-- middle range -->
+  <path d="M0 470 L150 380 L260 430 L380 350 L500 420 L610 360 L740 440 L860 370 L990 430 L1120 360 L1250 430 L1380 380 L1500 440 L1600 400 L1600 640 L0 640Z" fill="url(#m2)"/>
+  <!-- prayer flags -->
+  <path d="M180 360 Q420 420 660 352" stroke="#134e4a" stroke-width="2" fill="none" opacity=".6"/>
+  <g opacity=".9">
+    <path d="M220 372 l14 4 -4 18 -14 -4z" fill="#3b82f6"/><path d="M262 384 l14 3 -3 18 -14 -3z" fill="#f8fafc"/>
+    <path d="M304 393 l14 3 -2 18 -14 -3z" fill="#ef4444"/><path d="M346 399 l14 2 -2 18 -14 -2z" fill="#22c55e"/>
+    <path d="M388 403 l14 1 -1 18 -14 -1z" fill="#facc15"/><path d="M430 404 l14 0 0 18 -14 0z" fill="#3b82f6"/>
+    <path d="M472 402 l14 -1 1 18 -14 1z" fill="#f8fafc"/><path d="M514 397 l14 -2 2 18 -14 2z" fill="#ef4444"/>
+    <path d="M556 389 l14 -3 3 18 -14 3z" fill="#22c55e"/><path d="M598 377 l14 -4 4 18 -14 4z" fill="#facc15"/>
+  </g>
+  <!-- birds -->
+  <g stroke="#134e4a" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".55">
+    <path d="M880 170 q8 -8 16 0 q8 -8 16 0"/><path d="M930 140 q6 -6 12 0 q6 -6 12 0"/><path d="M960 182 q5 -5 10 0 q5 -5 10 0"/>
+  </g>
+  <!-- near hills -->
+  <path d="M0 540 Q160 470 320 520 T640 510 T960 530 T1280 500 T1600 520 L1600 640 L0 640Z" fill="url(#m3)"/>
+  <path d="M0 600 Q200 550 420 590 T860 585 T1300 575 T1600 590 L1600 640 L0 640Z" fill="url(#m4)"/>
+  <!-- pine trees -->
+  <g fill="#042f2e">
+    <path d="M90 600 l18 -60 18 60z"/><path d="M120 605 l14 -46 14 46z"/><path d="M1420 598 l18 -62 18 62z"/><path d="M1452 604 l13 -44 13 44z"/><path d="M1490 600 l16 -54 16 54z"/>
+  </g>
+</svg>

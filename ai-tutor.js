@@ -41,6 +41,12 @@
 
 
   Object.assign(MLS.UI, {
+    modeCloud: { en: 'Cloud AI · fast', ne: 'क्लाउड AI · छिटो', zh: '云端 AI · 快速' },
+    brainT: { en: 'AI brain', ne: 'AI दिमाग', zh: 'AI 大脑' },
+    brainCloud: { en: '⚡ Cloud (fast, smart)', ne: '⚡ क्लाउड (छिटो, स्मार्ट)', zh: '⚡ 云端（快速、聪明）' },
+    brainLocal: { en: '🧠 On my device', ne: '🧠 मेरो उपकरणमा', zh: '🧠 本机' },
+    brainOff: { en: '📴 Offline', ne: '📴 अफलाइन', zh: '📴 离线' },
+    brainHelp: { en: 'Cloud uses Claude through Puter — free, no key. The first time, a pop-up asks you to sign in to (or create) a free Puter account; your usage comes from your own free monthly allowance.', ne: 'क्लाउडले Puter मार्फत Claude प्रयोग गर्छ — निःशुल्क, key नचाहिने। पहिलो पटक पप-अपले निःशुल्क Puter खातामा साइन इन (वा खाता बनाउन) भन्छ; प्रयोग तपाईंकै निःशुल्क मासिक भत्ताबाट हुन्छ।', zh: '云端通过 Puter 使用 Claude——免费，无需密钥。第一次会弹出窗口让你登录（或创建）免费 Puter 账户；用量从你自己的免费月度额度中扣除。' },
     aiTeacher: { en: 'AI Teacher', ne: 'AI शिक्षक', zh: 'AI 老师' },
     avBuild: { en: 'Design your teacher', ne: 'आफ्नो शिक्षक डिजाइन गर्नुहोस्', zh: '设计你的老师' },
     av_skin: { en: 'Skin', ne: 'छाला', zh: '肤色' }, av_hair: { en: 'Hair', ne: 'कपाल', zh: '发色' }, av_shirt: { en: 'Clothes', ne: 'लुगा', zh: '衣服' }, av_eyes: { en: 'Eyes', ne: 'आँखा', zh: '眼睛' },
@@ -241,7 +247,42 @@ ${small ? smallContext() : context()}`;
   const hasGPU = !!navigator.gpu;
   cfg.local = store.get('ai-local', false);
   cfg.localModel = store.get('ai-local-model', LOCAL_MODELS[0][0]);
-  const engine = () => (cfg.key ? 'claude' : cfg.local && hasGPU ? 'local' : 'offline');
+  cfg.brain = store.get('ai-brain', 'cloud');          // cloud (Puter.js) | local (WebGPU) | offline
+  cfg.cloudModel = store.get('ai-cloud-model', 'anthropic/claude-sonnet-5-5');
+  const CLOUD_MODELS = [
+    ['anthropic/claude-sonnet-5-5', 'Claude Sonnet 5.5 — smart & fast (recommended)'],
+    ['anthropic/claude-haiku-5-5', 'Claude Haiku 5.5 — fastest, uses the least allowance'],
+    ['anthropic/claude-opus-5-5', 'Claude Opus 5.5 — smartest, slower'],
+    ['openai/gpt-6-luna', 'GPT-6 Luna — fast'],
+    ['google/gemini-3.8-flash', 'Gemini 3.8 Flash — fast'],
+  ];
+  const engine = () => (cfg.key ? 'claude' : cfg.brain === 'local' && hasGPU ? 'local' : cfg.brain === 'offline' ? 'offline' : 'cloud');
+
+  // ---------- Cloud AI for everyone via Puter.js (no API key; each visitor uses their own free Puter allowance) ----------
+  let puterP = null;
+  const loadPuter = () => puterP || (puterP = new Promise((res, rej) => {
+    if (window.puter && window.puter.ai) return res(window.puter);
+    const sc = document.createElement('script'); sc.src = 'https://js.puter.com/v2/';
+    sc.onload = () => (window.puter && window.puter.ai ? res(window.puter) : rej(new Error('Puter.js did not load')));
+    sc.onerror = () => { puterP = null; rej(new Error('Could not load Puter.js (check your internet)')); };
+    document.head.appendChild(sc);
+  }));
+  async function askCloud(onText, voice, holder) {
+    const puter = await loadPuter();
+    const ctrl = new AbortController();
+    if (holder) holder.stream = { abort: () => ctrl.abort() };
+    const msgs = [{ role: 'system', content: SYSTEM(voice) }, ...history.slice(-16)];
+    const model = voice && cfg.cloudModel.includes('opus') ? 'anthropic/claude-sonnet-5-5' : cfg.cloudModel;
+    const resp = await puter.ai.chat(msgs, { model, stream: true, max_tokens: voice ? 700 : 3000, signal: ctrl.signal });
+    let full = '';
+    for await (const part of resp) {
+      if (!part) continue;
+      if (part.type === 'error') throw Object.assign(new Error(part.message || 'AI error'), { cloud: true, part });
+      const d = part.text || '';
+      if (d) { full += d; onText(d); }
+    }
+    return full;
+  }
   let localEngine = null, localLoading = null, localModelLoaded = null;
   let lastProg = null;
   function localProgress(p) {
@@ -274,7 +315,7 @@ ${small ? smallContext() : context()}`;
     for await (const c of chunks) { const d = (c.choices[0] && c.choices[0].delta && c.choices[0].delta.content) || ''; if (d) { full += d; onText(d); } }
     return full;
   }
-  const askAI = (onText, voice, holder) => (engine() === 'claude' ? askClaude(onText, voice, holder) : askLocal(onText, voice, holder));
+  const askAI = (onText, voice, holder) => (engine() === 'claude' ? askClaude(onText, voice, holder) : engine() === 'cloud' ? askCloud(onText, voice, holder) : askLocal(onText, voice, holder));
 
   // ---------- Claude (official SDK, browser build) ----------
   let sdkP = null;
@@ -293,6 +334,13 @@ ${small ? smallContext() : context()}`;
     return msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
   }
   function apiErrorText(e, A) {
+    const m = String((e && (e.message || (e.part && e.part.message))) || e || '');
+    if (engine() === 'cloud') {
+      if (/insufficient|402|funds|credit/i.test(m)) return t({ en: '💳 Your free monthly AI allowance on Puter is used up. It resets next month — or switch the AI brain in ⚙️.', ne: '💳 Puter मा तपाईंको निःशुल्क मासिक AI भत्ता सकियो। अर्को महिना फेरि सुरु हुन्छ — वा ⚙️ मा AI दिमाग बदल्नुहोस्।', zh: '💳 你在 Puter 上的免费月度 AI 额度已用完。下个月会重置——或在 ⚙️ 中切换 AI 大脑。' });
+      if (/429|too_many/i.test(m)) return t({ en: '⏳ Too many questions at once — wait a few seconds and try again.', ne: '⏳ एकैपटक धेरै प्रश्न — केही सेकेन्ड पर्खेर फेरि प्रयास गर्नुहोस्।', zh: '⏳ 提问太频繁——请稍等几秒再试。' });
+      if (/sign|auth|cancel|popup/i.test(m)) return t({ en: '🔐 Please sign in to the free Puter account in the pop-up window, then ask again. (Allow pop-ups for this site if nothing appeared.)', ne: '🔐 पप-अप विन्डोमा निःशुल्क Puter खातामा साइन इन गरेर फेरि सोध्नुहोस्। (केही नदेखिए यो साइटका लागि पप-अप अनुमति दिनुहोस्।)', zh: '🔐 请在弹出窗口中登录免费的 Puter 账户，然后再问一次。（如果没有弹出，请允许本网站弹出窗口。）' });
+      return `⚠️ ${esc(m || 'AI error')}`;
+    }
     if (e.refusal) return t({ en: 'Claude declined to answer this request. Try asking in a different way.', ne: 'Claude ले यो अनुरोधको उत्तर दिन अस्वीकार गर्यो। अर्को तरिकाले सोध्नुहोस्।', zh: 'Claude 拒绝回答这个请求，请换一种方式提问。' });
     if (A && e instanceof A.AuthenticationError) return t({ en: '🔑 Your API key was not accepted. Check it in ⚙️ settings.', ne: '🔑 तपाईंको API key स्वीकार भएन। ⚙️ सेटिङमा जाँच्नुहोस्।', zh: '🔑 API 密钥无效，请在 ⚙️ 设置中检查。' });
     if (A && e instanceof A.PermissionDeniedError) return t({ en: '🔒 This key has no access to the selected model. Pick another model in ⚙️ settings.', ne: '🔒 यो key ले छानिएको मोडेल प्रयोग गर्न पाउँदैन। ⚙️ सेटिङमा अर्को मोडेल छान्नुहोस्।', zh: '🔒 该密钥无权使用所选模型，请在 ⚙️ 设置中换一个模型。' });
@@ -488,7 +536,7 @@ ${small ? smallContext() : context()}`;
     const av = panel.querySelector('.tutor-avatar'), cls = av.className;
     av.innerHTML = avatarSVG(cfg.look); av.className = cls;
     panel.querySelector('.tt').textContent = `${teacherName()} · ${u('tutor')}`;
-    panel.querySelector('.mode').innerHTML = engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
+    panel.querySelector('.mode').innerHTML = engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'cloud' ? `<i class="dot on"></i>⚡ ${u('modeCloud')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
     if (!panel.querySelector('.tutor-state').textContent) panel.querySelector('.tutor-state').textContent = u('stReady');
     panel.querySelector('.spk').textContent = cfg.speak ? '🔊' : '🔇';
     panel.querySelector('textarea').placeholder = u('tutorPh');
@@ -531,6 +579,10 @@ ${small ? smallContext() : context()}`;
       <label class="small">${u('tutorVoice')} <select class="voice">${VOICES.map(([id, n]) => `<option value="${id}" ${id === cfg.voice ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label class="small chk"><input type="checkbox" class="speak" ${cfg.speak ? 'checked' : ''}> ${u('tutorSpeak')}</label>
       <p class="small muted">${u('voiceNote')}</p>
+      <b>⚡ ${u('brainT')}</b>
+      <div class="seg brain">${[['cloud', u('brainCloud')], ['local', u('brainLocal')], ['offline', u('brainOff')]].map(([k, n]) => `<button data-b="${k}" class="${cfg.brain === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+      <p class="small">${u('brainHelp')}</p>
+      <label class="small">${u('tutorModel')} <select class="cmodel">${CLOUD_MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.cloudModel ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <b>🧠 ${u('freeAI')}</b><p class="small">${u('freeAIHelp')}</p>
       ${hasGPU ? `<label class="small chk"><input type="checkbox" class="local" ${cfg.local ? 'checked' : ''}> ${u('freeAIOn')}</label>
       <label class="small">${u('tutorModel')} <select class="lmodel">${LOCAL_MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.localModel ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
@@ -541,6 +593,7 @@ ${small ? smallContext() : context()}`;
       <input type="password" class="key" placeholder="sk-ant-..." autocomplete="off" value="${esc(cfg.key)}">
       <label class="small">${u('tutorModel')} <select class="model">${MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.model ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <div class="row"><button class="btn sm save">${u('tutorSave')}</button>${cfg.key ? `<button class="btn ghost sm forget">${u('tutorForget')}</button>` : ''}</div>`;
+    s.querySelectorAll('.brain button').forEach((b) => (b.onclick = () => { cfg.brain = b.dataset.b; cfg.local = cfg.brain === 'local'; store.set('ai-brain', cfg.brain); store.set('ai-local', cfg.local); refresh(); drawSettings(); }));
     const avSet = (k, v) => { cfg.av = { ...cfg.av, [k]: v }; store.set('ai-avatar', cfg.av); refresh(); drawSettings(); };
     s.querySelectorAll('.sw').forEach((b) => (b.onclick = () => avSet(b.dataset.k, b.dataset.v)));
     s.querySelectorAll('.stl').forEach((b) => (b.onclick = () => avSet('style', b.dataset.v)));
@@ -549,7 +602,8 @@ ${small ? smallContext() : context()}`;
     s.querySelector('.save').onclick = () => {
       cfg.key = s.querySelector('.key').value.trim(); cfg.model = s.querySelector('.model').value;
       cfg.voice = s.querySelector('.voice').value; cfg.speak = s.querySelector('.speak').checked; cfg.voiceName = s.querySelector('.vname').value; cfg.rate = +s.querySelector('.vrate').value; cfg.pitch = +s.querySelector('.vpitch').value;
-      if (hasGPU) { cfg.local = s.querySelector('.local').checked; cfg.localModel = s.querySelector('.lmodel').value; }
+      if (hasGPU) { cfg.local = s.querySelector('.local').checked; cfg.localModel = s.querySelector('.lmodel').value; if (cfg.local) cfg.brain = 'local'; }
+      cfg.cloudModel = s.querySelector('.cmodel').value; store.set('ai-cloud-model', cfg.cloudModel); store.set('ai-brain', cfg.brain);
       ['key', 'model', 'voice', 'speak', 'local', 'voiceName', 'rate', 'pitch'].forEach((k) => store.set('ai-' + k, cfg[k]));
       store.set('live-owner', s.querySelector('.liveowner').checked);
       store.set('ai-local-model', cfg.localModel);
@@ -578,7 +632,7 @@ ${small ? smallContext() : context()}`;
     return el;
   }
   function aiCard() {
-    if (engine() === 'claude' || (engine() === 'local' && localEngine && !localLoading)) return null;
+    if (engine() === 'claude' || engine() === 'cloud' || (engine() === 'local' && localEngine && !localLoading)) return null;
     if (localLoading || engine() === 'local') {
       const pe = h(`<div class="ai-card"><b>🧠 ${u('freeAI')}</b><p class="small">${u('freeAIHelp')}</p><div class="ai-progress"><span></span><small>…</small></div></div>`);
       if (!localLoading) startLocal(pe.querySelector('.ai-progress'));
@@ -645,6 +699,7 @@ ${small ? smallContext() : context()}`;
     box.scrollTop = box.scrollHeight;
   }
   function openTutor(prefill) {
+    if (engine() === 'cloud') loadPuter().catch(() => {});
     if (!panel) build();
     panel.hidden = false; fab.classList.add('open'); refresh();
     if (prefill) send(prefill); else panel.querySelector('textarea').focus();
