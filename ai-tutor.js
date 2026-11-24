@@ -41,6 +41,20 @@
 
 
   Object.assign(MLS.UI, {
+    connectT: { en: 'Connect the free ChatGPT brain (one click)', ne: 'निःशुल्क ChatGPT दिमाग जोड्नुहोस् (एक क्लिक)', zh: '连接免费的 ChatGPT 大脑（一键）' },
+    connectP: { en: 'Your AI teacher runs on ChatGPT (OpenAI GPT-6.2) for free through Puter, and speaks with ChatGPT\'s natural voices. Click below, then press "Continue" — a small window creates your free account automatically. If nothing opens, allow pop-ups for this site.', ne: 'तपाईंको AI शिक्षक Puter मार्फत निःशुल्क ChatGPT (OpenAI GPT-6.2) मा चल्छ, र ChatGPT कै प्राकृतिक आवाजमा बोल्छ। तल क्लिक गरेर "Continue" थिच्नुहोस् — सानो विन्डोले निःशुल्क खाता आफैं बनाउँछ। केही नखुले यो साइटका लागि पप-अप अनुमति दिनुहोस्।', zh: '你的 AI 老师通过 Puter 免费使用 ChatGPT（OpenAI GPT-6.2），并用 ChatGPT 的自然声音说话。点击下方按钮，然后按“Continue”——一个小窗口会自动为你创建免费账户。如果没有弹出，请允许本网站弹出窗口。' },
+    connectBtn: { en: '⚡ Connect ChatGPT', ne: '⚡ ChatGPT जोड्नुहोस्', zh: '⚡ 连接 ChatGPT' },
+    connected: { en: '✅ Connected — ask me anything!', ne: '✅ जोडियो — जे पनि सोध्नुहोस्!', zh: '✅ 已连接——尽管问吧！' },
+    popupBlocked: { en: 'The sign-in window was blocked. Allow pop-ups for this site (icon in the address bar), then click Connect again.', ne: 'साइन-इन विन्डो रोकियो। यो साइटका लागि पप-अप अनुमति दिनुहोस् (address bar को आइकन), अनि फेरि Connect थिच्नुहोस्।', zh: '登录窗口被拦截了。请允许本网站弹出窗口（地址栏中的图标），然后再点一次连接。' },
+    connectFail: { en: 'Not connected yet — click Connect and then "Continue" to finish.', ne: 'अझै जोडिएको छैन — Connect अनि "Continue" थिचेर पूरा गर्नुहोस्।', zh: '还没有连接——请点击连接，然后点“Continue”完成。' },
+    needConnect: { en: '⚡ One more step: connect the free ChatGPT brain to get real answers.', ne: '⚡ एक चरण बाँकी: वास्तविक उत्तरका लागि निःशुल्क ChatGPT दिमाग जोड्नुहोस्।', zh: '⚡ 还差一步：连接免费的 ChatGPT 大脑以获得真正的回答。' },
+    notConnected: { en: 'not connected', ne: 'जोडिएको छैन', zh: '未连接' },
+    aiTimeout: { en: '⏳ The AI took too long to reply. Check your internet and try again.', ne: '⏳ AI ले जवाफ दिन धेरै समय लगायो। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।', zh: '⏳ AI 回复超时。请检查网络后重试。' },
+    aiOops: { en: 'Something went wrong while answering.', ne: 'उत्तर दिँदा केही गडबड भयो।', zh: '回答时出了点问题。' },
+    retry: { en: 'Try again', ne: 'फेरि प्रयास', zh: '重试' },
+    vChatGPT: { en: '🎙 ChatGPT voice (natural)', ne: '🎙 ChatGPT आवाज (प्राकृतिक)', zh: '🎙 ChatGPT 声音（自然）' },
+    vBrowser: { en: '🔈 Browser voice', ne: '🔈 ब्राउजर आवाज', zh: '🔈 浏览器声音' },
+    vOaPick: { en: 'ChatGPT voice', ne: 'ChatGPT आवाज', zh: 'ChatGPT 声音' },
     modeCloud: { en: 'Cloud AI · fast', ne: 'क्लाउड AI · छिटो', zh: '云端 AI · 快速' },
     brainT: { en: 'AI brain', ne: 'AI दिमाग', zh: 'AI 大脑' },
     brainCloud: { en: '⚡ Cloud (fast, smart)', ne: '⚡ क्लाउड (छिटो, स्मार्ट)', zh: '⚡ 云端（快速、聪明）' },
@@ -164,8 +178,9 @@
   const lipPulse = (strength = 1) => { mouthState.target = 0.45 + Math.random() * 0.55 * strength; mouthState.talkingUntil = performance.now() + 220; };
   function lifeLoop() {
     const now = performance.now(), root = document.documentElement.style;
-    const speakingNow = (synth && synth.speaking) || (typeof call !== 'undefined' && call && call.speaking);
-    if (speakingNow && now > mouthState.talkingUntil) mouthState.target = 0.15 + Math.abs(Math.sin(now / 85) * Math.sin(now / 47)) * 0.75;
+    const speakingNow = (synth && synth.speaking) || audioPlaying || (typeof call !== 'undefined' && call && call.speaking);
+    if (audioPlaying && curAnalysed) mouthState.target = Math.min(1, audioLevel() * 1.25);
+    else if (speakingNow && now > mouthState.talkingUntil) mouthState.target = 0.15 + Math.abs(Math.sin(now / 85) * Math.sin(now / 47)) * 0.75;
     if (!speakingNow && now > mouthState.talkingUntil) mouthState.target = 0;
     mouthState.value += (mouthState.target - mouthState.value) * 0.35;
     root.setProperty('--mouth', mouthState.value.toFixed(3));
@@ -248,14 +263,25 @@ ${small ? smallContext() : context()}`;
   cfg.local = store.get('ai-local', false);
   cfg.localModel = store.get('ai-local-model', LOCAL_MODELS[0][0]);
   cfg.brain = store.get('ai-brain', 'cloud');          // cloud (Puter.js) | local (WebGPU) | offline
-  cfg.cloudModel = store.get('ai-cloud-model', 'anthropic/claude-sonnet-5-5');
+  cfg.cloudModel = (() => {
+    let m = store.get('ai-cloud-model', '');
+    if (!store.get('ai-chatgpt-default', false)) { store.set('ai-chatgpt-default', true); m = 'gpt-6.2-sol'; store.set('ai-cloud-model', m); } // one-time switch to the ChatGPT brain
+    return (m || 'gpt-6.2-sol').replace(/^(anthropic|openai|google)\//, '');
+  })();
   const CLOUD_MODELS = [
-    ['anthropic/claude-sonnet-5-5', 'Claude Sonnet 5.5 — smart & fast (recommended)'],
-    ['anthropic/claude-haiku-5-5', 'Claude Haiku 5.5 — fastest, uses the least allowance'],
-    ['anthropic/claude-opus-5-5', 'Claude Opus 5.5 — smartest, slower'],
-    ['openai/gpt-6-luna', 'GPT-6 Luna — fast'],
-    ['google/gemini-3.8-flash', 'Gemini 3.8 Flash — fast'],
+    ['gpt-6.2-sol', 'ChatGPT · GPT-6.2 Sol — smart & fast (recommended)'],
+    ['gpt-6.2-astra', 'ChatGPT · GPT-6.2 Astra — OpenAI\'s most capable, slower'],
+    ['gpt-6-luna', 'ChatGPT · GPT-6 Luna — fastest'],
+    ['claude-sonnet-5-5', 'Claude Sonnet 5.5'],
+    ['claude-opus-5-5', 'Claude Opus 5.5 — deep thinker, slower'],
+    ['claude-haiku-5-5', 'Claude Haiku 5.5 — fast'],
   ];
+  const modelLabel = () => { const m = CLOUD_MODELS.find((x) => x[0] === cfg.cloudModel); return m ? m[1].split(' — ')[0] : cfg.cloudModel; };
+  // ChatGPT-style voice: OpenAI's natural voices through Puter (falls back to the browser voice automatically)
+  cfg.voiceEngine = store.get('ai-voice-engine', 'openai');
+  cfg.oaVoice = store.get('ai-oa-voice', 'marin');
+  const OA_VOICES = [['marin', 'Marin — warm & natural (recommended)'], ['cedar', 'Cedar — calm & natural'], ['coral', 'Coral — bright & friendly'], ['sage', 'Sage — gentle'], ['verse', 'Verse — expressive'], ['alloy', 'Alloy — neutral'], ['ash', 'Ash'], ['ballad', 'Ballad'], ['echo', 'Echo'], ['fable', 'Fable'], ['nova', 'Nova — energetic'], ['onyx', 'Onyx — deep'], ['shimmer', 'Shimmer — soft']];
+  const VOICE_STYLE = 'Speak like a warm, friendly human teacher on a one-to-one video call: natural conversational pace, expressive intonation, small natural pauses, encouraging and kind. Never sound robotic or like you are reading.';
   const engine = () => (cfg.key ? 'claude' : cfg.brain === 'local' && hasGPU ? 'local' : cfg.brain === 'offline' ? 'offline' : 'cloud');
 
   // ---------- Cloud AI for everyone via Puter.js (no API key; each visitor uses their own free Puter allowance) ----------
@@ -267,21 +293,60 @@ ${small ? smallContext() : context()}`;
     sc.onerror = () => { puterP = null; rej(new Error('Could not load Puter.js (check your internet)')); };
     document.head.appendChild(sc);
   }));
+  // Puter returns plain objects like {error: "auth_window_closed", msg: "..."} — read them properly.
+  const puterErr = (e) => {
+    if (!e) return '';
+    if (typeof e === 'string') return e;
+    const parts = [e.error, e.code, e.message, e.msg, e.part && (e.part.error || e.part.message)].filter((x) => typeof x === 'string' && x);
+    if (parts.length) return parts.join(' · ');
+    try { return JSON.stringify(e); } catch { return String(e); }
+  };
+  const isSignedIn = () => !!(window.puter && window.puter.auth && window.puter.auth.isSignedIn());
+  const needsConnect = (e) => /not_signed_in|auth_window_closed|popup_blocked|unauthori[sz]ed|\b401\b|sign.?in|log.?in/i.test(puterErr(e));
+  let pendingQ = null;
+  // Must run directly inside a click: Puter shows a consent screen, then a small window that creates a free account automatically.
+  function connectPuter(btn) {
+    if (btn) { btn.disabled = true; btn.dataset.label = btn.textContent; btn.textContent = '…'; }
+    const go = (pu) => pu.auth.signIn({ attempt_temp_user_creation: true });
+    const pr = window.puter && window.puter.auth ? go(window.puter) : loadPuter().then(go);
+    return pr.then(() => {
+      toast(u('connected'));
+      refresh(); if (!history.length) drawMsgs();
+      if (pendingQ) { const q = pendingQ; pendingQ = null; if (q.call && call) cAsk(q.text); else if (!q.call) send(q.text, q.voice); }
+      if (call) { call.el.querySelector('.cb.connect').hidden = true; cStatus(''); }
+    }).catch((e) => {
+      const m = puterErr(e);
+      toast(/popup/i.test(m) ? u('popupBlocked') : u('connectFail'));
+      if (btn) { btn.disabled = false; btn.textContent = btn.dataset.label || u('connectBtn'); }
+    });
+  }
+  function connectCard() {
+    const el = h(`<div class="ai-card connect-card"><b>⚡ ${u('connectT')}</b><p class="small">${u('connectP')}</p><button class="btn sm cbtn">${u('connectBtn')}</button></div>`);
+    el.querySelector('.cbtn').onclick = (ev) => connectPuter(ev.currentTarget);
+    return el;
+  }
   async function askCloud(onText, voice, holder) {
     const puter = await loadPuter();
+    if (!puter.auth.isSignedIn()) throw { error: 'not_signed_in' };
     const ctrl = new AbortController();
     if (holder) holder.stream = { abort: () => ctrl.abort() };
     const msgs = [{ role: 'system', content: SYSTEM(voice) }, ...history.slice(-16)];
-    const model = voice && cfg.cloudModel.includes('opus') ? 'anthropic/claude-sonnet-5-5' : cfg.cloudModel;
-    const resp = await puter.ai.chat(msgs, { model, stream: true, max_tokens: voice ? 700 : 3000, signal: ctrl.signal });
-    let full = '';
-    for await (const part of resp) {
-      if (!part) continue;
-      if (part.type === 'error') throw Object.assign(new Error(part.message || 'AI error'), { cloud: true, part });
-      const d = part.text || '';
-      if (d) { full += d; onText(d); }
-    }
-    return full;
+    let model = cfg.cloudModel;
+    if (voice && /astra|opus/.test(model)) model = model.includes('opus') ? 'claude-sonnet-5-5' : 'gpt-6.2-sol'; // faster for live talk
+    let first = false;
+    const timer = setTimeout(() => { if (!first) { if (holder) holder.timedOut = true; ctrl.abort(); } }, 45000);
+    try {
+      const resp = await puter.ai.chat(msgs, { model, stream: true, max_tokens: voice ? 600 : 3000, signal: ctrl.signal });
+      let full = '';
+      for await (const part of resp) {
+        if (!part) continue;
+        if (part.type === 'error') throw part;
+        const d = typeof part === 'string' ? part : part.text || '';
+        if (d) { first = true; full += d; onText(d); }
+      }
+      if (!full) throw { error: 'empty_response' };
+      return full;
+    } finally { clearTimeout(timer); }
   }
   let localEngine = null, localLoading = null, localModelLoaded = null;
   let lastProg = null;
@@ -334,12 +399,14 @@ ${small ? smallContext() : context()}`;
     return msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
   }
   function apiErrorText(e, A) {
-    const m = String((e && (e.message || (e.part && e.part.message))) || e || '');
+    const m = puterErr(e);
     if (engine() === 'cloud') {
+      if (needsConnect(e)) return u('needConnect');
+      if (/timeout|timed.?out|abort/i.test(m)) return u('aiTimeout');
       if (/insufficient|402|funds|credit/i.test(m)) return t({ en: '💳 Your free monthly AI allowance on Puter is used up. It resets next month — or switch the AI brain in ⚙️.', ne: '💳 Puter मा तपाईंको निःशुल्क मासिक AI भत्ता सकियो। अर्को महिना फेरि सुरु हुन्छ — वा ⚙️ मा AI दिमाग बदल्नुहोस्।', zh: '💳 你在 Puter 上的免费月度 AI 额度已用完。下个月会重置——或在 ⚙️ 中切换 AI 大脑。' });
       if (/429|too_many/i.test(m)) return t({ en: '⏳ Too many questions at once — wait a few seconds and try again.', ne: '⏳ एकैपटक धेरै प्रश्न — केही सेकेन्ड पर्खेर फेरि प्रयास गर्नुहोस्।', zh: '⏳ 提问太频繁——请稍等几秒再试。' });
       if (/sign|auth|cancel|popup/i.test(m)) return t({ en: '🔐 Please sign in to the free Puter account in the pop-up window, then ask again. (Allow pop-ups for this site if nothing appeared.)', ne: '🔐 पप-अप विन्डोमा निःशुल्क Puter खातामा साइन इन गरेर फेरि सोध्नुहोस्। (केही नदेखिए यो साइटका लागि पप-अप अनुमति दिनुहोस्।)', zh: '🔐 请在弹出窗口中登录免费的 Puter 账户，然后再问一次。（如果没有弹出，请允许本网站弹出窗口。）' });
-      return `⚠️ ${esc(m || 'AI error')}`;
+      return `⚠️ ${u('aiOops')} <small class="muted">(${esc(m || 'error')})</small>`;
     }
     if (e.refusal) return t({ en: 'Claude declined to answer this request. Try asking in a different way.', ne: 'Claude ले यो अनुरोधको उत्तर दिन अस्वीकार गर्यो। अर्को तरिकाले सोध्नुहोस्।', zh: 'Claude 拒绝回答这个请求，请换一种方式提问。' });
     if (A && e instanceof A.AuthenticationError) return t({ en: '🔑 Your API key was not accepted. Check it in ⚙️ settings.', ne: '🔑 तपाईंको API key स्वीकार भएन। ⚙️ सेटिङमा जाँच्नुहोस्।', zh: '🔑 API 密钥无效，请在 ⚙️ 设置中检查。' });
@@ -447,7 +514,79 @@ ${small ? smallContext() : context()}`;
     return ut;
   }
   let speakQueue = 0;
+  // ---- OpenAI voice (same voice technology as ChatGPT) via Puter ----
+  let ttsBroken = false, audioCtx = null, analyser = null, levelBuf = null, curAudio = null, audioPlaying = false, curAnalysed = false;
+  const useCloudVoice = () => cfg.voiceEngine === 'openai' && !ttsBroken && engine() === 'cloud' && isSignedIn();
+  const ttsCache = new Map();
+  function tts(text) {
+    const key = cfg.oaVoice + '|' + text;
+    if (ttsCache.has(key)) return ttsCache.get(key);
+    const pr = loadPuter().then((pu) => pu.ai.txt2speech(text.slice(0, 2900), { provider: 'openai', model: 'gpt-4o-mini-tts', voice: cfg.oaVoice, response_format: 'mp3', instructions: VOICE_STYLE }));
+    ttsCache.set(key, pr);
+    if (ttsCache.size > 40) ttsCache.delete(ttsCache.keys().next().value);
+    pr.catch(() => ttsCache.delete(key));
+    return pr;
+  }
+  function hookAnalyser(audio) {
+    try {
+      if (!/^(blob|data):/.test(audio.src || '')) return false; // cross-origin audio can't be analysed without muting it
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (!analyser) { analyser = audioCtx.createAnalyser(); analyser.fftSize = 512; levelBuf = new Uint8Array(analyser.fftSize); analyser.connect(audioCtx.destination); }
+      audioCtx.createMediaElementSource(audio).connect(analyser);
+      return true;
+    } catch { return false; }
+  }
+  function audioLevel() {
+    if (!analyser || !levelBuf) return 0;
+    analyser.getByteTimeDomainData(levelBuf);
+    let sum = 0; for (let i = 0; i < levelBuf.length; i++) { const v = (levelBuf[i] - 128) / 128; sum += v * v; }
+    return Math.sqrt(sum / levelBuf.length) * 4.5;
+  }
+  function playAudio(audio) {
+    return new Promise((res) => {
+      curAudio = audio;
+      curAnalysed = audio.dataset.hooked === '1' || hookAnalyser(audio);
+      if (curAnalysed) audio.dataset.hooked = '1';
+      try { audio.currentTime = 0; } catch { /* ignore */ }
+      let doneOnce = false; const done = (r) => { if (doneOnce) return; doneOnce = true; audioPlaying = false; res(r); };
+      audio.onplaying = () => { audioPlaying = true; };
+      audio.onended = () => done('ended'); audio.onerror = () => done('error');
+      audio.play().then(() => { audioPlaying = true; }).catch(() => done('blocked'));
+    });
+  }
+  function ttsChunks(text) {
+    const sents = (text.match(/[^.!?।。！？\n]+[.!?।。！？]*/g) || [text]).map((x) => x.trim()).filter(Boolean);
+    const out = []; let cur = '';
+    sents.forEach((x) => { const limit = out.length === 0 ? 150 : 420; if (cur && (cur + ' ' + x).length > limit) { out.push(cur); cur = x; } else cur = cur ? cur + ' ' + x : x; });
+    if (cur) out.push(cur);
+    return out;
+  }
+  function speakCloud(text, onDone) {
+    stopSpeaking();
+    const id = ++speakQueue; setState('speaking');
+    const chunks = ttsChunks(text);
+    let i = 0, nextP = tts(chunks[0]);
+    const step = async () => {
+      if (id !== speakQueue) return;
+      if (i >= chunks.length) { setState('idle'); onDone && onDone(); return; }
+      let audio;
+      try { audio = await nextP; } catch (e) { console.warn('ChatGPT voice unavailable, using the browser voice', puterErr(e)); ttsBroken = true; if (id === speakQueue) speakBrowser(chunks.slice(i).join(' '), onDone); return; }
+      if (id !== speakQueue) return;
+      i++; if (i < chunks.length) nextP = tts(chunks[i]); // prefetch the next part while this one plays
+      const r = await playAudio(audio);
+      if (id !== speakQueue) return;
+      if (r === 'blocked' || r === 'error') { ttsBroken = r === 'error'; speakBrowser(chunks.slice(i - 1).join(' '), onDone); return; }
+      step();
+    };
+    step();
+  }
   function speak(text, onDone) {
+    if (!cfg.speak || !text) { onDone && onDone(); return; }
+    if (useCloudVoice()) return speakCloud(text, onDone);
+    return speakBrowser(text, onDone);
+  }
+  function speakBrowser(text, onDone) {
     if (!synth || !cfg.speak || !text) { onDone && onDone(); return; }
     synth.cancel();
     const lang = detectLang(text), voice = pickVoice(lang);
@@ -463,7 +602,7 @@ ${small ? smallContext() : context()}`;
     };
     next(0);
   }
-  function stopSpeaking() { if (synth) synth.cancel(); speakQueue++; setState('idle'); }
+  function stopSpeaking() { if (synth) synth.cancel(); if (curAudio) { try { curAudio.pause(); } catch { /* ignore */ } } audioPlaying = false; speakQueue++; setState('idle'); }
 
   // ---------- Voice: speech recognition (listen) ----------
   let rec = null, listening = false, convo = false;
@@ -536,7 +675,7 @@ ${small ? smallContext() : context()}`;
     const av = panel.querySelector('.tutor-avatar'), cls = av.className;
     av.innerHTML = avatarSVG(cfg.look); av.className = cls;
     panel.querySelector('.tt').textContent = `${teacherName()} · ${u('tutor')}`;
-    panel.querySelector('.mode').innerHTML = engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'cloud' ? `<i class="dot on"></i>⚡ ${u('modeCloud')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
+    panel.querySelector('.mode').innerHTML = engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'cloud' ? `<i class="dot ${isSignedIn() ? 'on' : ''}"></i>⚡ ${esc(modelLabel())}${isSignedIn() ? '' : ' · ' + u('notConnected')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
     if (!panel.querySelector('.tutor-state').textContent) panel.querySelector('.tutor-state').textContent = u('stReady');
     panel.querySelector('.spk').textContent = cfg.speak ? '🔊' : '🔇';
     panel.querySelector('textarea').placeholder = u('tutorPh');
@@ -574,6 +713,8 @@ ${small ? smallContext() : context()}`;
         <div class="av-row"><span>${u('av_style')}</span>${AV_OPTS.style.map((st) => `<button class="stl ${(cfg.av.style || AV_DEFAULT.style) === st ? 'on' : ''}" data-v="${st}">${u('st_' + st)}</button>`).join('')}</div>
         <label class="small chk"><input type="checkbox" class="glasses" ${(cfg.av.glasses ?? AV_DEFAULT.glasses) ? 'checked' : ''}> ${u('av_glasses')}</label></div></div>
       <b>🗣️ ${u('voiceTitle')}</b>
+      <div class="seg veng">${[['openai', u('vChatGPT')], ['browser', u('vBrowser')]].map(([k, n]) => `<button data-v="${k}" class="${cfg.voiceEngine === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+      <label class="small">${u('vOaPick')} <select class="oavoice">${OA_VOICES.map(([id, n]) => `<option value="${id}" ${id === cfg.oaVoice ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label class="small">${u('voicePick')} <select class="vname"><option value="">${u('voiceAuto')}</option>${(synth ? synth.getVoices() : []).filter((v) => !cfg.voice || cfg.voice === 'auto' || v.lang.startsWith(cfg.voice.split('-')[0])).map((v) => `<option ${v.name === cfg.voiceName ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></label>
       <div class="row small"><label>${u('voiceSpeed')} <input type="range" class="vrate" min="0.8" max="1.25" step="0.01" value="${cfg.rate || 1}"></label><label>${u('voicePitch')} <input type="range" class="vpitch" min="0.8" max="1.25" step="0.01" value="${cfg.pitch || 1}"></label><button class="btn ghost sm vtest">▶ ${u('voiceTest')}</button></div>
       <label class="small">${u('tutorVoice')} <select class="voice">${VOICES.map(([id, n]) => `<option value="${id}" ${id === cfg.voice ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
@@ -594,6 +735,8 @@ ${small ? smallContext() : context()}`;
       <label class="small">${u('tutorModel')} <select class="model">${MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.model ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <div class="row"><button class="btn sm save">${u('tutorSave')}</button>${cfg.key ? `<button class="btn ghost sm forget">${u('tutorForget')}</button>` : ''}</div>`;
     s.querySelectorAll('.brain button').forEach((b) => (b.onclick = () => { cfg.brain = b.dataset.b; cfg.local = cfg.brain === 'local'; store.set('ai-brain', cfg.brain); store.set('ai-local', cfg.local); refresh(); drawSettings(); }));
+    s.querySelectorAll('.veng button').forEach((b) => (b.onclick = () => { cfg.voiceEngine = b.dataset.v; store.set('ai-voice-engine', cfg.voiceEngine); ttsBroken = false; drawSettings(); }));
+    s.querySelector('.oavoice').onchange = (e) => { cfg.oaVoice = e.target.value; store.set('ai-oa-voice', cfg.oaVoice); ttsBroken = false; };
     const avSet = (k, v) => { cfg.av = { ...cfg.av, [k]: v }; store.set('ai-avatar', cfg.av); refresh(); drawSettings(); };
     s.querySelectorAll('.sw').forEach((b) => (b.onclick = () => avSet(b.dataset.k, b.dataset.v)));
     s.querySelectorAll('.stl').forEach((b) => (b.onclick = () => avSet('style', b.dataset.v)));
@@ -652,6 +795,7 @@ ${small ? smallContext() : context()}`;
     const ch = chooserCard(); if (ch) box.appendChild(ch);
     bubble('bot', esc(u('tutorHi').replace('{name}', teacherName())));
     const card = aiCard(); if (card) box.appendChild(card);
+    if (engine() === 'cloud' && !isSignedIn()) box.appendChild(connectCard());
     history.forEach((m) => { if (m.role === 'user') bubble('user', esc(m.content).replace(/\n/g, '<br>')); else render(m.content, bubble('bot', '')); });
     box.scrollTop = box.scrollHeight;
   }
@@ -673,6 +817,14 @@ ${small ? smallContext() : context()}`;
       speak(speakable(out.innerText.replace(u('offlineNote'), '')), after);
       return;
     }
+    if (engine() === 'cloud') {
+      try { await loadPuter(); } catch { /* handled below */ }
+      if (!isSignedIn()) {
+        pendingQ = { text, voice: viaVoice };
+        out.innerHTML = ''; out.appendChild(connectCard()); box.scrollTop = box.scrollHeight;
+        return;
+      }
+    }
     busy = true; setSendBtn(true); setState('thinking');
     history.push({ role: 'user', content: text });
     const holder = (curHolder = {});
@@ -687,11 +839,15 @@ ${small ? smallContext() : context()}`;
       render(full, out);
       speak(speakable(full), after);
     } catch (e) {
-      const aborted = /abort/i.test(String(e && (e.name + e.message)));
+      const aborted = !holder.timedOut && /abort/i.test(puterErr(e) + String(e && e.name));
       if (aborted && acc) { history.push({ role: 'assistant', content: acc }); render(acc, out); }
       else {
-        console.error(e); history.pop();
-        out.innerHTML = `<p>${apiErrorText(e, A)}</p>` + offlineAnswer(text);
+        console.error('AI error:', puterErr(e)); history.pop();
+        if (engine() === 'cloud' && needsConnect(e)) { pendingQ = { text, voice: viaVoice }; out.innerHTML = ''; out.appendChild(connectCard()); }
+        else {
+          out.innerHTML = `<p>${holder.timedOut ? u('aiTimeout') : apiErrorText(e, A)}</p><button class="btn ghost sm retry">↻ ${u('retry')}</button>`;
+          out.querySelector('.retry').onclick = () => send(text, viaVoice);
+        }
         setState('idle');
       }
     }
@@ -699,7 +855,7 @@ ${small ? smallContext() : context()}`;
     box.scrollTop = box.scrollHeight;
   }
   function openTutor(prefill) {
-    if (engine() === 'cloud') loadPuter().catch(() => {});
+    if (engine() === 'cloud') loadPuter().then(() => { if (panel) { refresh(); if (!history.length) drawMsgs(); } }).catch(() => {});
     if (!panel) build();
     panel.hidden = false; fab.classList.add('open'); refresh();
     if (prefill) send(prefill); else panel.querySelector('textarea').focus();
@@ -725,19 +881,37 @@ ${small ? smallContext() : context()}`;
   function face(cls, on) { if (call) call.el.querySelector('.call-avatar').classList.toggle(cls, on); }
   function caption(who, txt) { if (call) call.el.querySelector('.call-caption.' + who).textContent = txt; }
   function cStatus(txt) { if (call) call.el.querySelector('.call-status').textContent = txt; }
-  function cSay(text) { text = cleanSpeech(text); if (!call || !text) return; call.queue.push(text); if (!call.speaking) cNext(); }
-  function cNext() {
+  function cSay(text) {
+    text = cleanSpeech(text); if (!call || !text) return;
+    call.queue.push({ text, audioP: cfg.speak && useCloudVoice() ? tts(text) : null }); // start fetching the voice immediately
+    if (!call.speaking) cNext();
+  }
+  async function cNext() {
     if (!call) return;
-    const s = call.queue.shift();
-    if (!s) { call.speaking = false; call.cur = ''; face('talking', false); setTimeout(() => { if (call && !call.speaking) caption('bot', ''); }, 1800); return; }
+    const item = call.queue.shift();
+    if (!item) { call.speaking = false; call.cur = ''; face('talking', false); setTimeout(() => { if (call && !call.speaking) caption('bot', ''); }, 1800); return; }
+    const s = item.text;
     call.speaking = true; call.cur = s; face('talking', true); caption('bot', s);
-    if (!synth || !cfg.speak) { setTimeout(() => { if (call && call.cur === s) cNext(); }, 55 * s.length + 400); return; }
+    const advance = () => { if (call && call.cur === s) setTimeout(() => { if (call && call.cur === s) cNext(); }, /[.!?。！？।]$/.test(s) ? 110 + Math.random() * 150 : 60); };
+    if (!cfg.speak) { setTimeout(advance, 55 * s.length + 400); return; }
+    if (item.audioP) {
+      try {
+        const audio = await item.audioP;
+        if (!call || call.cur !== s) return;
+        const r = await playAudio(audio);
+        if (!call || call.cur !== s) return;
+        if (r === 'ended') { advance(); return; }
+        if (r === 'error') ttsBroken = true;
+      } catch (e) { ttsBroken = true; console.warn('ChatGPT voice unavailable', puterErr(e)); }
+      if (!call || call.cur !== s) return;
+    }
+    if (!synth) { setTimeout(advance, 55 * s.length); return; }
     const lang = detectLang(s), v = pickVoice(lang);
     const ut = humanUtterance(s, lang, v);
-    ut.onend = ut.onerror = () => { if (call && call.cur === s) setTimeout(() => { if (call && call.cur === s) cNext(); }, /[.!?。！？।]$/.test(s) ? 160 + Math.random() * 200 : 80); };
+    ut.onend = ut.onerror = advance;
     synth.speak(ut);
   }
-  function cHush() { if (!call) return; call.queue = []; call.cur = ''; if (synth) synth.cancel(); call.speaking = false; face('talking', false); }
+  function cHush() { if (!call) return; call.queue = []; call.cur = ''; if (synth) synth.cancel(); if (curAudio) { try { curAudio.pause(); } catch { /* ignore */ } } audioPlaying = false; call.speaking = false; face('talking', false); }
   function backchannel() {
     if (!call || call.speaking) return;
     const now = Date.now(); if (now - call.lastBC < 2200) return; call.lastBC = now;
@@ -750,7 +924,7 @@ ${small ? smallContext() : context()}`;
     if (!cls) return; face(cls, true); setTimeout(() => face(cls, false), 4000);
   }
   function isEcho(heard) {
-    const a = normTxt(heard), b = normTxt(call.cur + ' ' + call.queue.join(' '));
+    const a = normTxt(heard), b = normTxt(call.cur + ' ' + call.queue.map((q) => q.text).join(' '));
     return a.length > 0 && a.length < 60 && b.includes(a.slice(0, Math.min(a.length, 14)));
   }
   function cListen() {
@@ -807,7 +981,8 @@ ${small ? smallContext() : context()}`;
       if (acc) history.push({ role: 'assistant', content: acc + ' …' }); else history.pop();
       if (!call || call.turn !== turn) return;                 // aborted by a newer question
       face('thinking', false); cStatus('');
-      const A = await sdk().catch(() => null);
+      if (engine() === 'cloud' && needsConnect(e)) { pendingQ = { text, call: true }; call.el.querySelector('.cb.connect').hidden = false; cStatus(u('needConnect')); return; }
+      const A = engine() === 'claude' ? await sdk().catch(() => null) : null;
       const d = document.createElement('div'); d.innerHTML = apiErrorText(e, A); cSay(d.innerText);
     }
   }
@@ -842,6 +1017,7 @@ ${small ? smallContext() : context()}`;
         <button class="cb mic on" title="Microphone">🎙️</button>
         <button class="cb cam" title="Camera">📷</button>
         <select class="cl">${VOICES.map(([id, n]) => `<option value="${id}" ${id === cfg.voice ? 'selected' : ''}>${n}</option>`).join('')}</select>
+        <button class="cb connect" title="Connect" hidden>⚡</button>
         <button class="cb end" title="End">📞</button>
       </div></div>`);
     document.body.appendChild(el);
@@ -851,8 +1027,10 @@ ${small ? smallContext() : context()}`;
     el.querySelector('.cb.end').onclick = endCall;
     el.querySelector('.cl').onchange = (e) => { cfg.voice = e.target.value; store.set('ai-voice', cfg.voice); call.lang = recLang(); if (call.rec) { const r = call.rec; call.rec = null; r.abort(); } cListen(); };
     document.addEventListener('keydown', escCall);
+    el.querySelector('.cb.connect').onclick = (ev) => connectPuter(ev.currentTarget);
     cSay(u('callGreet').replace('{name}', teacherName()));
     cListen();
+    if (engine() === 'cloud') loadPuter().then(() => { if (call && !isSignedIn()) { call.el.querySelector('.cb.connect').hidden = false; cStatus(u('needConnect')); } }).catch(() => {});
   }
   function escCall(e) { if (e.key === 'Escape') endCall(); }
   function endCall() {

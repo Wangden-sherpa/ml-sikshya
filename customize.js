@@ -16,6 +16,7 @@
   });
 
   const FONTS = {
+    neon: ['Space Grotesk + DM Sans', '"DM Sans", "Noto Sans Devanagari", "Noto Sans SC", system-ui, sans-serif'],
     clay: ['Poppins + Nunito', '"Nunito Sans", "Noto Sans Devanagari", "Noto Sans SC", system-ui, sans-serif'],
     inter: ['Inter', '"Inter", "Noto Sans Devanagari", "Noto Sans SC", system-ui, sans-serif'],
     system: ['System', 'system-ui, -apple-system, "Segoe UI", "Noto Sans Devanagari", "Microsoft YaHei", sans-serif'],
@@ -25,10 +26,10 @@
   };
   const BGS = { default: ['', ''], warm: ['#fbf6ef', '#1b1611'], cool: ['#eef4fb', '#0c1422'], mint: ['#eefaf5', '#0b1a16'], lavender: ['#f5f2fd', '#14111f'], paper: ['#ffffff', '#000000'] };
   const PRESETS = [
-    { n: 'Clay Teal', a: '#0f766e', b: '#2dd4bf' }, { n: 'Indigo', a: '#4f46e5', b: '#7c3aed' }, { n: 'Ocean', a: '#0284c7', b: '#0d9488' }, { n: 'Forest', a: '#15803d', b: '#65a30d' },
+    { n: 'Neon', a: '#22d3ee', b: '#a855f7' }, { n: 'Clay Teal', a: '#0f766e', b: '#2dd4bf' }, { n: 'Indigo', a: '#4f46e5', b: '#7c3aed' }, { n: 'Ocean', a: '#0284c7', b: '#0d9488' }, { n: 'Forest', a: '#15803d', b: '#65a30d' },
     { n: 'Sunset', a: '#ea580c', b: '#db2777' }, { n: 'Rose', a: '#e11d48', b: '#c026d3' }, { n: 'Gold', a: '#b45309', b: '#ca8a04' }, { n: 'Mono', a: '#334155', b: '#64748b' },
   ];
-  const DEF = { accent: '#0f766e', accent2: '#2dd4bf', bg: 'default', bright: 100, contrast: 100, sat: 100, text: 100, font: 'clay', radius: 20, width: 'normal', motion: true, glow: true };
+  const DEF = { accent: '#22d3ee', accent2: '#a855f7', bg: 'default', bright: 100, contrast: 100, sat: 100, text: 100, font: 'neon', radius: 18, width: 'normal', motion: true, glow: true };
   let C = { ...DEF, ...store.get('design', {}) };
   if (!store.get('design', null)) { const old = { ocean: 1, forest: 2, sunset: 3, rose: 4 }[store.get('accent', '')]; if (old) { C.accent = PRESETS[old].a; C.accent2 = PRESETS[old].b; } }
 
@@ -36,9 +37,9 @@
   function apply() {
     const r = document.documentElement, st = r.style, dark = r.dataset.theme === 'dark';
     delete r.dataset.accent;
-    st.setProperty('--primary', C.accent);
-    st.setProperty('--primary-2', C.accent2);
-    st.setProperty('--primary-soft', `color-mix(in srgb, ${C.accent} ${dark ? 22 : 11}%, ${dark ? '#161a29' : '#ffffff'})`);
+    const themed = C.accent === DEF.accent && C.accent2 === DEF.accent2; // default colours: let the theme pick (neon on dark, violet on light)
+    if (themed) { ['--primary', '--primary-2', '--neon-a', '--neon-b'].forEach((v) => st.removeProperty(v)); } else { st.setProperty('--primary', C.accent); st.setProperty('--primary-2', C.accent2); st.setProperty('--neon-a', C.accent); st.setProperty('--neon-b', C.accent2); }
+    if (themed) st.removeProperty('--primary-soft'); else st.setProperty('--primary-soft', `color-mix(in srgb, ${C.accent} ${dark ? 22 : 11}%, ${dark ? '#161a29' : '#ffffff'})`);
     const bg = BGS[C.bg] || BGS.default;
     if (bg[0]) { st.setProperty('--bg', dark ? bg[1] : bg[0]); r.dataset.czBg = C.bg; } else { st.removeProperty('--bg'); delete r.dataset.czBg; }
     st.setProperty('--cz-filter', `brightness(${C.bright / 100}) contrast(${C.contrast / 100}) saturate(${C.sat / 100})`);

@@ -94,7 +94,7 @@
   };
   const S = {
     lang: store.get('lang', 'en'),
-    theme: store.get('theme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+    theme: store.get('theme', 'dark'),
     done: store.get('done', {}),
     quiz: store.get('quiz', {}),
   };

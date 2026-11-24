@@ -20,16 +20,60 @@
   });
 
   // ---------- Three.js loading & stage ----------
-  let libP = null;
+  let libP = null, fxP = null;
   const lib = () => libP || (libP = Promise.all([import('three'), import('three/addons/controls/OrbitControls.js')])
     .then(([THREE, oc]) => ({ THREE, OrbitControls: oc.OrbitControls }))
     .catch((e) => { libP = null; throw e; }));
+  // Cinematic extras (bloom glow, vignette, studio reflections). Optional: if they fail to load, the scenes still work.
+  const fxLib = () => fxP || (fxP = Promise.all([
+    import('three/addons/postprocessing/EffectComposer.js'), import('three/addons/postprocessing/RenderPass.js'),
+    import('three/addons/postprocessing/UnrealBloomPass.js'), import('three/addons/postprocessing/ShaderPass.js'),
+    import('three/addons/postprocessing/OutputPass.js'), import('three/addons/shaders/VignetteShader.js'),
+    import('three/addons/environments/RoomEnvironment.js'),
+  ]).then(([ec, rp, ub, sp, op, vs, re]) => ({ EffectComposer: ec.EffectComposer, RenderPass: rp.RenderPass, UnrealBloomPass: ub.UnrealBloomPass, ShaderPass: sp.ShaderPass, OutputPass: op.OutputPass, VignetteShader: vs.VignetteShader, RoomEnvironment: re.RoomEnvironment }))
+    .catch((e) => { fxP = null; console.warn('3D: cinematic effects unavailable, using the basic renderer.', e); return null; }));
+
+  // ---------- Picture quality (shared with the home-page hero) ----------
+  const QUAL = { ultra: { en: '4K Ultra ✨', ne: '4K अल्ट्रा ✨', zh: '4K 超清 ✨' }, hd: { en: 'HD', ne: 'HD', zh: '高清' }, standard: { en: 'Standard (fast)', ne: 'साधारण (छिटो)', zh: '标准（流畅）' } };
+  const QTITLE = { en: 'Picture quality', ne: 'चित्रको गुणस्तर', zh: '画质' };
+  let qualKey = MLS.store.get('3d-quality', 'ultra');
+  if (!QUAL[qualKey]) qualKey = 'ultra';
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // ultra is supersampled (up to 3x the screen's pixels), so edges and labels stay razor-sharp
+  const basePR = () => { const d = window.devicePixelRatio || 1; return qualKey === 'ultra' ? Math.min(Math.max(d, 1) * 1.5, 3) : qualKey === 'hd' ? Math.min(d, 2) : Math.min(d, 1.5); };
+
+  // ---------- Painted backdrops (opaque, so the glow can blend on top) ----------
+  const BGP = {
+    night: { base: '#070a1c', fog: 0x0d0f2e, glow: [[0.5, 0, 0.8, 1.35, [[0, '#1b1450'], [0.7, '#070a1c']]]], neb: [[0.15, 0.3, 0.3, 'rgba(34,211,238,.10)'], [0.85, 0.22, 0.34, 'rgba(168,85,247,.16)'], [0.6, 1, 0.38, 'rgba(244,114,182,.07)']] },
+    space: { base: '#000000', fog: 0x05030c, glow: [[0.5, 1.2, 0.85, 1.3, [[0, '#1a1033'], [0.6, '#000000']]]], neb: [[0.22, 0.32, 0.36, 'rgba(124,58,237,.20)'], [0.8, 0.2, 0.3, 'rgba(34,211,238,.10)'], [0.62, 0.85, 0.34, 'rgba(244,114,182,.10)']] },
+    dusk: { base: '#12081d', fog: 0x2a1033, glow: [[0.3, 0, 1, 1.6, [[0, '#7c2d72'], [0.45, '#2a1033'], [1, '#12081d']]]], neb: [] },
+    sea: { base: '#020f1a', fog: 0x031c2e, glow: [[0.5, 0, 0.9, 1.5, [[0, '#0e7490'], [0.5, '#052e45'], [1, '#020f1a']]]], neb: [] },
+    studio: { base: '#1f2937', fog: 0x2b2f36, glow: [[0.5, 0.3, 0.8, 1.2, [[0, '#4b5563'], [0.7, '#1f2937']]]], neb: [] },
+  };
+  function paintBg(THREE, P) {
+    const c = document.createElement('canvas'), W = (c.width = 1024), H = (c.height = 512), g = c.getContext('2d');
+    g.fillStyle = P.base; g.fillRect(0, 0, W, H);
+    const blob = (x, y, rx, ry, stops) => {
+      g.save(); g.translate(x * W, y * H); g.scale((rx * W) / (ry * H), 1);
+      const gr = g.createRadialGradient(0, 0, 0, 0, 0, ry * H);
+      stops.forEach(([o, col]) => gr.addColorStop(o, col));
+      g.fillStyle = gr; g.fillRect(-W * 4, -H * 4, W * 8, H * 8); g.restore();
+    };
+    P.glow.forEach(([x, y, rx, ry, stops]) => blob(x, y, rx, ry, stops));
+    P.neb.forEach(([x, y, r, col]) => blob(x, y, r, (r * W) / H, [[0, col], [1, 'rgba(0,0,0,0)']]));
+    const img = g.getImageData(0, 0, W, H), d = img.data; // tiny dither noise: no colour banding on big screens
+    for (let i = 0; i < d.length; i += 4) { const n = (Math.random() - 0.5) * 3; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+    g.putImageData(img, 0, 0);
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
 
   const active = new Set();
   MLS.hooks.beforeRender.push(() => { active.forEach((s) => s.dispose()); active.clear(); });
 
   // ---------- Colour themes (chosen by the learner, saved in the browser) ----------
   const THEMES = {
+    cosmic: { name: { en: 'Deep space neon ✨', ne: 'अन्तरिक्ष नियोन ✨', zh: '深空霓虹 ✨' }, a: 0xf472b6, b: 0x22d3ee, acc: 0xfde047, grad: ['#3b0764', '#c026d3', '#22d3ee'], pal: [0x22d3ee, 0xf472b6, 0xa855f7, 0xfacc15, 0x34d399, 0xfb923c, 0x60a5fa, 0xf87171, 0xa3e635, 0xe879f9] },
     aurora: { name: { en: 'Aurora', ne: 'अरोरा', zh: '极光' }, a: 0xef4444, b: 0x3b82f6, acc: 0xfde047, grad: ['#3b4cc0', '#2fd17a', '#ef4444'], pal: [0x6366f1, 0xec4899, 0x10b981, 0xf59e0b, 0x0ea5e9, 0x8b5cf6, 0xef4444, 0x14b8a6, 0xf97316, 0x84cc16] },
     ocean: { name: { en: 'Ocean', ne: 'समुद्र', zh: '海洋' }, a: 0x22d3ee, b: 0x6366f1, acc: 0xa5f3fc, grad: ['#0c1a5b', '#0ea5e9', '#e0f2fe'], pal: [0x0ea5e9, 0x22d3ee, 0x6366f1, 0x14b8a6, 0x38bdf8, 0x818cf8, 0x2dd4bf, 0x60a5fa, 0xa5f3fc, 0x3b82f6] },
     sunset: { name: { en: 'Sunset', ne: 'सूर्यास्त', zh: '日落' }, a: 0xf97316, b: 0xa855f7, acc: 0xfde68a, grad: ['#4c1d95', '#ec4899', '#fbbf24'], pal: [0xf97316, 0xec4899, 0xa855f7, 0xfbbf24, 0xef4444, 0xf472b6, 0xfb923c, 0xc084fc, 0xfde68a, 0xdb2777] },
@@ -38,9 +82,9 @@
     mono: { name: { en: 'Monochrome', ne: 'एकरङ', zh: '单色' }, a: 0xf8fafc, b: 0x64748b, acc: 0xfacc15, grad: ['#1e293b', '#94a3b8', '#ffffff'], pal: [0xf8fafc, 0x94a3b8, 0xcbd5e1, 0x64748b, 0xe2e8f0, 0x475569, 0xfacc15, 0x334155, 0xd1d5db, 0x9ca3af] },
   };
   const BGS = { night: { en: 'Night', ne: 'रात', zh: '夜空' }, space: { en: 'Deep space ✨', ne: 'अन्तरिक्ष ✨', zh: '深空 ✨' }, dusk: { en: 'Dusk', ne: 'साँझ', zh: '黄昏' }, sea: { en: 'Deep sea', ne: 'गहिरो समुद्र', zh: '深海' }, studio: { en: 'Studio grey', ne: 'स्टुडियो खैरो', zh: '影棚灰' } };
-  let themeKey = MLS.store.get('3d-theme', 'aurora'), bgKey = MLS.store.get('3d-bg', 'night');
-  if (!THEMES[themeKey]) themeKey = 'aurora';
-  if (!BGS[bgKey]) bgKey = 'night';
+  let themeKey = MLS.store.get('3d-theme', 'cosmic'), bgKey = MLS.store.get('3d-bg', 'space');
+  if (!THEMES[themeKey]) themeKey = 'cosmic';
+  if (!BGS[bgKey]) bgKey = 'space';
   let PAL, CA, CB, CACC, GRAD;
   const applyTheme = () => { const T = THEMES[themeKey]; PAL = T.pal; CA = T.a; CB = T.b; CACC = T.acc; GRAD = T.grad; };
   applyTheme();
@@ -48,16 +92,28 @@
   const randn = (r) => { let a = 0; while (!a) a = r(); return Math.sqrt(-2 * Math.log(a)) * Math.cos(2 * Math.PI * r()); };
 
   async function stage(container, opts = {}) {
-    const { THREE, OrbitControls } = await lib();
+    const [{ THREE, OrbitControls }, FX] = await Promise.all([lib(), qualKey === 'standard' ? null : fxLib()]);
     const H = opts.height || 400;
     const W = container.clientWidth || 640;
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    let pr = basePR();
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(pr);
     renderer.setSize(W, H);
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x0b1020, 18, 40);
+    const look = BGP[bgKey] || BGP.night;
+    const bgTex = paintBg(THREE, look);
+    scene.background = bgTex;
+    scene.fog = new THREE.Fog(look.fog, 18, 40);
+    let envTex = null;
+    if (FX) { // soft studio reflections on every shiny surface
+      try {
+        const pm = new THREE.PMREMGenerator(renderer), room = new FX.RoomEnvironment(renderer);
+        envTex = pm.fromScene(room, 0.04).texture; scene.environment = envTex;
+        pm.dispose(); if (room.dispose) room.dispose();
+      } catch (e) { console.warn('3D: reflections off', e); }
+    }
     const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 200);
     camera.position.set(...(opts.cam || [7, 5, 9]));
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -65,33 +121,88 @@
     controls.autoRotate = opts.autoRotate !== false;
     controls.autoRotateSpeed = 0.7;
     if (opts.target) controls.target.set(...opts.target);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+    scene.add(new THREE.AmbientLight(0xffffff, envTex ? 0.5 : 0.75));
     const dl = new THREE.DirectionalLight(0xffffff, 1.2); dl.position.set(6, 12, 8); scene.add(dl);
     const pl = new THREE.PointLight(0xa78bfa, 1.2, 30); pl.position.set(-6, 4, -4); scene.add(pl);
-    renderer.domElement.addEventListener('pointerdown', () => { controls.autoRotate = false; });
+    // neon rim lights in the theme colours: soft coloured edges on every object
+    const rimA = new THREE.DirectionalLight(CB, 0.55); rimA.position.set(-9, 4, -7); scene.add(rimA);
+    const rimB = new THREE.DirectionalLight(CA, 0.45); rimB.position.set(9, 3, -6); scene.add(rimB);
+    // cinematic intro: the camera glides in (skipped for reduced motion, or as soon as you touch it)
+    const camDist = camera.position.distanceTo(controls.target), tmpV = new THREE.Vector3();
+    let intro = reduceMotion ? 1 : 0;
+    renderer.domElement.addEventListener('pointerdown', () => { controls.autoRotate = false; intro = 1; });
+    renderer.domElement.addEventListener('wheel', () => { intro = 1; }, { passive: true });
+
+    // post-processing for HD / 4K Ultra: multisampled anti-aliasing + bloom glow + vignette
+    let composer = null;
+    if (FX) {
+      try {
+        composer = new FX.EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
+        composer.setPixelRatio(pr); composer.setSize(W, H);
+        composer.addPass(new FX.RenderPass(scene, camera));
+        composer.addPass(new FX.UnrealBloomPass(new THREE.Vector2(W, H), qualKey === 'ultra' ? 0.9 : 0.7, 0.5, 0.86));
+        const vig = new FX.ShaderPass(FX.VignetteShader); vig.uniforms.offset.value = 0.8; vig.uniforms.darkness.value = 1.05;
+        composer.addPass(vig);
+        composer.addPass(new FX.OutputPass());
+      } catch (e) { console.warn('3D: effects off', e); composer = null; }
+    }
+
+    // "glow-up": shiny reflections + brighter neon emissives on whatever the scene builds
+    const seen = new WeakSet();
+    const polish = () => {
+      scene.traverse((o) => {
+        if (!o.material) return;
+        [].concat(o.material).forEach((m) => {
+          if (seen.has(m)) return;
+          seen.add(m);
+          if (!m.isMeshStandardMaterial) return;
+          if (envTex) m.envMapIntensity = 0.5;
+          if (composer && m.emissive && m.emissive.getHex() !== 0) m.emissiveIntensity *= 1.7;
+        });
+      });
+    };
+    let nextPolish = 0;
 
     const frames = [];
     let alive = true, raf = 0, visible = true;
     const clock = new THREE.Clock();
+    const fit = () => {
+      const w = container.clientWidth; if (!w) return;
+      renderer.setPixelRatio(pr); renderer.setSize(w, H);
+      if (composer) { composer.setPixelRatio(pr); composer.setSize(w, H); }
+      camera.aspect = w / H; camera.updateProjectionMatrix();
+    };
+    let warm = 0, perfN = 0, perfT = 0, drops = 0;
     const loop = () => {
       if (!alive) return;
       raf = requestAnimationFrame(loop);
-      const dt = Math.min(clock.getDelta(), 0.05);
+      const raw = clock.getDelta(), dt = Math.min(raw, 0.05);
       if (!visible) return;
+      if (intro < 1) {
+        intro = Math.min(1, intro + dt / 1.8);
+        tmpV.copy(camera.position).sub(controls.target).setLength(camDist * (1 + 0.6 * Math.pow(1 - intro, 3)));
+        camera.position.copy(controls.target).add(tmpV);
+      }
       frames.forEach((f) => f(dt, clock.elapsedTime));
+      if (clock.elapsedTime >= nextPolish) { nextPolish = clock.elapsedTime + 0.6; polish(); }
       controls.update();
-      renderer.render(scene, camera);
+      if (composer) composer.render(dt); else renderer.render(scene, camera);
+      // stay smooth: if this device can't hold ~30 fps, quietly render fewer pixels
+      if (raw < 0.25 && ++warm > 45) {
+        perfT += raw;
+        if (++perfN === 45) {
+          if (perfT / perfN > 0.036 && pr > 1 && drops < 3) { pr = Math.max(1, pr * 0.7); drops++; fit(); }
+          perfN = 0; perfT = 0;
+        }
+      }
     };
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; });
     io.observe(container);
-    const ro = new ResizeObserver(() => {
-      const w = container.clientWidth; if (!w) return;
-      renderer.setSize(w, H); camera.aspect = w / H; camera.updateProjectionMatrix();
-    });
+    const ro = new ResizeObserver(fit);
     ro.observe(container);
     loop();
     const s = {
-      THREE, scene, camera, renderer, controls,
+      THREE, scene, camera, renderer, controls, polish,
       onFrame: (f) => frames.push(f),
       dispose() {
         if (!alive) return;
@@ -100,6 +211,8 @@
           if (o.geometry) o.geometry.dispose();
           if (o.material) [].concat(o.material).forEach((m) => { if (m.map) m.map.dispose(); m.dispose(); });
         });
+        if (composer) { composer.passes.forEach((ps) => ps.dispose && ps.dispose()); if (composer.dispose) composer.dispose(); }
+        bgTex.dispose(); if (envTex) envTex.dispose();
         renderer.dispose(); renderer.forceContextLoss && renderer.forceContextLoss(); renderer.domElement.remove();
         active.delete(s);
       },
@@ -760,11 +873,11 @@
     backprop: { icon: '🔁', lessons: ['training-deep'], cam: [0, 3, 12], target: [0, 2.2, 0], title: { en: 'Backpropagation & dropout', ne: 'ब्याकप्रोपागेसन र dropout', zh: '反向传播与 Dropout' }, desc: { en: 'Forward pass, loss, then gradients flow backwards and update the weights — epoch after epoch.', ne: 'Forward pass, loss, अनि gradient पछाडि बग्छ र weight update हुन्छ — epoch पछि epoch।', zh: '前向传播、计算损失，然后梯度反向流动并更新权重——一轮接一轮。' } },
   };
 
-  function addStars(s) {
+  function addStars(s, n = 900, size = 0.18) {
     const { THREE } = s, r = mulberry(77), pos = [];
-    for (let i = 0; i < 900; i++) { const th = r() * Math.PI * 2, ph = Math.acos(2 * r() - 1), d = 30 + r() * 25; pos.push(d * Math.sin(ph) * Math.cos(th), d * Math.cos(ph), d * Math.sin(ph) * Math.sin(th)); }
+    for (let i = 0; i < n; i++) { const th = r() * Math.PI * 2, ph = Math.acos(2 * r() - 1), d = 30 + r() * 25; pos.push(d * Math.sin(ph) * Math.cos(th), d * Math.cos(ph), d * Math.sin(ph) * Math.sin(th)); }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    const st = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 0.18, map: dot(THREE), transparent: true, depthWrite: false, fog: false }));
+    const st = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size, map: dot(THREE), transparent: true, depthWrite: false, fog: false }));
     s.scene.add(st);
     s.onFrame((dt) => { st.rotation.y += dt * 0.01; });
   }
@@ -772,22 +885,23 @@
     const info = INFO[name] || {};
     if (el._stage) { el._stage.dispose(); el._stage = null; }
     applyTheme();
-    el.innerHTML = `<div class="viz3d bg-${bgKey}"><div class="viz3d-canvas"><div class="viz3d-loading">${u('loading3d')}</div></div>
+    el.innerHTML = `<div class="viz3d bg-${bgKey}" style="--h3d:${opts.height || 420}px"><div class="viz3d-canvas"><div class="viz3d-loading">${u('loading3d')}</div></div>
       <div class="viz3d-hint">🖱️ ${u('drag3d')}</div>
       <div class="viz3d-theme">🎨 <select class="th">${Object.keys(THEMES).map((k) => `<option value="${k}" ${k === themeKey ? 'selected' : ''}>${t(THEMES[k].name)}</option>`).join('')}</select>
-        <select class="bgsel">${Object.keys(BGS).map((k) => `<option value="${k}" ${k === bgKey ? 'selected' : ''}>${t(BGS[k])}</option>`).join('')}</select></div>
+        <select class="bgsel">${Object.keys(BGS).map((k) => `<option value="${k}" ${k === bgKey ? 'selected' : ''}>${t(BGS[k])}</option>`).join('')}</select>
+        <select class="qsel" title="${t(QTITLE)}" aria-label="${t(QTITLE)}">${Object.keys(QUAL).map((k) => `<option value="${k}" ${k === qualKey ? 'selected' : ''}>${t(QUAL[k])}</option>`).join('')}</select></div>
       <div class="viz3d-controls"></div></div>`;
     const canvas = el.querySelector('.viz3d-canvas'), ctrl = el.querySelector('.viz3d-controls');
     el.querySelector('.th').onchange = (e) => { themeKey = e.target.value; MLS.store.set('3d-theme', themeKey); mount(el, name, opts); };
     el.querySelector('.bgsel').onchange = (e) => { bgKey = e.target.value; MLS.store.set('3d-bg', bgKey); mount(el, name, opts); };
+    el.querySelector('.qsel').onchange = (e) => { qualKey = e.target.value; MLS.store.set('3d-quality', qualKey); mount(el, name, opts); };
     try {
       const s = await stage(canvas, { height: opts.height || 420, cam: opts.cam || info.cam, target: opts.target || info.target, autoRotate: opts.autoRotate !== undefined ? opts.autoRotate : info.autoRotate });
       el._stage = s;
       if (!document.body.contains(el)) { s.dispose(); return; }
-      const FOG = { night: 0x0b1020, space: 0x000000, dusk: 0x2a1033, sea: 0x031c2e, studio: 0x2b2f36 };
-      s.scene.fog.color.setHex(FOG[bgKey]);
-      if (bgKey === 'space') addStars(s);
+      if (bgKey === 'space') addStars(s); else if (bgKey === 'night') addStars(s, 420, 0.13);
       await SCENES[name](s, ctrl, opts);
+      s.polish();
     } catch (e) {
       console.error(e);
       canvas.innerHTML = `<div class="viz3d-loading">⚠️ ${u('fail3d')}</div>`;
