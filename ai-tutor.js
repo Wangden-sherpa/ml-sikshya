@@ -49,6 +49,11 @@
     connectFail: { en: 'Not connected yet — click Connect and then "Continue" to finish.', ne: 'अझै जोडिएको छैन — Connect अनि "Continue" थिचेर पूरा गर्नुहोस्।', zh: '还没有连接——请点击连接，然后点“Continue”完成。' },
     needConnect: { en: '⚡ One more step: connect the free ChatGPT brain to get real answers.', ne: '⚡ एक चरण बाँकी: वास्तविक उत्तरका लागि निःशुल्क ChatGPT दिमाग जोड्नुहोस्।', zh: '⚡ 还差一步：连接免费的 ChatGPT 大脑以获得真正的回答。' },
     notConnected: { en: 'not connected', ne: 'जोडिएको छैन', zh: '未连接' },
+    fileT: { en: 'Open the online version to use ChatGPT', ne: 'ChatGPT प्रयोग गर्न अनलाइन संस्करण खोल्नुहोस्', zh: '打开在线版即可使用 ChatGPT' },
+    fileP: { en: 'This page was opened as a file (by double-clicking index.html), so ChatGPT can\'t sign in here: it needs a web address. The online version works straight away and has everything.', ne: 'यो पेज फाइलको रूपमा खोलिएको छ (index.html मा डबल-क्लिक गरेर), त्यसैले यहाँ ChatGPT साइन-इन हुन सक्दैन: यसलाई वेब ठेगाना चाहिन्छ। अनलाइन संस्करण तुरुन्तै चल्छ र त्यहाँ सबै कुरा छ।', zh: '此页面是以文件方式打开的（双击 index.html），没有网址，所以 ChatGPT 无法在这里登录。在线版可立即使用，功能完全相同。' },
+    fileBtn: { en: '🌐 Open online version', ne: '🌐 अनलाइन संस्करण खोल्नुहोस्', zh: '🌐 打开在线版' },
+    fileLocal: { en: 'Prefer your own copy? Double-click "Start ML Sikshya.bat" in the ML Sikshya folder instead of index.html.', ne: 'आफ्नै कपी चलाउन चाहनुहुन्छ? index.html को सट्टा ML Sikshya फोल्डरमा "Start ML Sikshya.bat" मा डबल-क्लिक गर्नुहोस्।', zh: '想用自己电脑上的副本？请双击 ML Sikshya 文件夹里的 "Start ML Sikshya.bat"，而不是 index.html。' },
+    fileShort: { en: 'opened as a file', ne: 'फाइलको रूपमा खोलिएको', zh: '以文件方式打开' },
     aiTimeout: { en: '⏳ The AI took too long to reply. Check your internet and try again.', ne: '⏳ AI ले जवाफ दिन धेरै समय लगायो। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।', zh: '⏳ AI 回复超时。请检查网络后重试。' },
     aiOops: { en: 'Something went wrong while answering.', ne: 'उत्तर दिँदा केही गडबड भयो।', zh: '回答时出了点问题。' },
     retry: { en: 'Try again', ne: 'फेरि प्रयास', zh: '重试' },
@@ -286,13 +291,18 @@ ${small ? smallContext() : context()}`;
 
   // ---------- Cloud AI for everyone via Puter.js (no API key; each visitor uses their own free Puter allowance) ----------
   let puterP = null;
-  const loadPuter = () => puterP || (puterP = new Promise((res, rej) => {
+  // Opened by double-clicking index.html (file://)? Puter signs a page in by its web address and a file has none,
+  // so don't load it there (it would only show an error); offer the online copy or the local launcher instead.
+  const FILE_MODE = location.protocol === 'file:';
+  const LIVE_URL = 'https://wangdencerpa12345-star.github.io/ml-sikshya/';
+  const openOnline = () => window.open(LIVE_URL + (location.hash || '#/'), '_blank', 'noopener');
+  const loadPuter = () => (FILE_MODE ? Promise.reject({ error: 'file_protocol', msg: 'Page opened as a file (file://)' }) : puterP || (puterP = new Promise((res, rej) => {
     if (window.puter && window.puter.ai) return res(window.puter);
     const sc = document.createElement('script'); sc.src = 'https://js.puter.com/v2/';
     sc.onload = () => (window.puter && window.puter.ai ? res(window.puter) : rej(new Error('Puter.js did not load')));
     sc.onerror = () => { puterP = null; rej(new Error('Could not load Puter.js (check your internet)')); };
     document.head.appendChild(sc);
-  }));
+  })));
   // Puter returns plain objects like {error: "auth_window_closed", msg: "..."} — read them properly.
   const puterErr = (e) => {
     if (!e) return '';
@@ -302,10 +312,11 @@ ${small ? smallContext() : context()}`;
     try { return JSON.stringify(e); } catch { return String(e); }
   };
   const isSignedIn = () => !!(window.puter && window.puter.auth && window.puter.auth.isSignedIn());
-  const needsConnect = (e) => /not_signed_in|auth_window_closed|popup_blocked|unauthori[sz]ed|\b401\b|sign.?in|log.?in/i.test(puterErr(e));
+  const needsConnect = (e) => /file_protocol|not_signed_in|auth_window_closed|popup_blocked|unauthori[sz]ed|\b401\b|sign.?in|log.?in/i.test(puterErr(e));
   let pendingQ = null;
   // Must run directly inside a click: Puter shows a consent screen, then a small window that creates a free account automatically.
   function connectPuter(btn) {
+    if (FILE_MODE) { openOnline(); return Promise.resolve(); }
     if (btn) { btn.disabled = true; btn.dataset.label = btn.textContent; btn.textContent = '…'; }
     const go = (pu) => pu.auth.signIn({ attempt_temp_user_creation: true });
     const pr = window.puter && window.puter.auth ? go(window.puter) : loadPuter().then(go);
@@ -321,6 +332,11 @@ ${small ? smallContext() : context()}`;
     });
   }
   function connectCard() {
+    if (FILE_MODE) {
+      const fc = h(`<div class="ai-card connect-card"><b>🌐 ${u('fileT')}</b><p class="small">${u('fileP')}</p><button class="btn sm cbtn">${u('fileBtn')}</button><p class="small muted">${u('fileLocal')}</p></div>`);
+      fc.querySelector('.cbtn').onclick = openOnline;
+      return fc;
+    }
     const el = h(`<div class="ai-card connect-card"><b>⚡ ${u('connectT')}</b><p class="small">${u('connectP')}</p><button class="btn sm cbtn">${u('connectBtn')}</button></div>`);
     el.querySelector('.cbtn').onclick = (ev) => connectPuter(ev.currentTarget);
     return el;
@@ -401,7 +417,7 @@ ${small ? smallContext() : context()}`;
   function apiErrorText(e, A) {
     const m = puterErr(e);
     if (engine() === 'cloud') {
-      if (needsConnect(e)) return u('needConnect');
+      if (needsConnect(e)) return FILE_MODE ? u('fileT') : u('needConnect');
       if (/timeout|timed.?out|abort/i.test(m)) return u('aiTimeout');
       if (/insufficient|402|funds|credit/i.test(m)) return t({ en: '💳 Your free monthly AI allowance on Puter is used up. It resets next month — or switch the AI brain in ⚙️.', ne: '💳 Puter मा तपाईंको निःशुल्क मासिक AI भत्ता सकियो। अर्को महिना फेरि सुरु हुन्छ — वा ⚙️ मा AI दिमाग बदल्नुहोस्।', zh: '💳 你在 Puter 上的免费月度 AI 额度已用完。下个月会重置——或在 ⚙️ 中切换 AI 大脑。' });
       if (/429|too_many/i.test(m)) return t({ en: '⏳ Too many questions at once — wait a few seconds and try again.', ne: '⏳ एकैपटक धेरै प्रश्न — केही सेकेन्ड पर्खेर फेरि प्रयास गर्नुहोस्।', zh: '⏳ 提问太频繁——请稍等几秒再试。' });
@@ -675,7 +691,7 @@ ${small ? smallContext() : context()}`;
     const av = panel.querySelector('.tutor-avatar'), cls = av.className;
     av.innerHTML = avatarSVG(cfg.look); av.className = cls;
     panel.querySelector('.tt').textContent = `${teacherName()} · ${u('tutor')}`;
-    panel.querySelector('.mode').innerHTML = engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'cloud' ? `<i class="dot ${isSignedIn() ? 'on' : ''}"></i>⚡ ${esc(modelLabel())}${isSignedIn() ? '' : ' · ' + u('notConnected')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
+    panel.querySelector('.mode').innerHTML = engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'cloud' ? `<i class="dot ${isSignedIn() ? 'on' : ''}"></i>⚡ ${esc(modelLabel())}${isSignedIn() ? '' : ' · ' + u(FILE_MODE ? 'fileShort' : 'notConnected')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
     if (!panel.querySelector('.tutor-state').textContent) panel.querySelector('.tutor-state').textContent = u('stReady');
     panel.querySelector('.spk').textContent = cfg.speak ? '🔊' : '🔇';
     panel.querySelector('textarea').placeholder = u('tutorPh');
@@ -821,6 +837,7 @@ ${small ? smallContext() : context()}`;
       try { await loadPuter(); } catch { /* handled below */ }
       if (!isSignedIn()) {
         pendingQ = { text, voice: viaVoice };
+        box.querySelectorAll('.connect-card').forEach((c) => c.remove()); // keep just one card, next to the question
         out.innerHTML = ''; out.appendChild(connectCard()); box.scrollTop = box.scrollHeight;
         return;
       }
@@ -843,7 +860,7 @@ ${small ? smallContext() : context()}`;
       if (aborted && acc) { history.push({ role: 'assistant', content: acc }); render(acc, out); }
       else {
         console.error('AI error:', puterErr(e)); history.pop();
-        if (engine() === 'cloud' && needsConnect(e)) { pendingQ = { text, voice: viaVoice }; out.innerHTML = ''; out.appendChild(connectCard()); }
+        if (engine() === 'cloud' && needsConnect(e)) { pendingQ = { text, voice: viaVoice }; box.querySelectorAll('.connect-card').forEach((c) => c.remove()); out.innerHTML = ''; out.appendChild(connectCard()); }
         else {
           out.innerHTML = `<p>${holder.timedOut ? u('aiTimeout') : apiErrorText(e, A)}</p><button class="btn ghost sm retry">↻ ${u('retry')}</button>`;
           out.querySelector('.retry').onclick = () => send(text, viaVoice);
@@ -981,7 +998,7 @@ ${small ? smallContext() : context()}`;
       if (acc) history.push({ role: 'assistant', content: acc + ' …' }); else history.pop();
       if (!call || call.turn !== turn) return;                 // aborted by a newer question
       face('thinking', false); cStatus('');
-      if (engine() === 'cloud' && needsConnect(e)) { pendingQ = { text, call: true }; call.el.querySelector('.cb.connect').hidden = false; cStatus(u('needConnect')); return; }
+      if (engine() === 'cloud' && needsConnect(e)) { pendingQ = { text, call: true }; call.el.querySelector('.cb.connect').hidden = false; cStatus(FILE_MODE ? u('fileT') : u('needConnect')); return; }
       const A = engine() === 'claude' ? await sdk().catch(() => null) : null;
       const d = document.createElement('div'); d.innerHTML = apiErrorText(e, A); cSay(d.innerText);
     }
@@ -1017,7 +1034,7 @@ ${small ? smallContext() : context()}`;
         <button class="cb mic on" title="Microphone">🎙️</button>
         <button class="cb cam" title="Camera">📷</button>
         <select class="cl">${VOICES.map(([id, n]) => `<option value="${id}" ${id === cfg.voice ? 'selected' : ''}>${n}</option>`).join('')}</select>
-        <button class="cb connect" title="Connect" hidden>⚡</button>
+        <button class="cb connect" title="${FILE_MODE ? u('fileBtn') : 'Connect'}" hidden>${FILE_MODE ? '🌐' : '⚡'}</button>
         <button class="cb end" title="End">📞</button>
       </div></div>`);
     document.body.appendChild(el);
@@ -1030,7 +1047,7 @@ ${small ? smallContext() : context()}`;
     el.querySelector('.cb.connect').onclick = (ev) => connectPuter(ev.currentTarget);
     cSay(u('callGreet').replace('{name}', teacherName()));
     cListen();
-    if (engine() === 'cloud') loadPuter().then(() => { if (call && !isSignedIn()) { call.el.querySelector('.cb.connect').hidden = false; cStatus(u('needConnect')); } }).catch(() => {});
+    if (engine() === 'cloud') loadPuter().then(() => { if (call && !isSignedIn()) { call.el.querySelector('.cb.connect').hidden = false; cStatus(u('needConnect')); } }).catch(() => { if (call && FILE_MODE) { call.el.querySelector('.cb.connect').hidden = false; cStatus(u('fileT')); } });
   }
   function escCall(e) { if (e.key === 'Escape') endCall(); }
   function endCall() {
