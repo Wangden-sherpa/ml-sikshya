@@ -35,6 +35,27 @@ when a button had a question ready, the panel shows it so the student can say it
 Nuance's rules (shown in the panel): **adults 18+ only**, **English only**, and available only in the
 US (not Colorado, Connecticut, Illinois or Texas), the EU, the UK and Canada (not Quebec).
 
+## 🎥 Live AI video tutor in the page (owner only, Nuance API)
+
+A real-time video teacher (Sam, Sonia or Mira, Nuance's API personas) that teaches **inside ML Tutor**.
+Through its tools it knows every lesson (text, code examples and quiz), all 9 projects (goal, steps,
+challenges, starter code) and the glossary; it can search the course, see the student's lesson and latest
+code run, open lessons and projects, and put runnable examples on screen. It guides step by step, quizzes
+the student, and gives project hints instead of full solutions.
+
+It only runs on the owner's computer, because it needs your Nuance API key:
+
+1. Create an API key on [platform.nuancelabs.ai](https://platform.nuancelabs.ai) and accept the developer
+   agreement there.
+2. Save the key (it starts with `nk_`) in `%USERPROFILE%\.ml-sikshya\nuance_key.txt` on Windows, or
+   `~/.ml-sikshya/nuance_key.txt` on Mac/Linux. **Never** put it in this project, on GitHub or in a chat.
+3. Double-click `tools\start-live-tutor.bat` and keep its window open.
+4. In ML Tutor open **📹 Emma & Nora**, open **🎥 Live AI video tutor (owner only)**, tick
+   **"This is my computer"**, then press **🎥 Live AI video tutor**.
+
+Good to know: the personas speak and understand **English only** (Nuance refuses other languages), Nuance's
+API is for adults 18+, and each class uses your Nuance credits.
+
 ## 🗂️ Structure
 
 ```

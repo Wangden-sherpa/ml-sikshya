@@ -5,12 +5,13 @@
   MLS.hooks.home.push((el) => {
     const sec = h(`<section class="teachers one">
       <div class="teachers-text"><span class="new-badge big">AI</span><h2>${u('enTitle')}</h2><p class="muted">${u('enSub')}</p>
-        <div class="tc-actions big"><button class="btn chat">${u('enStart')}</button></div>
+        <div class="tc-actions big">${MLS.liveEnabled && MLS.liveEnabled() ? `<button class="btn tc-live">${u('liveBtn')}</button>` : ''}<button class="btn chat">${u('enStart')}</button></div>
         <p class="small muted">${u('enRules')}</p></div>
       <div class="teacher-stage"><div class="en-people">
         <div class="en-persona emma"><div class="en-face">E</div><b>Emma</b><span class="en-live">● Live</span></div>
         <div class="en-persona nora"><div class="en-face">N</div><b>Nora</b><span class="en-live">● Live</span></div></div></div></section>`);
     sec.querySelector('.chat').onclick = () => MLS.openTutor();
+    const lv = sec.querySelector('.tc-live'); if (lv) lv.onclick = () => MLS.openLive();
     sec.querySelectorAll('.en-persona').forEach((p) => (p.onclick = () => MLS.openTutor()));
     const hero = el.querySelector('.hero');
     (hero || el.firstElementChild).after(sec);

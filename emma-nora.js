@@ -20,6 +20,7 @@
     enCopy: { en: '📋 Copy', ne: '📋 कपी', zh: '📋 复制' },
     enCopied: { en: 'Copied', ne: 'कपी भयो', zh: '已复制' },
     enClose: { en: 'Close', ne: 'बन्द', zh: '关闭' },
+    enLiveHere: { en: 'Or learn right here on this page with a live AI video teacher (Sam, Sonia or Mira). They know every ML Tutor lesson, project and glossary term, can see your code, and guide you step by step. English only.', ne: 'वा यही पेजमा प्रत्यक्ष AI भिडियो शिक्षक (Sam, Sonia वा Mira) सँग सिक्नुहोस्। उनीहरूलाई ML Tutor का सबै पाठ, प्रोजेक्ट र शब्दावली थाहा छ, तपाईंको कोड हेर्न सक्छन् र चरणबद्ध रूपमा सिकाउँछन्। अङ्ग्रेजी मात्र।', zh: '或者就在本页面和 AI 实时视频老师（Sam、Sonia 或 Mira）一起学习。他们了解 ML Tutor 的所有课程、项目和术语，能看到你的代码，并一步步指导你。仅限英语。' },
     enFab: { en: 'Emma & Nora', ne: 'Emma र Nora', zh: 'Emma 和 Nora' },
   });
 
@@ -41,6 +42,7 @@
       <p class="small muted en-pick">${u('enPick')}</p>
       <p class="small en-rules">ℹ️ ${u('enRules')}</p>
       <p class="small muted">${u('enPrivacy')}</p>
+      <div class="en-livebox"></div>
     </div></div>`);
     panel.querySelector('.en-x').onclick = close;
     panel.onclick = (e) => { if (e.target === panel) close(); };
@@ -57,8 +59,20 @@
     document.body.append(fab, panel);
   }
 
+  function drawLive() {   // the in-page live tutor (live-tutor.js): only on the owner's computer, where the key server runs
+    const box = panel.querySelector('.en-livebox');
+    if (!MLS.openLive) { box.innerHTML = ''; return; }
+    const on = MLS.liveEnabled && MLS.liveEnabled();
+    box.innerHTML = `${on ? `<div class="en-livehere"><p class="small">${u('enLiveHere')}</p><button class="btn en-live-go">${u('liveBtn')}</button></div>` : ''}
+      <details class="en-owner small"><summary>🎥 ${u('liveOwner')}</summary><p class="muted">${u('liveOwnerHelp')}</p>
+        <label class="chk"><input type="checkbox" class="en-owner-on" ${on ? 'checked' : ''}> ${u('liveOwnerOn')}</label></details>`;
+    const go = box.querySelector('.en-live-go'); if (go) go.onclick = () => { close(); MLS.openLive(); };
+    box.querySelector('.en-owner-on').onchange = (e) => { MLS.store.set('live-owner', e.target.checked); drawLive(); if (MLS.route === 'home' || !MLS.route) MLS.render && MLS.render(); };
+  }
+
   function openTutor(question) {
     if (!panel) build();
+    drawLive();
     const q = panel.querySelector('.en-q');
     q.hidden = !question;
     panel.querySelector('.en-qtext').innerHTML = question ? esc(question) : '';
