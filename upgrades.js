@@ -16,7 +16,7 @@
     certificate: { en: '🎓 Certificate', ne: '🎓 प्रमाणपत्र', zh: '🎓 证书' },
     certTitle: { en: 'Certificate of Completion', ne: 'समापन प्रमाणपत्र', zh: '结业证书' },
     certLine1: { en: 'This certifies that', ne: 'यो प्रमाणित गरिन्छ कि', zh: '兹证明' },
-    certLine2: { en: 'has successfully completed all 28 lessons of the Machine Learning course — from foundations to deep learning and professional practice.', ne: 'ले मेसिन लर्निङ कोर्सका सबै २८ पाठ सफलतापूर्वक पूरा गर्नुभएको छ — आधारभूत ज्ञानदेखि डिप लर्निङ र पेशेवर अभ्याससम्म।', zh: '已成功完成机器学习课程全部 28 课——从基础知识到深度学习与专业实践。' },
+    certLine2: { en: 'has successfully completed all 34 lessons of the Machine Learning course — from foundations to deep learning, professional practice and generative AI.', ne: 'ले मेसिन लर्निङ कोर्सका सबै ३४ पाठ सफलतापूर्वक पूरा गर्नुभएको छ — आधारभूत ज्ञानदेखि डिप लर्निङ, पेशेवर अभ्यास र जेनेरेटिभ AI सम्म।', zh: '已成功完成机器学习课程全部 34 课——从基础知识到深度学习、专业实践与生成式 AI。' },
     certName: { en: 'Your name', ne: 'तपाईंको नाम', zh: '你的名字' },
     certPrint: { en: '🖨️ Print / save as PDF', ne: '🖨️ प्रिन्ट / PDF सेभ', zh: '🖨️ 打印 / 保存为 PDF' },
     certLocked: { en: '🔒 Finish all lessons to unlock your certificate. Below is a preview.', ne: '🔒 प्रमाणपत्र खोल्न सबै पाठ पूरा गर्नुहोस्। तल पूर्वावलोकन छ।', zh: '🔒 完成全部课程即可解锁证书。下面是预览。' },
@@ -78,7 +78,7 @@
     { id: 's7', icon: '⚡', name: { en: 'Unstoppable', ne: 'नरोकिने', zh: '势不可挡' }, how: { en: '7-day streak', ne: '७ दिन लगातार', zh: '连续学习 7 天' }, ok: () => streak() >= 7 },
     { id: 'mission1', icon: '🌍', name: { en: 'Real-world hero', ne: 'वास्तविक संसारको नायक', zh: '实战英雄' }, how: { en: 'Complete a real-world mission', ne: 'एउटा वास्तविक मिसन पूरा', zh: '完成 1 个真实任务' }, ok: () => store.get('missions-done', []).length >= 1 },
     { id: 'mission4', icon: '🏆', name: { en: 'Data professional', ne: 'डाटा पेशेवर', zh: '数据专家' }, how: { en: 'Complete 4 missions', ne: '४ मिसन पूरा', zh: '完成 4 个任务' }, ok: () => store.get('missions-done', []).length >= 4 },
-    { id: 'grad', icon: '🎓', name: { en: 'Graduate', ne: 'स्नातक', zh: '毕业生' }, how: { en: 'Finish all 28 lessons', ne: 'सबै २८ पाठ पूरा', zh: '完成全部 28 课' }, ok: () => C.lessons.every((l) => S.done[l.id]) },
+    { id: 'grad', icon: '🎓', name: { en: 'Graduate', ne: 'स्नातक', zh: '毕业生' }, how: { en: 'Finish all 34 lessons', ne: 'सबै ३४ पाठ पूरा', zh: '完成全部 34 课' }, ok: () => C.lessons.every((l) => S.done[l.id]) },
   ];
   let checking = false;
   function check() {

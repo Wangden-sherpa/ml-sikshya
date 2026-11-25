@@ -46,16 +46,15 @@
   function loadPipe(M, onProgress) {
     if (pipes[M.id]) return pipes[M.id];
     const files = {};
-    pipes[M.id] = getTF().then((TF) => TF.pipeline(M.task, M.model, {
-      dtype: M.dtype, device: 'wasm',
-      progress_callback: (p) => {
-        if (p.status === 'progress' && p.file) {
-          files[p.file] = [p.loaded || 0, p.total || 0];
-          const v = Object.values(files), got = v.reduce((s, x) => s + x[0], 0), all = v.reduce((s, x) => s + x[1], 0);
-          onProgress(all ? got / all : 0, got);
-        } else if (p.status === 'ready') onProgress(1, -1);
-      },
-    })).catch((e) => { delete pipes[M.id]; throw e; });
+    const progress_callback = (p) => {
+      if (p.status === 'progress' && p.file) {
+        files[p.file] = [p.loaded || 0, p.total || 0];
+        const v = Object.values(files), got = v.reduce((s, x) => s + x[0], 0), all = v.reduce((s, x) => s + x[1], 0);
+        onProgress(all ? got / all : 0, got);
+      } else if (p.status === 'ready') onProgress(1, -1);
+    };
+    pipes[M.id] = (M.load ? M.load(progress_callback) : getTF().then((TF) => TF.pipeline(M.task, M.model, { dtype: M.dtype, device: 'wasm', progress_callback })))
+      .catch((e) => { delete pipes[M.id]; throw e; });
     return pipes[M.id];
   }
 
@@ -166,6 +165,30 @@
       },
     },
     {
+      id: 'tts', icon: '🔊', model: 'onnx-community/Kokoro-82M-v1.0-ONNX', mb: 92, lesson: 'text-to-speech', englishOnly: true,
+      load: (progress_callback) => import('https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm')
+        .then((K) => K.KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', { dtype: 'q8', device: 'wasm', progress_callback })),
+      title: T('Text to speech (Kokoro)', 'अक्षरबाट आवाज (Kokoro)', '文字转语音（Kokoro）'),
+      what: T('A neural TTS model reads your sentence aloud in a natural human voice. Audiobooks, screen readers and voice assistants work like this.', 'Neural TTS मोडेलले तपाईंको वाक्य प्राकृतिक मानव आवाजमा पढ्छ। अडियोबुक, स्क्रिन रिडर र भ्वाइस असिस्टेन्ट यसरी नै काम गर्छन्।', '神经网络 TTS 模型用自然的人声朗读你的句子。有声书、读屏软件和语音助手都是这样工作的。'),
+      inside: [
+        T('Your text is turned into phonemes (sound units), e.g. "hello" → h-ə-l-oʊ.', 'तपाईंको अक्षर phoneme (उच्चारण एकाइ) मा बदलिन्छ, जस्तै "hello" → h-ə-l-oʊ।', '你的文字被转换成音素（发音单位），例如 "hello" → h-ə-l-oʊ。'),
+        T('The chosen voice is a list of numbers (a "voice embedding") that describes how that speaker sounds.', 'छानिएको आवाज भनेको त्यो बोल्नेको आवाज कस्तो छ भन्ने अंकको सूची ("voice embedding") हो।', '所选的声音是一串数字（“声音嵌入”），描述这个说话人的声音特点。'),
+        T('A small network (82 million parameters) predicts the pitch and timing of every sound, then a decoder makes 24,000 sound numbers per second.', 'सानो नेटवर्क (८.२ करोड parameter) ले हरेक उच्चारणको स्वर र समय अनुमान गर्छ, अनि decoder ले प्रति सेकेन्ड २४,००० ध्वनि अंक बनाउँछ।', '一个小网络（8200 万参数）预测每个音的音高和时长，然后解码器每秒生成 24000 个声音数字。'),
+        T('Everything happens on your device — your text is never sent anywhere.', 'सबै कुरा तपाईंकै उपकरणमा हुन्छ — तपाईंको अक्षर कतै पठाइँदैन।', '一切都在你的设备上完成——你的文字不会发送到任何地方。'),
+      ],
+      ui: 'tts', placeholder: 'Hello! Welcome to ML Tutor. Today we will learn how computers can speak like people.',
+      voices: [['af_heart', '🇺🇸 Heart (female)'], ['af_bella', '🇺🇸 Bella (female)'], ['am_michael', '🇺🇸 Michael (male)'], ['bf_emma', '🇬🇧 Emma (female)'], ['bm_george', '🇬🇧 George (male)']],
+      async run(tts, card) {
+        const text = (card.text || '').trim().slice(0, 400); if (!text) return '';
+        const audio = await tts.generate(text, { voice: card.voice || 'af_heart' });
+        const url = URL.createObjectURL(audio.toBlob());
+        const secs = (audio.audio.length / audio.sampling_rate).toFixed(1);
+        card.summary = `"${text}" spoken by ${card.voice || 'af_heart'} (${secs} s of audio)`;
+        return `<audio class="mp-audio" controls autoplay src="${url}"></audio>
+          <div class="small muted">🔊 ${secs} s · ${audio.sampling_rate.toLocaleString()} ${t(T('sound numbers per second', 'ध्वनि अंक प्रति सेकेन्ड', '个声音数字/秒'))} · <a href="${url}" download="ml-tutor-voice.wav">⬇ ${t(T('Download', 'डाउनलोड', '下载'))}</a></div>`;
+      },
+    },
+    {
       id: 'teach', icon: '🎯', small: true, local: true, lesson: 'knn',
       title: T('Train your own model (k-nearest neighbours)', 'आफ्नै मोडेल तालिम गर्नुहोस् (k-nearest neighbours)', '训练你自己的模型（k 近邻）'),
       what: T('Click to add 🔵 and 🔴 examples. The model learns instantly and colours the whole map with its predictions. Move the k slider and watch the borders change.', '🔵 र 🔴 उदाहरण थप्न क्लिक गर्नुहोस्। मोडेलले तुरुन्तै सिक्छ र पूरै नक्सालाई आफ्नो अनुमानले रङ्ग्याउँछ। k स्लाइडर सारेर सीमाना बदलिएको हेर्नुहोस्।', '点击添加 🔵 和 🔴 示例。模型立即学习，并用它的预测给整张地图上色。移动 k 滑块，看看边界如何变化。'),
@@ -216,6 +239,9 @@
       <label class="small"><span>${t(T('Your sentence', 'तपाईंको वाक्य', '你的句子'))}</span><input class="mp-base" value="${esc(M.base)}"></label>
       <div class="small muted">${t(T('Compare it with:', 'यीसँग तुलना गर्नुहोस्:', '与这些比较：'))}</div>
       ${M.compare.map((x, i) => `<input class="mp-cmp" data-i="${i}" value="${esc(x)}">`).join('')}`;
+    if (M.ui === 'tts') return `
+      <textarea class="mp-text" rows="3" maxlength="400">${esc(M.placeholder)}</textarea>
+      <label class="small mp-row">${t(T('Voice', 'आवाज', '声音'))} <select class="mp-voice">${M.voices.map(([id, n]) => `<option value="${id}">${n}</option>`).join('')}</select></label>`;
     if (M.ui === 'speech') return `
       <div class="mp-row"><button class="btn sm mp-rec">🎙️ ${t(T('Record (up to 10 s)', 'रेकर्ड (१० सेकेन्डसम्म)', '录音（最多 10 秒）'))}</button>
         <button class="btn ghost sm mp-sample-audio">🔊 ${t(T('Use a famous speech', 'प्रसिद्ध भाषण प्रयोग गर्ने', '使用一段著名演讲'))}</button>
@@ -344,6 +370,8 @@
       if (go) go.onclick = () => (card.audio ? run() : rec.click());
     }
     if (M.ui === 'teach') teach(card, el);
+    const vs = el.querySelector('.mp-voice');
+    if (vs) { card.voice = vs.value; vs.onchange = () => { card.voice = vs.value; if (pipesReady[M.id]) run(); }; }
     // ask the AI teacher
     el.querySelector('.mp-ask').onclick = () => {
       const what = t(M.title);

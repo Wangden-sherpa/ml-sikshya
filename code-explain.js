@@ -196,6 +196,10 @@
     yscale: ['changes the y axis scale (e.g. "log" for numbers that grow very fast)', 'y अक्षको स्केल बदल्छ (जस्तै धेरै छिटो बढ्ने अंकका लागि "log")', '改变 y 轴刻度（例如增长很快的数用 "log"）'],
     xscale: ['changes the x axis scale (e.g. "log")', 'x अक्षको स्केल बदल्छ (जस्तै "log")', '改变 x 轴刻度（例如 "log"）'],
     from_predictions: ['draws a confusion-matrix picture from the true and the predicted answers', 'साँचो र अनुमानित उत्तरबाट confusion-matrix चित्र बनाउँछ', '根据真实答案和预测答案画出混淆矩阵图'],
+    add_patch: ['draws a shape (like a rectangle) on the chart', 'चार्टमा आकार (जस्तै आयत) कोर्छ', '在图上画一个形状（比如矩形）'],
+    Rectangle: ['makes a rectangle shape (here: a bounding box)', 'आयतको आकार बनाउँछ (यहाँ: bounding box)', '生成一个矩形（这里是边界框）'],
+    text: ['writes a label on the chart at a position', 'चार्टमा कुनै ठाउँमा लेबल लेख्छ', '在图上某个位置写标签'],
+    set_xlim: ['sets the left and right edges of the x axis', 'x अक्षको बायाँ र दायाँ सीमा तोक्छ', '设置 x 轴的左右范围'],
     grid: ['adds background grid lines', 'पृष्ठभूमिमा जालो रेखा थप्छ', '加背景网格线'],
     // scikit-learn: data
     load_iris: ['loads the famous Iris flowers dataset (150 flowers, 3 species)', 'प्रसिद्ध Iris फूल डाटासेट ल्याउँछ (१५० फूल, ३ प्रजाति)', '载入著名的鸢尾花数据集（150 朵花，3 个品种）'],
