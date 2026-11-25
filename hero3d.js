@@ -1,4 +1,4 @@
-/* ML Sikshya — immersive cinematic 3D hero ("neural galaxy"):
+/* ML Tutor — immersive cinematic 3D hero ("neural galaxy"):
    a spiral galaxy of thousands of stars, a glowing energy core, refractive glass orbs, a neural network with
    travelling light pulses and a neon Himalaya terrain — ACES film tone mapping, bloom glow, supersampled
    ("Ultra") resolution and mouse parallax. Falls back to the static artwork if WebGL is unavailable. */

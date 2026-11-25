@@ -1,4 +1,4 @@
-/* ML Sikshya — Real-World Missions: apply each lesson to real public datasets, with a checklist, starter code and tutor review. */
+/* ML Tutor — Real-World Missions: apply each lesson to real public datasets, with a checklist, starter code and tutor review. */
 (() => {
   const MLS = window.MLS;
   const { t, u, h, esc, toast, store } = MLS;

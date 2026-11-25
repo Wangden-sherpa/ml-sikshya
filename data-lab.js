@@ -1,4 +1,4 @@
-/* ML Sikshya — Data Lab: upload real-world data (CSV / Excel / JSON), explore it, get suggestions, visualize in 3D and train models. Runs 100% in the browser. */
+/* ML Tutor — Data Lab: upload real-world data (CSV / Excel / JSON), explore it, get suggestions, visualize in 3D and train models. Runs 100% in the browser. */
 (() => {
   const MLS = window.MLS;
   const { t, u, h, esc, toast } = MLS;

@@ -1,4 +1,4 @@
-/* ML Sikshya — interactive 3D models (Three.js). Adds: 3D Lab page, "See it in 3D" blocks in lessons, 3D showcase on home. */
+/* ML Tutor — interactive 3D models (Three.js). Adds: 3D Lab page, "See it in 3D" blocks in lessons, 3D showcase on home. */
 (() => {
   const MLS = window.MLS;
   const { t, u, h, esc } = MLS;

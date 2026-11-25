@@ -1,4 +1,4 @@
-/* ML Sikshya — human-like talking AI Tutor ("Guru"): animated avatar, voice in & out, answers in any language.
+/* ML Tutor — human-like talking AI Tutor ("Guru"): animated avatar, voice in & out, answers in any language.
    Claude (with the learner's own API key) for full answers; offline helper + Error Doctor without a key. */
 (() => {
   const MLS = window.MLS;
@@ -52,8 +52,8 @@
     fileT: { en: 'Open the online version to use ChatGPT', ne: 'ChatGPT प्रयोग गर्न अनलाइन संस्करण खोल्नुहोस्', zh: '打开在线版即可使用 ChatGPT' },
     fileP: { en: 'This page was opened as a file (by double-clicking index.html), so ChatGPT can\'t sign in here: it needs a web address. The online version works straight away and has everything.', ne: 'यो पेज फाइलको रूपमा खोलिएको छ (index.html मा डबल-क्लिक गरेर), त्यसैले यहाँ ChatGPT साइन-इन हुन सक्दैन: यसलाई वेब ठेगाना चाहिन्छ। अनलाइन संस्करण तुरुन्तै चल्छ र त्यहाँ सबै कुरा छ।', zh: '此页面是以文件方式打开的（双击 index.html），没有网址，所以 ChatGPT 无法在这里登录。在线版可立即使用，功能完全相同。' },
     fileBtn: { en: '🌐 Open online version', ne: '🌐 अनलाइन संस्करण खोल्नुहोस्', zh: '🌐 打开在线版' },
-    fileLocal: { en: 'Prefer your own copy? Double-click "Start ML Sikshya.bat" in the ML Sikshya folder instead of index.html.', ne: 'आफ्नै कपी चलाउन चाहनुहुन्छ? index.html को सट्टा ML Sikshya फोल्डरमा "Start ML Sikshya.bat" मा डबल-क्लिक गर्नुहोस्।', zh: '想用自己电脑上的副本？请双击 ML Sikshya 文件夹里的 "Start ML Sikshya.bat"，而不是 index.html。' },
-    madeByAnswer: { en: 'ML Sikshya was made by <b class="notranslate">Wangden Sherpa</b>, a Master of Business Analytics (MBAN) student at Saint Mary\'s University, as a free and friendly place for everyone to learn machine learning. 💙', ne: 'ML Sikshya <b class="notranslate">Wangden Sherpa</b> ले बनाउनुभएको हो। उहाँ Saint Mary\'s University मा Master of Business Analytics (MBAN) पढ्दै हुनुहुन्छ, र सबैले निःशुल्क मेसिन लर्निङ सिक्न सकून् भनेर यो बनाउनुभयो। 💙', zh: 'ML Sikshya 由 <b class="notranslate">Wangden Sherpa</b> 创建。Wangden Sherpa 正在圣玛丽大学（Saint Mary\'s University）攻读商业分析硕士（MBAN），希望让每个人都能免费学习机器学习。💙' },
+    fileLocal: { en: 'Prefer your own copy? Double-click "Start ML Tutor.bat" in the project folder instead of index.html.', ne: 'आफ्नै कपी चलाउन चाहनुहुन्छ? index.html को सट्टा प्रोजेक्ट फोल्डरमा "Start ML Tutor.bat" मा डबल-क्लिक गर्नुहोस्।', zh: '想用自己电脑上的副本？请双击项目文件夹里的 "Start ML Tutor.bat"，而不是 index.html。' },
+    madeByAnswer: { en: 'ML Tutor was made by <b class="notranslate">Wangden Sherpa</b>, a Master of Business Analytics (MBAN) student at Saint Mary\'s University, as a free and friendly place for everyone to learn machine learning. 💙', ne: 'ML Tutor <b class="notranslate">Wangden Sherpa</b> ले बनाउनुभएको हो। उहाँ Saint Mary\'s University मा Master of Business Analytics (MBAN) पढ्दै हुनुहुन्छ, र सबैले निःशुल्क मेसिन लर्निङ सिक्न सकून् भनेर यो बनाउनुभयो। 💙', zh: 'ML Tutor 由 <b class="notranslate">Wangden Sherpa</b> 创建。Wangden Sherpa 正在圣玛丽大学（Saint Mary\'s University）攻读商业分析硕士（MBAN），希望让每个人都能免费学习机器学习。💙' },
     fileShort: { en: 'opened as a file', ne: 'फाइलको रूपमा खोलिएको', zh: '以文件方式打开' },
     aiTimeout: { en: '⏳ The AI took too long to reply. Check your internet and try again.', ne: '⏳ AI ले जवाफ दिन धेरै समय लगायो। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।', zh: '⏳ AI 回复超时。请检查网络后重试。' },
     aiOops: { en: 'Something went wrong while answering.', ne: 'उत्तर दिँदा केही गडबड भयो।', zh: '回答时出了点问题。' },
@@ -77,7 +77,7 @@
     freeWait: { en: '⏳ Lots of learners right now, answering in {s} s…', ne: '⏳ अहिले धेरै विद्यार्थी, {s} सेकेन्डमा उत्तर दिँदै…', zh: '⏳ 当前学习者较多，{s} 秒后回答…' },
     cgptWhy: { en: 'Optional: even smarter answers and the natural ChatGPT voice.', ne: 'ऐच्छिक: अझ स्मार्ट उत्तर र प्राकृतिक ChatGPT आवाज।', zh: '可选：更聪明的回答和自然的 ChatGPT 声音。' },
     vNeedsConnect: { en: 'The ChatGPT voice needs ChatGPT connected (see AI brain below). Until then, your browser\'s most natural voice speaks.', ne: 'ChatGPT आवाजका लागि ChatGPT जोडिएको हुनुपर्छ (तल AI दिमाग हेर्नुहोस्)। त्यतिन्जेल तपाईंको ब्राउजरको सबैभन्दा प्राकृतिक आवाज बोल्छ।', zh: 'ChatGPT 声音需要先连接 ChatGPT（见下方 AI 大脑）。在此之前，会使用浏览器中最自然的声音。' },
-    vEdgeTip: { en: 'Tip: for a much more human free voice, open ML Sikshya in Microsoft Edge. It has "Natural" voices built in.', ne: 'सुझाव: अझ मानवजस्तो निःशुल्क आवाजका लागि ML Sikshya लाई Microsoft Edge मा खोल्नुहोस्। त्यसमा "Natural" आवाज हुन्छन्।', zh: '提示：想要更像真人的免费声音，请在 Microsoft Edge 中打开 ML Sikshya，它内置 "Natural" 自然语音。' },
+    vEdgeTip: { en: 'Tip: for a much more human free voice, open ML Tutor in Microsoft Edge. It has "Natural" voices built in.', ne: 'सुझाव: अझ मानवजस्तो निःशुल्क आवाजका लागि ML Tutor लाई Microsoft Edge मा खोल्नुहोस्। त्यसमा "Natural" आवाज हुन्छन्।', zh: '提示：想要更像真人的免费声音，请在 Microsoft Edge 中打开 ML Tutor，它内置 "Natural" 自然语音。' },
     brainLocal: { en: '🧠 On my device', ne: '🧠 मेरो उपकरणमा', zh: '🧠 本机' },
     brainOff: { en: '📴 Offline', ne: '📴 अफलाइन', zh: '📴 离线' },
     brainHelp: { en: '✨ Free AI answers straight away for everyone, with no account and no key (it uses the open GPT-OSS model from Pollinations.ai; questions are sent there privately). Once you connect ChatGPT, it switches to ChatGPT automatically for even smarter answers and the ChatGPT voice. 🧠 runs a small AI on your own device, 🤖 uses your own WANG AI server, 📴 works without internet.', ne: '✨ निःशुल्क AI ले सबैलाई तुरुन्तै उत्तर दिन्छ, खाता वा key चाहिँदैन (यसले Pollinations.ai को खुला GPT-OSS मोडेल प्रयोग गर्छ; प्रश्नहरू त्यहाँ निजी रूपमा पठाइन्छन्)। ChatGPT जोडेपछि अझ स्मार्ट उत्तर र ChatGPT आवाजका लागि यो आफैँ ChatGPT मा जान्छ। 🧠 ले तपाईंकै उपकरणमा सानो AI चलाउँछ, 🤖 ले तपाईंको WANG AI सर्भर प्रयोग गर्छ, 📴 इन्टरनेट बिना चल्छ।', zh: '✨ 免费 AI 可以立即为所有人回答，无需账户和密钥（使用 Pollinations.ai 的开放 GPT-OSS 模型，问题会以私密方式发送到那里）。连接 ChatGPT 后会自动切换到 ChatGPT，回答更聪明，并使用 ChatGPT 声音。🧠 在你自己的设备上运行小型 AI，🤖 使用你自己的 WANG AI 服务器，📴 无需联网。' },
@@ -250,8 +250,8 @@
   const SITE_LANG = { en: 'English', ne: 'Nepali (Devanagari script)', zh: 'Simplified Chinese' };
   const persona = () => 'a warm, patient, encouraging human teacher who speaks naturally like a real person in a one-to-one class — friendly, curious, uses everyday examples, and is never robotic.';
   // Who made this website: the AI teacher knows it and says so warmly when asked.
-  const ABOUT = 'About this website: ML Sikshya was created by Wangden Sherpa, a Master of Business Analytics (MBAN) student at Saint Mary\'s University, as a free and friendly place where anyone can learn machine learning in English, Nepali or Chinese. If anyone asks who made, built, created or owns ML Sikshya or this AI teacher, say warmly and proudly that Wangden Sherpa built it while doing the MBAN at Saint Mary\'s University (the teacher\'s answers come from an AI language model, but the website, lessons and AI teacher were designed and built by Wangden Sherpa). Always refer to Wangden Sherpa by name (for example "Wangden built it while doing the MBAN"); never use he, she, his, her, him or hers for Wangden.';
-  const SYSTEM = (voice, small) => `You are ${teacherName()}, a human-like AI teacher and personal assistant inside "ML Sikshya", a free learning website. Your personality — ${persona()}
+  const ABOUT = 'About this website: ML Tutor was created by Wangden Sherpa, a Master of Business Analytics (MBAN) student at Saint Mary\'s University, as a free and friendly place where anyone can learn machine learning in English, Nepali or Chinese. If anyone asks who made, built, created or owns ML Tutor or this AI teacher, say warmly and proudly that Wangden Sherpa built it while doing the MBAN at Saint Mary\'s University (the teacher\'s answers come from an AI language model, but the website, lessons and AI teacher were designed and built by Wangden Sherpa). Always refer to Wangden Sherpa by name (for example "Wangden built it while doing the MBAN"); never use he, she, his, her, him or hers for Wangden.';
+  const SYSTEM = (voice, small) => `You are ${teacherName()}, a human-like AI teacher and personal assistant inside "ML Tutor", a free learning website. Your personality — ${persona()}
 
 ${ABOUT}
 
@@ -608,7 +608,7 @@ ${small ? smallContext() : context()}`;
   }
 
   // ---------- Offline helper ----------
-  const WHO_MADE = /\bwho\b.{0,30}\b(made|created?|built|developed?|designed?|owns?)\b.{0,25}(\byou\b|\bml ?sikshya\b|\bthis\s*(\?|$|site\b|website|app\b|platform|course|page))|\b(creator|founder|maker)s?\b.{0,25}(\bml ?sikshya\b|\bthis\s*(\?|$|site\b|website|app\b|platform|course|page))|कसले.{0,25}(बना|निर्माण)|निर्माता|谁.{0,6}(做|开发|创建|制作|建)|创始人|kasle.{0,20}banay/i;
+  const WHO_MADE = /\bwho\b.{0,30}\b(made|created?|built|developed?|designed?|owns?)\b.{0,25}(\byou\b|\bml ?(sikshya|tutor)\b|\bthis\s*(\?|$|site\b|website|app\b|platform|course|page))|\b(creator|founder|maker)s?\b.{0,25}(\bml ?(sikshya|tutor)\b|\bthis\s*(\?|$|site\b|website|app\b|platform|course|page))|कसले.{0,25}(बना|निर्माण)|निर्माता|谁.{0,6}(做|开发|创建|制作|建)|创始人|kasle.{0,20}banay/i;
   function offlineAnswer(q) {
     const ql = q.toLowerCase();
     if (WHO_MADE.test(q)) return `<p>${u('madeByAnswer')}</p>`;

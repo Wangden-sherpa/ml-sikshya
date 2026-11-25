@@ -1,6 +1,6 @@
 @echo off
-rem ML Sikshya - run your own copy properly (ChatGPT sign-in and the AI tutor need a web address, not a file).
-title ML Sikshya - keep this window open while you learn
+rem ML Tutor - run your own copy properly (ChatGPT sign-in and the AI tutor need a web address, not a file).
+title ML Tutor - keep this window open while you learn
 cd /d "%~dp0"
 set "PORT=8770"
 set "URL=http://127.0.0.1:%PORT%/"
@@ -19,7 +19,7 @@ if not defined PY (
 )
 
 echo.
-echo    ML Sikshya is running at %URL%
+echo    ML Tutor is running at %URL%
 echo    Keep this window open while you learn. Close it to stop.
 echo.
 start "" /min cmd /c "ping -n 3 127.0.0.1 >nul & start %URL%"

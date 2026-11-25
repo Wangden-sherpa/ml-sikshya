@@ -1,4 +1,4 @@
-/* ML Sikshya — Simplified Chinese (中文) for the interface, levels, 3D models, projects and glossary. Lessons are in content/zh-lessons-*.js */
+/* ML Tutor — Simplified Chinese (中文) for the interface, levels, 3D models, projects and glossary. Lessons are in content/zh-lessons-*.js */
 (() => {
   const MLS = window.MLS, C = window.COURSE;
 

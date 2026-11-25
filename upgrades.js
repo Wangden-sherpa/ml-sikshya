@@ -1,4 +1,4 @@
-/* ML Sikshya — upgrades: site colour picker, search (Ctrl+K), XP levels, daily streak, badges, certificate. */
+/* ML Tutor — upgrades: site colour picker, search (Ctrl+K), XP levels, daily streak, badges, certificate. */
 (() => {
   const MLS = window.MLS;
   const { t, u, h, esc, toast, store, S } = MLS;
@@ -121,7 +121,7 @@
       <div class="cert-tools"><input class="nm-in" placeholder="${u('certName')}" value="${esc(store.get('cert-name', ''))}" ${all ? '' : 'disabled'}>
         <button class="btn print" ${all ? '' : 'disabled'}>${u('certPrint')}</button></div>
       <div class="certificate">
-        <div class="brand-c">ML SIKSHYA · मेसिन लर्निङ शिक्षा · 机器学习</div>
+        <div class="brand-c">ML TUTOR · मेसिन लर्निङ शिक्षा · 机器学习</div>
         <h1>${u('certTitle')}</h1>
         <p>${u('certLine1')}</p>
         <div class="nm">${esc(store.get('cert-name', '') || (all ? '…' : 'PREVIEW'))}</div>

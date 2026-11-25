@@ -1,4 +1,4 @@
-# 🧠 ML Sikshya — Learn Machine Learning (English + नेपाली)
+# 🧠 ML Tutor — Learn Machine Learning (English + नेपाली)
 
 Created by **Wangden Sherpa**, Master of Business Analytics (MBAN) student at Saint Mary's University.
 
@@ -34,13 +34,13 @@ the code they last ran.
 1. Start the WANG AI backend on your computer. Follow the steps in the
    [WANG AI README](https://github.com/wangdencerpa12345-star/Doing-something-new/tree/claude/zealous-hypatia-9zr2yv#readme)
    (add your AI key to `backend/.env`, then run `uvicorn app.main:app`).
-2. Open ML Sikshya, click **AI Teacher**, then **⚙️**.
+2. Open ML Tutor, click **AI Teacher**, then **⚙️**.
 3. Under **AI brain** choose **🤖 WANG AI**. Leave the address as
    `http://localhost:8000` and click **Test connection**. You should see
    **✓ Connected**.
 4. Click **Save** and ask a question.
 
-Use the local copy (`Start ML Sikshya.bat`) or the online site. If Chrome
+Use the local copy (`Start ML Tutor.bat`) or the online site. If Chrome
 asks to let the site access devices on your local network, click **Allow**:
 that is how the page reaches the server on your computer.
 
@@ -59,7 +59,7 @@ It only runs on the owner's computer, because it needs your Nuance API key:
 2. Save the key (it starts with `nk_`) in `%USERPROFILE%\.ml-sikshya\nuance_key.txt` on Windows, or
    `~/.ml-sikshya/nuance_key.txt` on Mac/Linux. **Never** put it in this project, on GitHub or in a chat.
 3. Double-click `tools\start-live-tutor.bat` and keep its window open.
-4. In ML Sikshya: **AI Teacher → ⚙️ → "This is my computer — show the live tutor"**, then press
+4. In ML Tutor: **AI Teacher → ⚙️ → "This is my computer — show the live tutor"**, then press
    **🎥 Live AI video tutor**.
 
 Good to know: the Nuance persona speaks and understands **English only**. With the camera on, a student

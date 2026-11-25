@@ -1,4 +1,4 @@
-/* ML Sikshya — "Explain this code" for every Python code box.
+/* ML Tutor — "Explain this code" for every Python code box.
    Under each code box, a learner can open a plain-language, line-by-line explanation (English / नेपाली / 中文),
    a short "what this code does" summary, a 30-second guide to reading Python, and a button to ask the AI teacher.
    It works offline and instantly: the explanations come from a built-in dictionary of Python, NumPy, Pandas,

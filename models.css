@@ -1,4 +1,4 @@
-/* ML Sikshya — Model Playground + "Explain this code" panels */
+/* ML Tutor — Model Playground + "Explain this code" panels */
 
 /* ---------- Model Playground ---------- */
 .mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; margin: 20px 0 30px; }

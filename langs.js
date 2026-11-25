@@ -1,4 +1,4 @@
-/* ML Sikshya — more languages. English / नेपाली / 中文 are hand-translated; the 🌐 menu adds many more via automatic page translation (Google Translate website widget). Code is protected from translation. */
+/* ML Tutor — more languages. English / नेपाली / 中文 are hand-translated; the 🌐 menu adds many more via automatic page translation (Google Translate website widget). Code is protected from translation. */
 (() => {
   const MLS = window.MLS;
   const { t, u, h, store } = MLS;

@@ -1,4 +1,4 @@
-/* ML Sikshya — Model Playground: try real, ready-made ML models right in the browser.
+/* ML Tutor — Model Playground: try real, ready-made ML models right in the browser.
    Models run on the learner's own device with Transformers.js (free, no account, no key, nothing is uploaded).
    Each model downloads once when the learner presses "Try it", then the browser keeps it cached. */
 (() => {

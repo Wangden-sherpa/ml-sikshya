@@ -1,4 +1,4 @@
-/* ML Sikshya — SVG icons (Lucide-style) instead of emoji in the navigation (UI UX Pro Max checklist: "No emojis as icons"). */
+/* ML Tutor — SVG icons (Lucide-style) instead of emoji in the navigation (UI UX Pro Max checklist: "No emojis as icons"). */
 (() => {
   const MLS = window.MLS;
   const P = {

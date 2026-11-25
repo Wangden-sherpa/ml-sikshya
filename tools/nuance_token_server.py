@@ -1,4 +1,4 @@
-"""ML Sikshya - private token server for the Live AI video tutor (Nuance Labs "Nuance Live").
+"""ML Tutor - private token server for the Live AI video tutor (Nuance Labs "Nuance Live").
 
 Why: a Nuance API key (nk_...) must never be put inside a website. This tiny server runs ONLY on your own PC,
 keeps the key secret, and gives the website a short-lived session token (st_...) that is good for one conversation.
@@ -8,7 +8,7 @@ Where the key lives (never in this project, never on GitHub):
   2. the file  %USERPROFILE%\\.ml-sikshya\\nuance_key.txt   (Windows)  /  ~/.ml-sikshya/nuance_key.txt
 
 Run:   python tools/nuance_token_server.py      (or double-click tools\\start-live-tutor.bat)
-Then open ML Sikshya and press "Live AI video tutor".  Stop with Ctrl+C.
+Then open ML Tutor and press "Live AI video tutor".  Stop with Ctrl+C.
 
 Only pages from the origins in ALLOWED_ORIGINS may ask for tokens, and the server only listens on 127.0.0.1,
 so other computers and other websites cannot use your key.
@@ -44,7 +44,7 @@ PERSONAS = {"sam": "Sam", "sonia": "Sonia", "mira": "Mira"}
 KEY_FILE = Path.home() / ".ml-sikshya" / "nuance_key.txt"
 
 # ---------------------------------------------------------------- the persona's prompt (English, fixed)
-SYSTEM_PROMPT = """You are {name}, an AI teacher on ML Sikshya, a free website where students learn machine learning \
+SYSTEM_PROMPT = """You are {name}, an AI teacher on ML Tutor, a free website where students learn machine learning \
 from zero to professional. You are talking with one student on a live video call. Many students are from Nepal and \
 are still learning English, so speak in simple, clear English and explain any new word.
 
@@ -69,7 +69,7 @@ them to help at the right moment. When the student says goodbye, say goodbye war
 
 # ---------------------------------------------------------------- the helper (backend) and the page's tools
 BACKEND_INSTRUCTIONS = """You are the helper of an AI teacher who is on a live voice call with a student on ML \
-Sikshya, a website for learning machine learning. You run tools on the website and write the answer the teacher \
+Tutor, a website for learning machine learning. You run tools on the website and write the answer the teacher \
 will say.
 
 Tools:
@@ -305,6 +305,6 @@ if __name__ == "__main__":
         print("SETUP PROBLEM:", p)
     if not load_key():
         print(f"WARNING: No API key found. Save your nk_ key in: {KEY_FILE}")
-    print(f"ML Sikshya private token server running on http://127.0.0.1:{PORT}  (Ctrl+C to stop)")
+    print(f"ML Tutor private token server running on http://127.0.0.1:{PORT}  (Ctrl+C to stop)")
     print("   Allowed sites:", ", ".join(sorted(ALLOWED_ORIGINS)))
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

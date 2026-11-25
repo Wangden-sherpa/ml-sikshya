@@ -1,4 +1,4 @@
-/* ML Sikshya — 🎥 Live AI video tutor (Nuance Labs "Nuance Live", https://docs.nuancelabs.ai).
+/* ML Tutor — 🎥 Live AI video tutor (Nuance Labs "Nuance Live", https://docs.nuancelabs.ai).
    A real-time video teacher (an AI persona) that hears, sees (if allowed) and talks back.
    Private to the owner: the nk_ API key never touches this website — a token server on the owner's own PC
    (tools/nuance_token_server.py) hands the page a one-conversation st_ token. Visitors never see this feature.
@@ -28,7 +28,7 @@
     liveCamNote: { en: 'With the camera on, a student under 18 needs an adult next to them, or the class ends.', ne: 'क्यामेरा खुला हुँदा १८ वर्षमुनिका विद्यार्थीसँग कुनै वयस्क हुनुपर्छ, नत्र कक्षा बन्द हुन्छ।', zh: '开启摄像头时，未满 18 岁的学生身边需要有成年人，否则课堂会结束。' },
     liveStart: { en: '▶ Start live class', ne: '▶ प्रत्यक्ष कक्षा सुरु', zh: '▶ 开始实时课堂' },
     liveChecking: { en: 'Checking your private key server…', ne: 'तपाईंको निजी key सर्भर जाँच्दै…', zh: '正在检查你的私有密钥服务器…' },
-    liveOff: { en: 'The private key server is not running. Double-click tools\\start-live-tutor.bat in the ML Sikshya folder, then press Start again.', ne: 'निजी key सर्भर चलिरहेको छैन। ML Sikshya फोल्डरको tools\\start-live-tutor.bat डबल-क्लिक गरेर फेरि Start थिच्नुहोस्।', zh: '私有密钥服务器没有运行。请双击 ML Sikshya 文件夹中的 tools\\start-live-tutor.bat，然后再次点击开始。' },
+    liveOff: { en: 'The private key server is not running. Double-click tools\\start-live-tutor.bat in the project folder, then press Start again.', ne: 'निजी key सर्भर चलिरहेको छैन। प्रोजेक्ट फोल्डरको tools\\start-live-tutor.bat डबल-क्लिक गरेर फेरि Start थिच्नुहोस्।', zh: '私有密钥服务器没有运行。请双击项目文件夹中的 tools\\start-live-tutor.bat，然后再次点击开始。' },
     liveOld: { en: 'Your private key server is an old version. Close its window and start tools\\start-live-tutor.bat again.', ne: 'तपाईंको निजी key सर्भर पुरानो संस्करण हो। यसको विन्डो बन्द गरेर tools\\start-live-tutor.bat फेरि सुरु गर्नुहोस्।', zh: '你的私有密钥服务器是旧版本。请关闭它的窗口，然后重新运行 tools\\start-live-tutor.bat。' },
     liveNoKey: { en: 'The key server is running but has no API key. Save your nk_ key in %USERPROFILE%\\.ml-sikshya\\nuance_key.txt', ne: 'Key सर्भर चलिरहेको छ तर API key छैन। आफ्नो nk_ key %USERPROFILE%\\.ml-sikshya\\nuance_key.txt मा सेभ गर्नुहोस्', zh: '密钥服务器在运行，但没有 API 密钥。请把 nk_ 密钥保存到 %USERPROFILE%\\.ml-sikshya\\nuance_key.txt' },
     liveConnecting: { en: 'Connecting to your teacher…', ne: 'शिक्षकसँग जोडिँदै…', zh: '正在连接老师…' },

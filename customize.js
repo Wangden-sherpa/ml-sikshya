@@ -1,4 +1,4 @@
-/* ML Sikshya — 🎨 Design customizer: every learner can change colours, brightness, contrast, text size, fonts, corners, width and motion. Saved in the browser. */
+/* ML Tutor — 🎨 Design customizer: every learner can change colours, brightness, contrast, text size, fonts, corners, width and motion. Saved in the browser. */
 (() => {
   const MLS = window.MLS;
   const { u, h, store, toast } = MLS;

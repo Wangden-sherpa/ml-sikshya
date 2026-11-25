@@ -1,4 +1,4 @@
-/* ML Sikshya — app logic (routing, bilingual UI, Python playground, quizzes, progress) */
+/* ML Tutor — app logic (routing, bilingual UI, Python playground, quizzes, progress) */
 (() => {
   const C = window.COURSE;
 

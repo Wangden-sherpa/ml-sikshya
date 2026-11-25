@@ -1,4 +1,4 @@
-/* ML Sikshya — design: "Meet your AI teacher" (code-drawn human avatar, no photos), animated hero particles. */
+/* ML Tutor — design: "Meet your AI teacher" (code-drawn human avatar, no photos), animated hero particles. */
 (() => {
   const MLS = window.MLS;
   const { u, h } = MLS;
