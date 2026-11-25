@@ -63,10 +63,24 @@
     vOaPick: { en: 'ChatGPT voice', ne: 'ChatGPT आवाज', zh: 'ChatGPT 声音' },
     modeCloud: { en: 'Cloud AI · fast', ne: 'क्लाउड AI · छिटो', zh: '云端 AI · 快速' },
     brainT: { en: 'AI brain', ne: 'AI दिमाग', zh: 'AI 大脑' },
-    brainCloud: { en: '⚡ Cloud (fast, smart)', ne: '⚡ क्लाउड (छिटो, स्मार्ट)', zh: '⚡ 云端（快速、聪明）' },
+    brainCloud: { en: '⚡ ChatGPT (connect once)', ne: '⚡ ChatGPT (एक पटक जोड्नुहोस्)', zh: '⚡ ChatGPT（只需连接一次）' },
+    brainAuto: { en: '✨ Free AI (no sign-in)', ne: '✨ निःशुल्क AI (साइन-इन चाहिँदैन)', zh: '✨ 免费 AI（无需登录）' },
+    modeFree: { en: 'Free AI', ne: 'निःशुल्क AI', zh: '免费 AI' },
+    freeBusy: { en: '⏳ The free AI is very busy right now. Please ask again in a few seconds, or connect ChatGPT in ⚙️ for unlimited answers.', ne: '⏳ निःशुल्क AI अहिले धेरै व्यस्त छ। केही सेकेन्डपछि फेरि सोध्नुहोस्, वा असीमित उत्तरका लागि ⚙️ मा ChatGPT जोड्नुहोस्।', zh: '⏳ 免费 AI 现在非常繁忙。请过几秒再问，或在 ⚙️ 中连接 ChatGPT 获得不限量的回答。' },
+    freeNet: { en: '📡 Could not reach the free AI. Check your internet connection and try again.', ne: '📡 निःशुल्क AI सम्म पुग्न सकिएन। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।', zh: '📡 无法连接免费 AI，请检查网络后重试。' },
+    freeLocalhost: { en: '🔁 The free AI does not answer pages opened as "localhost". Open the same page at this address instead (it is your same computer):', ne: '🔁 निःशुल्क AI ले "localhost" मा खोलिएका पेजलाई उत्तर दिँदैन। यही पेज यो ठेगानामा खोल्नुहोस् (यो तपाईंकै कम्प्युटर हो):', zh: '🔁 免费 AI 不回答以 "localhost" 打开的页面。请改用下面这个地址打开同一页面（仍是你自己的电脑）：' },
+    freeBusyNotes: { en: '⏳ The free AI is very busy right now, so here is what I found in the lessons. Press "Try again" in a few seconds for a full answer.', ne: '⏳ निःशुल्क AI अहिले धेरै व्यस्त छ, त्यसैले पाठहरूमा भेटिएको कुरा यहाँ छ। पूरा उत्तरका लागि केही सेकेन्डपछि "फेरि प्रयास" थिच्नुहोस्।', zh: '⏳ 免费 AI 现在非常繁忙，下面是我在课程中找到的内容。几秒后点击“重试”即可获得完整回答。' },
+    freeBusyS: { en: '⏳ The free AI allows one answer about every {s} seconds. Ask again in a moment, or connect ChatGPT in ⚙️ for unlimited answers.', ne: '⏳ निःशुल्क AI ले लगभग हरेक {s} सेकेन्डमा एउटा मात्र उत्तर दिन्छ। केही बेरमा फेरि सोध्नुहोस्, वा असीमित उत्तरका लागि ⚙️ मा ChatGPT जोड्नुहोस्।', zh: '⏳ 免费 AI 大约每 {s} 秒只能回答一次。请稍后再问，或在 ⚙️ 中连接 ChatGPT 获得不限量的回答。' },
+    freeBusyNotesS: { en: '⏳ The free AI needs a short pause (about {s} s), so here is what I found in the lessons. Press "Try again" after that for a full answer.', ne: '⏳ निःशुल्क AI लाई छोटो विश्राम चाहिन्छ (करिब {s} सेकेन्ड), त्यसैले पाठहरूमा भेटिएको कुरा यहाँ छ। त्यसपछि पूरा उत्तरका लागि "फेरि प्रयास" थिच्नुहोस्।', zh: '⏳ 免费 AI 需要稍作休息（约 {s} 秒），下面是我在课程中找到的内容。之后点击“重试”即可获得完整回答。' },
+    freeBusySay: { en: 'The free AI is busy right now, so I have put what I found in the lessons on the screen. Try again in a few seconds.', ne: 'निःशुल्क AI अहिले व्यस्त छ, त्यसैले पाठहरूमा भेटिएको कुरा स्क्रिनमा राखेको छु। केही सेकेन्डपछि फेरि प्रयास गर्नुहोस्।', zh: '免费 AI 现在很忙，我把课程里找到的内容放在屏幕上了。请几秒后再试。' },
+    freeBlocked: { en: '🛡️ The free AI could not verify this page. Please use the online version:', ne: '🛡️ निःशुल्क AI ले यो पेज प्रमाणित गर्न सकेन। कृपया अनलाइन संस्करण प्रयोग गर्नुहोस्:', zh: '🛡️ 免费 AI 无法验证此页面，请使用在线版：' },
+    freeWait: { en: '⏳ Lots of learners right now, answering in {s} s…', ne: '⏳ अहिले धेरै विद्यार्थी, {s} सेकेन्डमा उत्तर दिँदै…', zh: '⏳ 当前学习者较多，{s} 秒后回答…' },
+    cgptWhy: { en: 'Optional: even smarter answers and the natural ChatGPT voice.', ne: 'ऐच्छिक: अझ स्मार्ट उत्तर र प्राकृतिक ChatGPT आवाज।', zh: '可选：更聪明的回答和自然的 ChatGPT 声音。' },
+    vNeedsConnect: { en: 'The ChatGPT voice needs ChatGPT connected (see AI brain below). Until then, your browser\'s most natural voice speaks.', ne: 'ChatGPT आवाजका लागि ChatGPT जोडिएको हुनुपर्छ (तल AI दिमाग हेर्नुहोस्)। त्यतिन्जेल तपाईंको ब्राउजरको सबैभन्दा प्राकृतिक आवाज बोल्छ।', zh: 'ChatGPT 声音需要先连接 ChatGPT（见下方 AI 大脑）。在此之前，会使用浏览器中最自然的声音。' },
+    vEdgeTip: { en: 'Tip: for a much more human free voice, open ML Sikshya in Microsoft Edge. It has "Natural" voices built in.', ne: 'सुझाव: अझ मानवजस्तो निःशुल्क आवाजका लागि ML Sikshya लाई Microsoft Edge मा खोल्नुहोस्। त्यसमा "Natural" आवाज हुन्छन्।', zh: '提示：想要更像真人的免费声音，请在 Microsoft Edge 中打开 ML Sikshya，它内置 "Natural" 自然语音。' },
     brainLocal: { en: '🧠 On my device', ne: '🧠 मेरो उपकरणमा', zh: '🧠 本机' },
     brainOff: { en: '📴 Offline', ne: '📴 अफलाइन', zh: '📴 离线' },
-    brainHelp: { en: 'Cloud uses Claude through Puter — free, no key. The first time, a pop-up asks you to sign in to (or create) a free Puter account; your usage comes from your own free monthly allowance.', ne: 'क्लाउडले Puter मार्फत Claude प्रयोग गर्छ — निःशुल्क, key नचाहिने। पहिलो पटक पप-अपले निःशुल्क Puter खातामा साइन इन (वा खाता बनाउन) भन्छ; प्रयोग तपाईंकै निःशुल्क मासिक भत्ताबाट हुन्छ।', zh: '云端通过 Puter 使用 Claude——免费，无需密钥。第一次会弹出窗口让你登录（或创建）免费 Puter 账户；用量从你自己的免费月度额度中扣除。' },
+    brainHelp: { en: '✨ Free AI answers straight away for everyone, with no account and no key (it uses the open GPT-OSS model from Pollinations.ai; questions are sent there privately). Once you connect ChatGPT, it switches to ChatGPT automatically for even smarter answers and the ChatGPT voice. 🧠 runs a small AI on your own device, 🤖 uses your own WANG AI server, 📴 works without internet.', ne: '✨ निःशुल्क AI ले सबैलाई तुरुन्तै उत्तर दिन्छ, खाता वा key चाहिँदैन (यसले Pollinations.ai को खुला GPT-OSS मोडेल प्रयोग गर्छ; प्रश्नहरू त्यहाँ निजी रूपमा पठाइन्छन्)। ChatGPT जोडेपछि अझ स्मार्ट उत्तर र ChatGPT आवाजका लागि यो आफैँ ChatGPT मा जान्छ। 🧠 ले तपाईंकै उपकरणमा सानो AI चलाउँछ, 🤖 ले तपाईंको WANG AI सर्भर प्रयोग गर्छ, 📴 इन्टरनेट बिना चल्छ।', zh: '✨ 免费 AI 可以立即为所有人回答，无需账户和密钥（使用 Pollinations.ai 的开放 GPT-OSS 模型，问题会以私密方式发送到那里）。连接 ChatGPT 后会自动切换到 ChatGPT，回答更聪明，并使用 ChatGPT 声音。🧠 在你自己的设备上运行小型 AI，🤖 使用你自己的 WANG AI 服务器，📴 无需联网。' },
     aiTeacher: { en: 'AI Teacher', ne: 'AI शिक्षक', zh: 'AI 老师' },
     avBuild: { en: 'Design your teacher', ne: 'आफ्नो शिक्षक डिजाइन गर्नुहोस्', zh: '设计你的老师' },
     av_skin: { en: 'Skin', ne: 'छाला', zh: '肤色' }, av_hair: { en: 'Hair', ne: 'कपाल', zh: '发色' }, av_shirt: { en: 'Clothes', ne: 'लुगा', zh: '衣服' }, av_eyes: { en: 'Eyes', ne: 'आँखा', zh: '眼睛' },
@@ -236,7 +250,7 @@
   const SITE_LANG = { en: 'English', ne: 'Nepali (Devanagari script)', zh: 'Simplified Chinese' };
   const persona = () => 'a warm, patient, encouraging human teacher who speaks naturally like a real person in a one-to-one class — friendly, curious, uses everyday examples, and is never robotic.';
   // Who made this website: the AI teacher knows it and says so warmly when asked.
-  const ABOUT = 'About this website: ML Sikshya was created by Wangden Sherpa, a Master of Business Analytics (MBAN) student at Saint Mary\'s University, as a free and friendly place where anyone can learn machine learning in English, Nepali or Chinese. If anyone asks who made, built, created or owns ML Sikshya or this AI teacher, say warmly and proudly that Wangden Sherpa built it while doing the MBAN at Saint Mary\'s University (the teacher\'s answers come from an AI language model, but the website, lessons and AI teacher were designed and built by Wangden Sherpa). Refer to Wangden Sherpa by name rather than guessing pronouns.';
+  const ABOUT = 'About this website: ML Sikshya was created by Wangden Sherpa, a Master of Business Analytics (MBAN) student at Saint Mary\'s University, as a free and friendly place where anyone can learn machine learning in English, Nepali or Chinese. If anyone asks who made, built, created or owns ML Sikshya or this AI teacher, say warmly and proudly that Wangden Sherpa built it while doing the MBAN at Saint Mary\'s University (the teacher\'s answers come from an AI language model, but the website, lessons and AI teacher were designed and built by Wangden Sherpa). Always refer to Wangden Sherpa by name (for example "Wangden built it while doing the MBAN"); never use he, she, his, her, him or hers for Wangden.';
   const SYSTEM = (voice, small) => `You are ${teacherName()}, a human-like AI teacher and personal assistant inside "ML Sikshya", a free learning website. Your personality — ${persona()}
 
 ${ABOUT}
@@ -273,7 +287,8 @@ ${small ? smallContext() : context()}`;
   const hasGPU = !!navigator.gpu;
   cfg.local = store.get('ai-local', false);
   cfg.localModel = store.get('ai-local-model', LOCAL_MODELS[0][0]);
-  cfg.brain = store.get('ai-brain', 'cloud');          // cloud (Puter.js) | local (WebGPU) | offline
+  cfg.brain = store.get('ai-brain', 'auto');           // auto: free AI, or ChatGPT once connected | cloud | local | wang | offline
+  if (!store.get('ai-auto-brain', false)) { store.set('ai-auto-brain', true); if (cfg.brain === 'cloud') { cfg.brain = 'auto'; store.set('ai-brain', 'auto'); } } // one-time: answer without needing any sign-in
   cfg.cloudModel = (() => {
     let m = store.get('ai-cloud-model', '');
     if (!store.get('ai-chatgpt-default', false)) { store.set('ai-chatgpt-default', true); m = 'gpt-6.2-sol'; store.set('ai-cloud-model', m); } // one-time switch to the ChatGPT brain
@@ -300,7 +315,7 @@ ${small ? smallContext() : context()}`;
     'Pauses: short natural breaths at commas and between ideas, and a brief beat before the key point.',
     'Pronunciation: say technical terms clearly (NumPy as "num-pie", scikit-learn as "sy-kit learn", matplotlib as "mat-plot-lib") and speak every language with a natural native accent.',
   ].join(' ');
-  const engine = () => (cfg.brain === 'wang' ? 'wang' : cfg.key ? 'claude' : cfg.brain === 'local' && hasGPU ? 'local' : cfg.brain === 'offline' ? 'offline' : 'cloud');
+  const engine = () => (cfg.brain === 'wang' ? 'wang' : cfg.key ? 'claude' : cfg.brain === 'local' && hasGPU ? 'local' : cfg.brain === 'offline' ? 'offline' : cfg.brain === 'cloud' || (!cfg.cloudOff && !!(window.puter && window.puter.auth && window.puter.auth.isSignedIn())) ? 'cloud' : 'free');
 
   // ---------- Cloud AI for everyone via Puter.js (no API key; each visitor uses their own free Puter allowance) ----------
   let puterP = null;
@@ -377,6 +392,66 @@ ${small ? smallContext() : context()}`;
       return full;
     } finally { clearTimeout(timer); }
   }
+  // ---------- Free AI for everyone, no sign-in: the open GPT-OSS model through Pollinations.ai ----------
+  const FREE_URL = 'https://text.pollinations.ai/openai';
+  let freeNext = 0, freeGap = 11; // the free service allows one answer every N seconds per visitor (learned from its replies); space requests politely
+  const sleep = (ms, signal) => new Promise((res, rej) => {
+    const tm = setTimeout(res, ms);
+    if (signal) signal.addEventListener('abort', () => { clearTimeout(tm); rej(new DOMException('Aborted', 'AbortError')); }, { once: true });
+  });
+  async function askFree(onText, voice, holder) {
+    const msgs = [{ role: 'system', content: SYSTEM(voice) }, ...history.slice(-14)];
+    const body = JSON.stringify({ model: 'openai', messages: msgs, stream: true, private: true, referrer: 'ml-sikshya', reasoning_effort: voice ? 'low' : 'medium' });
+    const ctrl = new AbortController();
+    if (holder) holder.stream = { abort: () => ctrl.abort() };
+    for (let attempt = 0; ; attempt++) {
+      const wait = freeNext - Date.now();
+      if (wait > 12000) throw { free: 'busy', secs: Math.ceil(wait / 1000) }; // a long pause is needed: help from the lessons right now instead
+      if (wait > 0) { if (holder && holder.onWait) holder.onWait(Math.ceil(wait / 1000)); await sleep(wait, ctrl.signal); }
+      freeNext = Date.now() + freeGap * 1000;
+      let resp;
+      try { resp = await fetch(FREE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: ctrl.signal }); }
+      catch (e) { if (ctrl.signal.aborted) throw e; throw { free: 'network' }; }
+      if (resp.status === 402 || resp.status === 429 || resp.status === 503 || resp.status === 502) {
+        let m = ''; try { m = await resp.text(); } catch { /* ignore */ }
+        const per = /(\d+)\s*seconds?/i.exec(m); // e.g. "Free limit reached: 1 reply every 45 seconds per IP"
+        if (resp.status === 402 && per) freeGap = Math.min(120, Math.max(5, +per[1] + 1)); // learn the current free limit
+        const ra = resp.status === 402 && per ? freeGap : Math.max(3, parseInt(resp.headers.get('Retry-After') || '10', 10) || 10);
+        freeNext = Date.now() + ra * 1000;
+        if (attempt >= 1 || ra > 12) throw { free: 'busy', secs: ra }; // one patient retry at most, then help from the lessons
+        continue;
+      }
+      if (!resp.ok) {
+        let m = ''; try { m = (await resp.text()).slice(0, 160); } catch { /* ignore */ }
+        if (resp.status === 403 && /turnstile/i.test(m)) throw { free: location.hostname === 'localhost' ? 'localhost' : 'blocked' }; // the free service turns away "localhost" pages
+        throw { free: 'server', msg: resp.status + ' ' + m };
+      }
+      // the answer arrives as server-sent events: "content" is the answer, "reasoning" is the model thinking (skipped)
+      const reader = resp.body.getReader(), dec = new TextDecoder();
+      let buf = '', full = '';
+      const timer = setTimeout(() => { if (!full) { if (holder) holder.timedOut = true; ctrl.abort(); } }, 60000);
+      try {
+        for (;;) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          let nl;
+          while ((nl = buf.indexOf('\n')) >= 0) {
+            const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+            if (!line.startsWith('data:')) continue;
+            const data = line.slice(5).trim();
+            if (!data || data === '[DONE]') continue;
+            let j; try { j = JSON.parse(data); } catch { continue; }
+            if (j.error) throw { free: 'server', msg: j.error.message || String(j.error) };
+            const d = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+            if (d) { full += d; onText(d); }
+          }
+        }
+      } finally { clearTimeout(timer); }
+      if (!full) throw { free: 'empty' };
+      return full;
+    }
+  }
   let localEngine = null, localLoading = null, localModelLoaded = null;
   let lastProg = null;
   function localProgress(p) {
@@ -409,7 +484,19 @@ ${small ? smallContext() : context()}`;
     for await (const c of chunks) { const d = (c.choices[0] && c.choices[0].delta && c.choices[0].delta.content) || ''; if (d) { full += d; onText(d); } }
     return full;
   }
-  const askAI = (onText, voice, holder) => (engine() === 'wang' ? askWang(onText, voice, holder) : engine() === 'claude' ? askClaude(onText, voice, holder) : engine() === 'cloud' ? askCloud(onText, voice, holder) : askLocal(onText, voice, holder));
+  // Automatic brain: ChatGPT while it's connected and working, otherwise the free AI, so a learner never gets stuck
+  // (e.g. when the free monthly ChatGPT allowance on Puter is used up).
+  async function askAuto(onText, voice, holder) {
+    let any = false;
+    try { return await askCloud((d) => { any = true; onText(d); }, voice, holder); } catch (e) {
+      const m = puterErr(e) + ' ' + String(e && e.name);
+      if (any || (/abort/i.test(m) && !(holder && holder.timedOut))) throw e;   // half-answered, or the learner pressed stop
+      if (/insufficient|402|funds|credit|not_signed_in|unauthori[sz]ed|\b401\b|sign.?in|log.?in/i.test(m)) { cfg.cloudOff = true; ttsBroken = true; refresh(); }
+      if (holder) holder.timedOut = false;
+      return askFree(onText, voice, holder);
+    }
+  }
+  const askAI = (onText, voice, holder) => (engine() === 'wang' ? askWang(onText, voice, holder) : engine() === 'claude' ? askClaude(onText, voice, holder) : engine() === 'cloud' ? (cfg.brain === 'auto' ? askAuto(onText, voice, holder) : askCloud(onText, voice, holder)) : engine() === 'free' ? askFree(onText, voice, holder) : askLocal(onText, voice, holder));
 
   // ---------- WANG AI (your own WANG AI server; the API key stays on the server) ----------
   Object.assign(MLS.UI, {
@@ -490,8 +577,18 @@ ${small ? smallContext() : context()}`;
     if (msg.stop_reason === 'refusal') throw Object.assign(new Error('refusal'), { refusal: true });
     return msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
   }
+  // errors thrown by the free AI carry a "free" field, even when the auto brain fell back to it from ChatGPT
+  const isFreeErr = (e) => !!(e && typeof e === 'object' && 'free' in e);
   function apiErrorText(e, A) {
     if (engine() === 'wang') return wangErrorText(e);
+    if (engine() === 'free' || isFreeErr(e)) {
+      if (e && e.free === 'busy') return e.secs > 12 ? u('freeBusyS').replace('{s}', e.secs) : u('freeBusy');
+      if (e && e.free === 'network') return u('freeNet');
+      if (e && e.free === 'localhost') { const here = location.href.replace('//localhost', '//127.0.0.1'); return `${u('freeLocalhost')} <a href="${esc(here)}">${esc(here.split('#')[0])}</a> · <a href="${LIVE_URL}${esc(location.hash)}" target="_blank" rel="noopener">${u('fileBtn')}</a>`; }
+      if (e && e.free === 'blocked') return `${u('freeBlocked')} <a href="${LIVE_URL}${esc(location.hash)}" target="_blank" rel="noopener">${u('fileBtn')}</a>`;
+      if (/timeout|timed.?out|abort/i.test(puterErr(e) + String(e && e.name))) return u('aiTimeout');
+      return `⚠️ ${u('aiOops')} <small class="muted">(${esc((e && (e.msg || e.free)) || puterErr(e) || 'error')})</small>`;
+    }
     const m = puterErr(e);
     if (engine() === 'cloud') {
       if (needsConnect(e)) return FILE_MODE ? u('fileT') : u('needConnect');
@@ -988,7 +1085,7 @@ ${small ? smallContext() : context()}`;
     const av = panel.querySelector('.tutor-avatar'), cls = av.className;
     av.innerHTML = avatarSVG(cfg.look); av.className = cls;
     panel.querySelector('.tt').textContent = `${teacherName()} · ${u('tutor')}`;
-    panel.querySelector('.mode').innerHTML = engine() === 'wang' ? `<i class="dot ${wangOk ? 'on' : ''}"></i>${u('brainWang')}` : engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'cloud' ? `<i class="dot ${isSignedIn() ? 'on' : ''}"></i>⚡ ${esc(modelLabel())}${isSignedIn() ? '' : ' · ' + u(FILE_MODE ? 'fileShort' : 'notConnected')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
+    panel.querySelector('.mode').innerHTML = engine() === 'wang' ? `<i class="dot ${wangOk ? 'on' : ''}"></i>${u('brainWang')}` : engine() === 'claude' ? `<i class="dot on"></i>${u('tutorOnline')}` : engine() === 'free' ? `<i class="dot on"></i>✨ ${u('modeFree')} <small class="muted">· GPT-OSS</small>` : engine() === 'cloud' ? `<i class="dot ${isSignedIn() ? 'on' : ''}"></i>⚡ ${esc(modelLabel())}${isSignedIn() ? '' : ' · ' + u(FILE_MODE ? 'fileShort' : 'notConnected')}` : engine() === 'local' ? `<i class="dot on"></i>🧠 ${u('modeLocal')}` : `<i class="dot"></i>${u('tutorOffline')}`;
     if (!panel.querySelector('.tutor-state').textContent) panel.querySelector('.tutor-state').textContent = u('stReady');
     panel.querySelector('.spk').textContent = cfg.speak ? '🔊' : '🔇';
     panel.querySelector('.tutor-form textarea').placeholder = u('tutorPh');
@@ -1027,6 +1124,8 @@ ${small ? smallContext() : context()}`;
         <label class="small chk"><input type="checkbox" class="glasses" ${(cfg.av.glasses ?? AV_DEFAULT.glasses) ? 'checked' : ''}> ${u('av_glasses')}</label></div></div>
       <b>🗣️ ${u('voiceTitle')}</b>
       <div class="seg veng">${[['openai', u('vChatGPT')], ['browser', u('vBrowser')]].map(([k, n]) => `<button data-v="${k}" class="${cfg.voiceEngine === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+      ${cfg.voiceEngine === 'openai' && !isSignedIn() ? `<p class="small muted">${u('vNeedsConnect')}</p>` : ''}
+      ${synth && synth.getVoices().length && !synth.getVoices().some((v) => /natural|neural|online/i.test(v.name)) ? `<p class="small muted">${u('vEdgeTip')}</p>` : ''}
       <label class="small">${u('vOaPick')} <select class="oavoice">${OA_VOICES.map(([id, n]) => `<option value="${id}" ${id === cfg.oaVoice ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label class="small">${u('voicePick')} <select class="vname"><option value="">${u('voiceAuto')}</option>${(synth ? synth.getVoices() : []).filter((v) => !cfg.voice || cfg.voice === 'auto' || v.lang.startsWith(cfg.voice.split('-')[0])).map((v) => `<option ${v.name === cfg.voiceName ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></label>
       <div class="row small"><label>${u('voiceSpeed')} <input type="range" class="vrate" min="0.8" max="1.25" step="0.01" value="${cfg.rate || 1}"></label><label>${u('voicePitch')} <input type="range" class="vpitch" min="0.8" max="1.25" step="0.01" value="${cfg.pitch || 1}"></label><button class="btn ghost sm vtest">▶ ${u('voiceTest')}</button></div>
@@ -1039,8 +1138,9 @@ ${small ? smallContext() : context()}`;
       <div class="row"><button class="btn ghost sm mictest">🎙️ ${u('micTest')}</button><small class="micres"></small></div>
       <div class="mic-meter"><span></span></div>
       <b>⚡ ${u('brainT')}</b>
-      <div class="seg brain">${[['cloud', u('brainCloud')], ['local', u('brainLocal')], ['wang', u('brainWang')], ['offline', u('brainOff')]].map(([k, n]) => `<button data-b="${k}" class="${cfg.brain === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+      <div class="seg brain">${[['auto', u('brainAuto')], ['cloud', u('brainCloud')], ['local', u('brainLocal')], ['wang', u('brainWang')], ['offline', u('brainOff')]].map(([k, n]) => `<button data-b="${k}" class="${cfg.brain === k ? 'on' : ''}">${n}</button>`).join('')}</div>
       <p class="small">${cfg.brain === 'wang' ? u('wangHelp') : u('brainHelp')}</p>
+      ${cfg.brain === 'auto' && !FILE_MODE && !isSignedIn() ? `<div class="row"><button class="btn ghost sm cgpt">${u('connectBtn')}</button><small class="muted">${u('cgptWhy')}</small></div>` : ''}
       ${cfg.brain === 'wang' ? `<label class="small">${u('wangUrl')} <input type="url" class="wangurl" placeholder="http://localhost:8000" autocomplete="off" value="${esc(cfg.wangUrl)}"></label>
       <div class="row"><button class="btn ghost sm wangtest">${u('wangTest')}</button><small class="wangres"></small></div>` : ''}
       <label class="small">${u('tutorModel')} <select class="cmodel">${CLOUD_MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.cloudModel ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
@@ -1055,6 +1155,7 @@ ${small ? smallContext() : context()}`;
       <label class="small">${u('tutorModel')} <select class="model">${MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.model ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <div class="row"><button class="btn sm save">${u('tutorSave')}</button>${cfg.key ? `<button class="btn ghost sm forget">${u('tutorForget')}</button>` : ''}</div>`;
     s.querySelectorAll('.brain button').forEach((b) => (b.onclick = () => { cfg.brain = b.dataset.b; cfg.local = cfg.brain === 'local'; store.set('ai-brain', cfg.brain); store.set('ai-local', cfg.local); refresh(); drawSettings(); }));
+    const cg = s.querySelector('.cgpt'); if (cg) cg.onclick = (ev) => connectPuter(ev.currentTarget).then(() => { if (panel) drawSettings(); });
     s.querySelector('.micsens').onchange = (e) => { cfg.micSens = e.target.value; store.set('ai-mic-sens', cfg.micSens); };
     s.querySelector('.ptt').onchange = (e) => { cfg.ptt = e.target.checked; store.set('ai-ptt', cfg.ptt); };
     s.querySelector('.mictest').onclick = () => micTest(s);
@@ -1111,7 +1212,7 @@ ${small ? smallContext() : context()}`;
     return el;
   }
   function aiCard() {
-    if (engine() === 'wang' || engine() === 'claude' || engine() === 'cloud' || (engine() === 'local' && localEngine && !localLoading)) return null;
+    if (engine() === 'wang' || engine() === 'claude' || engine() === 'cloud' || engine() === 'free' || (engine() === 'local' && localEngine && !localLoading)) return null;
     if (localLoading || engine() === 'local') {
       const pe = h(`<div class="ai-card"><b>🧠 ${u('freeAI')}</b><p class="small">${u('freeAIHelp')}</p><div class="ai-progress"><span></span><small>…</small></div></div>`);
       if (!localLoading) startLocal(pe.querySelector('.ai-progress'));
@@ -1165,6 +1266,7 @@ ${small ? smallContext() : context()}`;
     busy = true; setSendBtn(true); setState('thinking');
     history.push({ role: 'user', content: text });
     const holder = (curHolder = {});
+    holder.onWait = (sec) => { if (!acc) { out.innerHTML = `<span class="muted">${u('freeWait').replace('{s}', sec)}</span>`; box.scrollTop = box.scrollHeight; } };
     let acc = '', A = null, last = 0;
     const speaker = (viaVoice || convo) && cfg.speak ? makeSpeaker(after) : null;   // talk while the answer is still arriving
     const feed = speaker ? sentenceFeeder((x) => speaker.say(x)) : null;
@@ -1183,7 +1285,13 @@ ${small ? smallContext() : context()}`;
       if (aborted && acc) { history.push({ role: 'assistant', content: acc }); render(acc, out); }
       else {
         console.error('AI error:', puterErr(e)); history.pop();
-        if (engine() === 'cloud' && needsConnect(e)) { pendingQ = { text, voice: viaVoice }; box.querySelectorAll('.connect-card').forEach((c) => c.remove()); out.innerHTML = ''; out.appendChild(connectCard()); }
+        if (engine() === 'cloud' && !isFreeErr(e) && needsConnect(e)) { pendingQ = { text, voice: viaVoice }; box.querySelectorAll('.connect-card').forEach((c) => c.remove()); out.innerHTML = ''; out.appendChild(connectCard()); }
+        else if (isFreeErr(e) && e.free === 'busy') {
+          // the shared free AI is overloaded: still help right away, from the built-in lessons and glossary
+          out.innerHTML = `<p class="muted">${e.secs > 12 ? u('freeBusyNotesS').replace('{s}', e.secs) : u('freeBusyNotes')}</p>${offlineAnswer(text)}<button class="btn ghost sm retry">↻ ${u('retry')}</button>`;
+          out.querySelector('.retry').onclick = () => send(text, viaVoice);
+          speak(u('freeBusySay'), after);
+        }
         else {
           out.innerHTML = `<p>${holder.timedOut ? u('aiTimeout') : apiErrorText(e, A)}</p><button class="btn ghost sm retry">↻ ${u('retry')}</button>`;
           out.querySelector('.retry').onclick = () => send(text, viaVoice);
@@ -1196,7 +1304,7 @@ ${small ? smallContext() : context()}`;
   }
   function openTutor(prefill) {
     if (engine() === 'cloud') loadPuter().then(() => { if (panel) { refresh(); if (!history.length) drawMsgs(); } }).catch(() => {});
-    else if (cfg.voiceEngine === 'openai' && !FILE_MODE) loadPuter().catch(() => {}); // natural ChatGPT voice for every brain once connected
+    else if (!FILE_MODE && (cfg.brain === 'auto' || cfg.voiceEngine === 'openai')) loadPuter().then(() => { if (panel) refresh(); }).catch(() => {}); // a connected learner automatically gets ChatGPT and its voice
     if (!panel) build();
     panel.hidden = false; fab.classList.add('open'); refresh();
     if (prefill) send(prefill); else panel.querySelector('.tutor-form textarea').focus();
@@ -1329,6 +1437,7 @@ ${small ? smallContext() : context()}`;
     }
     history.push({ role: 'user', content: text });
     const holder = (call.holder = {});
+    holder.onWait = (sec) => { if (call && call.turn === turn) cStatus(u('freeWait').replace('{s}', sec)); };
     let acc = '', spoken = 0, started = false;
     const pump = (final) => {
       for (;;) {
@@ -1353,7 +1462,7 @@ ${small ? smallContext() : context()}`;
       if (acc) history.push({ role: 'assistant', content: acc + ' …' }); else history.pop();
       if (!call || call.turn !== turn) return;                 // aborted by a newer question
       face('thinking', false); cStatus('');
-      if (engine() === 'cloud' && needsConnect(e)) { pendingQ = { text, call: true }; call.el.querySelector('.cb.connect').hidden = false; cStatus(FILE_MODE ? u('fileT') : u('needConnect')); return; }
+      if (engine() === 'cloud' && !isFreeErr(e) && needsConnect(e)) { pendingQ = { text, call: true }; call.el.querySelector('.cb.connect').hidden = false; cStatus(FILE_MODE ? u('fileT') : u('needConnect')); return; }
       const A = engine() === 'claude' ? await sdk().catch(() => null) : null;
       const d = document.createElement('div'); d.innerHTML = apiErrorText(e, A); cSay(d.innerText);
     }
@@ -1408,7 +1517,7 @@ ${small ? smallContext() : context()}`;
     cSay(u('callGreet').replace('{name}', teacherName()));
     gateStart().then(() => { if (call) cListen(); });
     if (engine() === 'cloud') loadPuter().then(() => { if (call && !isSignedIn()) { call.el.querySelector('.cb.connect').hidden = false; cStatus(u('needConnect')); } }).catch(() => { if (call && FILE_MODE) { call.el.querySelector('.cb.connect').hidden = false; cStatus(u('fileT')); } });
-    else if (cfg.voiceEngine === 'openai' && !FILE_MODE) loadPuter().catch(() => {});
+    else if (!FILE_MODE && (cfg.brain === 'auto' || cfg.voiceEngine === 'openai')) loadPuter().catch(() => {});
   }
   function escCall(e) { if (e.key === 'Escape') endCall(); }
   function endCall() {

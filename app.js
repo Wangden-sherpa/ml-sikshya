@@ -258,7 +258,7 @@ def _mls_figs():
 
   // ---------- Layout pieces ----------
   function renderTop(route) {
-    const items = [['#/', 'home'], ['#/learn', 'learn'], ['#/projects', 'projects'], ['#/playground', 'playground'], ['#/realworld', 'realworld'], ['#/lab3d', 'lab3d'], ['#/datalab', 'datalab'], ['#/glossary', 'glossary']];
+    const items = [['#/', 'home'], ['#/learn', 'learn'], ['#/projects', 'projects'], ['#/playground', 'playground'], ['#/realworld', 'realworld'], ['#/lab3d', 'lab3d'], ['#/datalab', 'datalab'], ['#/models', 'models'], ['#/glossary', 'glossary']];
     $('#topnav').innerHTML = items.map(([href, k]) => {
       const active = (k === 'home' && route === '') || (k === 'learn' && route === 'learn') || route === k || (k === 'projects' && route === 'project');
       return `<a href="${href}" class="${active ? 'active' : ''}">${u(k)}</a>`;
@@ -281,6 +281,7 @@ def _mls_figs():
         <a href="#/realworld" class="${route === 'realworld' || route === 'mission' ? 'active' : ''}">🌍 ${u('realworld')} <span class="new-badge">NEW</span></a>
         <a href="#/lab3d" class="${route === 'lab3d' ? 'active' : ''}">🧊 ${u('lab3d')} <span class="new-badge">NEW</span></a>
         <a href="#/datalab" class="${route === 'datalab' ? 'active' : ''}">📊 ${u('datalab')} <span class="new-badge">NEW</span></a>
+        <a href="#/models" class="${route === 'models' ? 'active' : ''}">🤖 ${u('models')} <span class="new-badge">NEW</span></a>
         <a href="#/" class="open-tutor">🤖 ${u('tutor')} <span class="new-badge">NEW</span></a>
       </div>`;
     LEVELS.forEach((lv, i) => {

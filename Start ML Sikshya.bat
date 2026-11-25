@@ -3,7 +3,7 @@ rem ML Sikshya - run your own copy properly (ChatGPT sign-in and the AI tutor ne
 title ML Sikshya - keep this window open while you learn
 cd /d "%~dp0"
 set "PORT=8770"
-set "URL=http://localhost:%PORT%/"
+set "URL=http://127.0.0.1:%PORT%/"
 
 rem Already running? Just open it in the browser.
 curl -s -o nul "%URL%" && (start "" "%URL%" & exit /b 0)
