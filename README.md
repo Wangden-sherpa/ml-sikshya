@@ -24,46 +24,16 @@ python -m http.server 8765
 
 The first time you press **▶ Run**, Python loads in the browser (10–30 seconds, needs internet).
 
-## 🤖 Use WANG AI as the tutor's brain
+## 📹 AI Tutor: Emma & Nora (Nuance Labs)
 
-The AI Teacher can answer through your own **WANG AI** server instead of a
-cloud account. The AI key stays on the server, so students don't need a key
-or a Puter account, and the teacher knows which lesson the student is on and
-the code they last ran.
+The AI Tutor is **Emma and Nora**, real-time, full-duplex video AI personas made by
+[Nuance Labs](https://www.nuancelabs.ai). The **📹 Emma & Nora** button (and every "Ask the tutor"
+button) opens a panel that sends the student to Nuance's own free site, `app.nuancelabs.ai`, in a new
+tab. Emma and Nora can't be embedded or used through Nuance's API, so they don't see the lesson or code;
+when a button had a question ready, the panel shows it so the student can say it or copy it.
 
-1. Start the WANG AI backend on your computer. Follow the steps in the
-   [WANG AI README](https://github.com/wangdencerpa12345-star/Doing-something-new/tree/claude/zealous-hypatia-9zr2yv#readme)
-   (add your AI key to `backend/.env`, then run `uvicorn app.main:app`).
-2. Open ML Tutor, click **AI Teacher**, then **⚙️**.
-3. Under **AI brain** choose **🤖 WANG AI**. Leave the address as
-   `http://localhost:8000` and click **Test connection**. You should see
-   **✓ Connected**.
-4. Click **Save** and ask a question.
-
-Use the local copy (`Start ML Tutor.bat`) or the online site. If Chrome
-asks to let the site access devices on your local network, click **Allow**:
-that is how the page reaches the server on your computer.
-
-## 🎥 Live AI video tutor (owner only, Nuance Live)
-
-A real-time video teacher (an AI persona from [Nuance Labs](https://docs.nuancelabs.ai)) that talks with
-the student face to face. During a class it can see the current lesson and the student's latest code run,
-read and open lessons, look up glossary terms, and put runnable code examples on the screen (the student
-presses ▶ Run; the teacher never runs code itself). Students can talk, interrupt, type, press **Stop**,
-or press **Give me a minute** to keep the teacher quiet while they read.
-
-It only runs on the owner's computer, because it needs your Nuance API key:
-
-1. Create an API key on [platform.nuancelabs.ai](https://platform.nuancelabs.ai) and accept the developer
-   agreement there.
-2. Save the key (it starts with `nk_`) in `%USERPROFILE%\.ml-sikshya\nuance_key.txt` on Windows, or
-   `~/.ml-sikshya/nuance_key.txt` on Mac/Linux. **Never** put it in this project, on GitHub or in a chat.
-3. Double-click `tools\start-live-tutor.bat` and keep its window open.
-4. In ML Tutor: **AI Teacher → ⚙️ → "This is my computer — show the live tutor"**, then press
-   **🎥 Live AI video tutor**.
-
-Good to know: the Nuance persona speaks and understands **English only**. With the camera on, a student
-under 18 needs an adult next to them, or Nuance ends the class. Each class uses Nuance credits.
+Nuance's rules (shown in the panel): **adults 18+ only**, **English only**, and available only in the
+US (not Colorado, Connecticut, Illinois or Texas), the EU, the UK and Canada (not Quebec).
 
 ## 🗂️ Structure
 

@@ -1,0 +1,23 @@
+/* ML Tutor — AI Tutor: Emma & Nora panel (emma-nora.js) */
+.en-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; background: rgba(5, 8, 22, .6); backdrop-filter: blur(4px); }
+.en-overlay[hidden] { display: none; }
+.en-panel { position: relative; width: min(520px, 100%); max-height: 92vh; overflow: auto; padding: 26px; border-radius: 22px;
+  background: var(--surface, #fff); color: var(--text, #111); border: 1px solid var(--border, rgba(0,0,0,.1)); box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+.en-panel h2 { margin: 0 0 6px; font-size: 1.45rem; }
+.en-x { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer; background: transparent; color: inherit; font-size: 1.05rem; }
+.en-x:hover { background: rgba(127,127,127,.15); }
+.en-people { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.en-persona { display: grid; justify-items: center; gap: 6px; padding: 16px 10px; border-radius: 16px; cursor: pointer; border: 1px solid var(--border, rgba(0,0,0,.1)); transition: transform .15s; }
+.en-persona:hover { transform: translateY(-2px); }
+.en-face { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; font-size: 2rem; font-weight: 800; color: #fff; }
+.en-persona.emma .en-face { background: linear-gradient(135deg, #f59e0b, #db2777); }
+.en-persona.nora .en-face { background: linear-gradient(135deg, #06b6d4, #6d28d9); }
+.en-live { font-size: .78rem; color: #16a34a; font-weight: 600; }
+.en-q { margin: 0 0 14px; padding: 12px; border-radius: 12px; background: rgba(127,127,127,.1); }
+.en-qrow { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; }
+.en-qtext { flex: 1; white-space: pre-wrap; font-size: .92rem; max-height: 140px; overflow: auto; }
+.en-go { width: 100%; padding: 13px; font-size: 1.05rem; }
+.en-pick { text-align: center; margin: 8px 0 12px; }
+.en-rules { padding: 10px 12px; border-radius: 10px; background: rgba(245, 158, 11, .12); }
+.teacher-stage .en-people { width: 100%; max-width: 360px; margin: 0; }
+.teacher-stage .en-persona { background: rgba(255,255,255,.08); }
