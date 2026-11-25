@@ -1221,6 +1221,7 @@ ${small ? smallContext() : context()}`;
     ch.innerHTML = chips.map(([k]) => `<button data-k="${k}">${u(k)}</button>`).join('');
     ch.querySelectorAll('button').forEach((b) => (b.onclick = () => send(u(b.dataset.k).replace(/^\S+\s/, ''))));
     const cb = h(`<button class="call-chip">${u('callBtn')}</button>`); cb.onclick = () => openCall(); ch.prepend(cb);
+    if (MLS.openEmmaNora) { const eb = h('<button class="en-chip">📹 Emma &amp; Nora ↗</button>'); eb.onclick = () => MLS.openEmmaNora(); ch.append(eb); }
     if (MLS.liveEnabled && MLS.liveEnabled()) { const lb = h(`<button class="call-chip live-chip">${u('liveBtn')}</button>`); lb.onclick = () => MLS.openLive(); ch.prepend(lb); }
     if (!history.length) drawMsgs();
   }
@@ -1342,8 +1343,9 @@ ${small ? smallContext() : context()}`;
   }
   function chooserCard() {
     if (history.length || store.get('ai-chosen', false)) return null;
-    const el = h(`<div class="chooser"><b>✨ ${u('chooseT')}</b><div class="chooser-grid">${Object.keys(TEACHERS).map((k) => `<button class="choose ${cfg.teacher === k ? 'on' : ''}" data-k="${k}">${avatarSVG(null, '', k)}<b>${esc(t(TEACHERS[k].name))}</b><span>${esc(t(TEACHERS[k].role))}</span></button>`).join('')}</div><small class="muted">${u('chooseMore')}</small></div>`);
-    el.querySelectorAll('.choose').forEach((b) => (b.onclick = () => { store.set('ai-chosen', true); setTeacher(b.dataset.k); }));
+    const el = h(`<div class="chooser"><b>✨ ${u('chooseT')}</b><div class="chooser-grid">${Object.keys(TEACHERS).map((k) => `<button class="choose ${cfg.teacher === k ? 'on' : ''}" data-k="${k}">${avatarSVG(null, '', k)}<b>${esc(t(TEACHERS[k].name))}</b><span>${esc(t(TEACHERS[k].role))}</span></button>`).join('')}${MLS.openEmmaNora ? ['Emma', 'Nora'].map((n) => `<button class="choose en-card"><div class="en-av teacher-avatar ${n.toLowerCase()}">${n[0]}</div><b>${n} ↗</b><span>${esc(u('enCardRole'))}</span></button>`).join('') : ''}</div><small class="muted">${u('chooseMore')}</small></div>`);
+    el.querySelectorAll('.choose:not(.en-card)').forEach((b) => (b.onclick = () => { store.set('ai-chosen', true); setTeacher(b.dataset.k); }));
+    el.querySelectorAll('.choose.en-card').forEach((b) => (b.onclick = () => MLS.openEmmaNora()));
     return el;
   }
   function setTeacher(k) {

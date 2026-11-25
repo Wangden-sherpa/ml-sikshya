@@ -1,4 +1,4 @@
-/* ML Tutor — design: home "Meet your AI teachers" (Asha and Kiran, code-drawn, no photos), animated hero particles. */
+/* ML Tutor — design: home "Meet your AI teachers" (Asha and Kiran, code-drawn, no photos; plus Emma & Nora cards that open Nuance Labs' site), animated hero particles. */
 (() => {
   const MLS = window.MLS;
   const { u, t, h, esc } = MLS;
@@ -8,7 +8,7 @@
     chatWith: { en: '💬 Chat', ne: '💬 च्याट', zh: '💬 聊天' },
     callWith: { en: '📹 Face-to-face call', ne: '📹 आमने-सामने कल', zh: '📹 面对面通话' },
     designT: { en: '🎨 Design my teacher', ne: '🎨 मेरो शिक्षक डिजाइन', zh: '🎨 设计我的老师' },
-    emmaLink: { en: 'Emma & Nora (Nuance Labs)', ne: 'Emma र Nora (Nuance Labs)', zh: 'Emma 和 Nora（Nuance Labs）' },
+    enCardRole: { en: 'Live video AI by Nuance Labs · opens their site · 18+, English', ne: 'Nuance Labs को प्रत्यक्ष भिडियो AI · उनीहरूको साइट खुल्छ · १८+, अङ्ग्रेजी', zh: 'Nuance Labs 的实时视频 AI · 打开其网站 · 18 岁以上，英语' },
     online: { en: 'Online now', ne: 'अहिले अनलाइन', zh: '在线' },
   });
 
@@ -19,16 +19,18 @@
       <div class="teachers-text"><span class="new-badge big">AI</span><h2>${u('meetT')}</h2><p class="muted">${u('meetSub')}</p>
         <div class="tc-actions big"><button class="btn chat">${u('chatWith')}</button><button class="btn ghost tc-call">${u('callWith')}</button>
         ${live ? `<button class="btn tc-live">${u('liveBtn')}</button>` : ''}<button class="btn ghost tc-design">${u('designT')}</button></div>
-        <p class="small muted tc-emma">📹 <a href="#/" class="emma-link">${u('emmaLink')}</a></p></div>
+</div>
       <div class="teacher-stage two">${Object.keys(T).map((k) => `<button class="tc-pick ${k === cur ? 'on' : ''}" data-t="${k}">
           <div class="teacher-avatar">${MLS.avatarSVG(null, '', k)}</div><b>${esc(t(T[k].name))}</b><small>${esc(t(T[k].role))}</small></button>`).join('')}
+        ${['Emma', 'Nora'].map((n) => `<button class="tc-pick en-card" title="Nuance Labs">
+          <div class="teacher-avatar en-av ${n.toLowerCase()}">${n[0]}<span class="en-ext">↗</span></div><b>${n}</b><small>${u('enCardRole')}</small></button>`).join('')}
         <span class="tc-online">● ${u('online')}</span></div></section>`);
     sec.querySelector('.chat').onclick = () => MLS.openTutor();
     sec.querySelector('.tc-call').onclick = () => MLS.openCall();
     const lv = sec.querySelector('.tc-live'); if (lv) lv.onclick = () => MLS.openLive();
     sec.querySelector('.tc-design').onclick = () => { MLS.openTutor(); setTimeout(() => { const b = document.querySelector('.tutor .set'); if (b && document.querySelector('.tutor-settings').hidden) b.click(); }, 50); };
-    sec.querySelector('.emma-link').onclick = (e) => { e.preventDefault(); MLS.openEmmaNora && MLS.openEmmaNora(); };
-    sec.querySelectorAll('.tc-pick').forEach((b) => (b.onclick = () => { MLS.setTeacher(b.dataset.t); MLS.openTutor(); }));
+    sec.querySelectorAll('.en-card').forEach((b) => (b.onclick = () => MLS.openEmmaNora && MLS.openEmmaNora()));
+    sec.querySelectorAll('.tc-pick:not(.en-card)').forEach((b) => (b.onclick = () => { MLS.setTeacher(b.dataset.t); MLS.openTutor(); }));
     const hero = el.querySelector('.hero');
     (hero || el.firstElementChild).after(sec);
 

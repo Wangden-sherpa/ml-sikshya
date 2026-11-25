@@ -35,3 +35,10 @@
 @media (max-width: 640px) {
   .call { inset: auto 8px 8px 8px; width: auto; height: min(78vh, calc(100vh - 16px)); }
 }
+
+/* Emma & Nora cards (Nuance Labs): open their own site, shown beside Asha and Kiran */
+.tc-pick .teacher-avatar.en-av { position: relative; display: grid; place-items: center; font-size: clamp(2.6rem, 7vw, 4.5rem); font-weight: 800; color: #fff; }
+.teacher-avatar.en-av.emma { background: linear-gradient(135deg, #f59e0b, #db2777); }
+.teacher-avatar.en-av.nora { background: linear-gradient(135deg, #06b6d4, #6d28d9); }
+.en-ext { position: absolute; top: 10%; right: 10%; font-size: 1.1rem; background: rgba(0,0,0,.35); border-radius: 50%; width: 1.8em; height: 1.8em; display: grid; place-items: center; }
+.chooser .choose.en-card .en-av { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0 auto; }
