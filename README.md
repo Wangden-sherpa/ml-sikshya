@@ -38,6 +38,14 @@ and **Kiran** (energetic and fun). They:
   the browser for free, downloaded once (about 92 MB; not by default on phones). Nepali and Chinese use the
   browser's voices. The lips move with the real speech.
 
+**How they hear you** (`hearing.js`, free, on the student's device, any modern browser): the microphone
+uses the browser's noise suppression and echo cancellation plus a voice-band filter; **Silero VAD** starts
+a recording only when someone is really speaking (room noise is ignored), keeps 400 ms before the first
+word and waits for a short pause at the end; then **Whisper** (Base about 80 MB, or Small about 250 MB for
+better Nepali) turns the speech into text. Known Whisper "phantom" phrases are dropped, and the teachers
+are told to work out small mishearings and ignore background chatter. Phones default to the browser's
+own recogniser; it can be switched in ⚙️.
+
 They use the free AI brain by default; Claude, ChatGPT, an on-device model or WANG AI can be chosen in ⚙️.
 
 **Emma & Nora** (Nuance Labs) are linked from the home page. They run only on Nuance's own site

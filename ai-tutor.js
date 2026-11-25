@@ -337,7 +337,7 @@ How to teach:
 - Use the course material in the context below as your source for anything about this website; never invent lessons, projects or quiz answers that are not there.
 - Sound like a real person talking, not a textbook or a robot: use contractions (it's, you'll, let's), plain everyday words, varied sentence lengths and a little warmth or light humour. React naturally to what the learner says ("Ah, good question!", "Nice, you're close!") but vary it and don't open every answer the same way. Never say "As an AI".
 - Be encouraging and human. ${small ? 'Keep answers focused (under about 250 words).' : 'Ask a short check-your-understanding question at the end when it helps.'}
-${voice ? '- The learner is TALKING to you by voice and will HEAR your reply, so write exactly what a friendly teacher would SAY on a video call: short, natural spoken sentences (about 3–6), contractions and everyday words, starting with the direct answer or a quick natural reaction. No lists, headings, tables, emojis, symbols, markdown or code (unless asked). Say numbers and maths the way people speak them ("x squared", "zero point eight"). It is fine to end with a short, friendly question to keep the chat going.' : '- Use short paragraphs, lists and headings where they help, but keep simple answers simple and conversational.'}
+${voice ? '- The learner is TALKING to you by voice and will HEAR your reply, so write exactly what a friendly teacher would SAY on a video call: short, natural spoken sentences (about 3–6), contractions and everyday words, starting with the direct answer or a quick natural reaction. No lists, headings, tables, emojis, symbols, markdown or code (unless asked). Say numbers and maths the way people speak them ("x squared", "zero point eight"). It is fine to end with a short, friendly question to keep the chat going. Their words come from speech recognition, so they may contain small mistakes: similar-sounding wrong words (for example "cycle learn" for scikit-learn), missing punctuation, or mixed English, Nepali and Chinese. Quietly work out what they most likely meant and answer that, without pointing out the mistake. If a message is only a fragment, sounds like background talk not meant for you, or you really cannot tell what they meant, ask a short, friendly question instead of guessing.' : '- Use short paragraphs, lists and headings where they help, but keep simple answers simple and conversational.'}
 
 Current context:
 ${small ? smallContext() : context()}`;
@@ -744,7 +744,18 @@ ${small ? smallContext() : context()}`;
 
   // ---------- Voice: speech synthesis (talk) ----------
   const synth = window.speechSynthesis;
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const BrowserRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const hasEars = () => !!(MLS.Hearing && MLS.Hearing.supported());
+  cfg.ear = store.get('ai-ear', lightDevice && BrowserRec ? 'browser' : 'whisper');   // phones: lighter browser recogniser by default
+  cfg.earModel = store.get('ai-ear-model', 'onnx-community/whisper-base');
+  let SpeechRec = null;
+  function pickEar() {
+    SpeechRec = (cfg.ear === 'whisper' || !BrowserRec) && hasEars() ? MLS.Hearing.Recognizer : BrowserRec || null;
+    if (MLS.Hearing) MLS.Hearing.setModel(cfg.earModel);
+  }
+  pickEar();
+  // With Whisper + Silero VAD, speech was already confirmed by the VAD, so the older energy gate must not veto it.
+  const usingEars = () => !!(MLS.Hearing && SpeechRec === MLS.Hearing.Recognizer);
   const detectLang = (txt) => {
     if (/[一-鿿]/.test(txt)) return 'zh-CN';
     if (/[ऀ-ॿ]/.test(txt)) return MLS.S.lang === 'ne' || cfg.voice === 'ne-NP' ? 'ne-NP' : (cfg.voice === 'hi-IN' ? 'hi-IN' : 'ne-NP');
@@ -931,6 +942,13 @@ ${small ? smallContext() : context()}`;
   // 3) Transcripts are dropped when the recogniser is unsure, when they are only "uh"/"hmm",
   //    when no real voice was measured, or when they repeat what the teacher just said (echo).
   Object.assign(MLS.UI, {
+    earT: { en: 'How your teacher hears you', ne: 'शिक्षकले तपाईंलाई कसरी सुन्छन्', zh: '老师如何听你说话' },
+    earWhisper: { en: '👂 Whisper on this device (accurate, any browser)', ne: '👂 यही उपकरणमा Whisper (सटीक, जुनसुकै ब्राउजर)', zh: '👂 本机 Whisper（准确，任何浏览器）' },
+    earBrowser: { en: '🌐 Browser recogniser (Chrome/Edge)', ne: '🌐 ब्राउजरको पहिचान (Chrome/Edge)', zh: '🌐 浏览器识别（Chrome/Edge）' },
+    earModelT: { en: 'Speech model', ne: 'बोली मोडेल', zh: '语音模型' },
+    earBase: { en: 'Whisper Base: fast (about 80 MB)', ne: 'Whisper Base: छिटो (करिब 80 MB)', zh: 'Whisper Base：快速（约 80 MB）' },
+    earSmall: { en: 'Whisper Small: more accurate, best for नेपाली (about 250 MB)', ne: 'Whisper Small: बढी सटीक, नेपालीका लागि उत्तम (करिब 250 MB)', zh: 'Whisper Small：更准确，尼泊尔语效果最好（约 250 MB）' },
+    earHelp: { en: 'A voice detector (Silero VAD) starts listening only when someone really speaks, ignores room noise, and keeps the first and last words. Then Whisper turns your speech into text, privately on your device. It downloads once.', ne: 'आवाज पहिचानकर्ता (Silero VAD) ले कसैले साँच्चै बोल्दा मात्र सुन्छ, कोठाको हल्ला बेवास्ता गर्छ, र पहिलो र अन्तिम शब्द नछुटाई राख्छ। त्यसपछि Whisper ले तपाईंको बोलीलाई तपाईंकै उपकरणमा गोप्य रूपमा अक्षरमा बदल्छ। एकपटक डाउनलोड हुन्छ।', zh: '语音检测器（Silero VAD）只在真正有人说话时开始收听，忽略房间噪音，并保留首尾的词。然后 Whisper 在你的设备上私密地把语音转成文字。只需下载一次。' },
     micSensT: { en: 'Microphone sensitivity', ne: 'माइकको संवेदनशीलता', zh: '麦克风灵敏度' },
     micHigh: { en: 'High — quiet room, soft voice', ne: 'उच्च — शान्त कोठा, मसिनो आवाज', zh: '高——安静房间、声音较小' },
     micNormal: { en: 'Normal', ne: 'सामान्य', zh: '普通' },
@@ -951,6 +969,7 @@ ${small ? smallContext() : context()}`;
     low: { k: 3.8, min: 0.02, conf: 0.6 },
   };
   cfg.micSens = SENS[store.get('ai-mic-sens', 'normal')] ? store.get('ai-mic-sens', 'normal') : 'normal';
+  if (MLS.Hearing) MLS.Hearing.setSensitivity(cfg.micSens);
   cfg.ptt = store.get('ai-ptt', false);
   const gate = { stream: null, track: null, ctx: null, an: null, td: null, fd: null, timer: null, starting: null, floor: 0.005, rms: 0, thr: 1, hist: [], lastVoice: 0, confirmedAt: 0, teacherAt: 0 };
   const teacherTalking = () => !!((call && call.speaking) || audioPlaying || (synth && synth.speaking));
@@ -1012,13 +1031,13 @@ ${small ? smallContext() : context()}`;
     gate.rms = rms; gate.thr = thr;
     if (call) call.el.querySelector('.cb.mic').classList.toggle('hearing', voiceShare(200) >= 0.4);
   }
-  const voiceHeardSince = (t) => !gateOn() || gate.confirmedAt >= t;     // without the gate, trust the recogniser
+  const voiceHeardSince = (t) => usingEars() || !gateOn() || gate.confirmedAt >= t;     // without the gate, trust the recogniser
   function voiceShare(ms) {
     const now = Date.now(); let n = 0, v = 0;
     for (let i = gate.hist.length - 1; i >= 0 && now - gate.hist[i][0] <= ms; i--) { n++; if (gate.hist[i][1]) v++; }
     return n ? v / n : 0;
   }
-  const sustainedVoice = (ms) => !gateOn() || voiceShare(ms) >= 0.5;    // a voice for at least about half of the last `ms`
+  const sustainedVoice = (ms) => usingEars() || !gateOn() || voiceShare(ms) >= 0.5;    // a voice for at least about half of the last `ms`
   const FILLER = /^(uh+|um+|hm+|mm+|ah+|eh+|er+|erm|huh|oh)$/;
   const tokens = (str) => {
     const n = normTxt(str);
@@ -1240,7 +1259,11 @@ ${small ? smallContext() : context()}`;
       <div class="row small"><label>${u('voiceSpeed')} <input type="range" class="vrate" min="0.8" max="1.25" step="0.01" value="${cfg.rate || 1}"></label><label>${u('voicePitch')} <input type="range" class="vpitch" min="0.8" max="1.25" step="0.01" value="${cfg.pitch || 1}"></label><button class="btn ghost sm vtest">▶ ${u('voiceTest')}</button></div>
       <label class="small">${u('tutorVoice')} <select class="voice">${VOICES.map(([id, n]) => `<option value="${id}" ${id === cfg.voice ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label class="small chk"><input type="checkbox" class="speak" ${cfg.speak ? 'checked' : ''}> ${u('tutorSpeak')}</label>
-      <p class="small muted">${u('voiceNote')}</p>
+      ${usingEars() ? '' : `<p class="small muted">${u('voiceNote')}</p>`}
+      <b>👂 ${u('earT')}</b>
+      <div class="seg ear">${[['whisper', u('earWhisper')], ['browser', u('earBrowser')]].map(([k, n]) => `<button data-e="${k}" class="${cfg.ear === k ? 'on' : ''}" ${k === 'browser' && !BrowserRec ? 'disabled' : ''}>${n}</button>`).join('')}</div>
+      ${cfg.ear === 'whisper' ? `<label class="small">${u('earModelT')} <select class="earmodel">${[['onnx-community/whisper-base', u('earBase')], ['onnx-community/whisper-small', u('earSmall')]].map(([id, n]) => `<option value="${id}" ${id === cfg.earModel ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+      <p class="small muted">${u('earHelp')}</p>` : ''}
       <b>🎙️ ${u('micSensT')}</b>
       <select class="micsens">${[['high', u('micHigh')], ['normal', u('micNormal')], ['low', u('micLow')]].map(([k, n]) => `<option value="${k}" ${cfg.micSens === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
       <label class="small chk"><input type="checkbox" class="ptt" ${cfg.ptt ? 'checked' : ''}> ${u('pttOn')}</label>
@@ -1265,7 +1288,9 @@ ${small ? smallContext() : context()}`;
       <div class="row"><button class="btn sm save">${u('tutorSave')}</button>${cfg.key ? `<button class="btn ghost sm forget">${u('tutorForget')}</button>` : ''}</div>`;
     s.querySelectorAll('.brain button').forEach((b) => (b.onclick = () => { cfg.brain = b.dataset.b; cfg.local = cfg.brain === 'local'; store.set('ai-brain', cfg.brain); store.set('ai-local', cfg.local); refresh(); drawSettings(); }));
     const cg = s.querySelector('.cgpt'); if (cg) cg.onclick = (ev) => connectPuter(ev.currentTarget).then(() => { if (panel) drawSettings(); });
-    s.querySelector('.micsens').onchange = (e) => { cfg.micSens = e.target.value; store.set('ai-mic-sens', cfg.micSens); };
+    s.querySelector('.micsens').onchange = (e) => { cfg.micSens = e.target.value; store.set('ai-mic-sens', cfg.micSens); if (MLS.Hearing) MLS.Hearing.setSensitivity(cfg.micSens); };
+    s.querySelectorAll('.ear button').forEach((b) => (b.onclick = () => { cfg.ear = b.dataset.e; store.set('ai-ear', cfg.ear); pickEar(); if (usingEars()) MLS.Hearing.preload(); drawSettings(); refresh(); }));
+    const em = s.querySelector('.earmodel'); if (em) em.onchange = (e) => { cfg.earModel = e.target.value; store.set('ai-ear-model', cfg.earModel); pickEar(); MLS.Hearing.preload(); };
     s.querySelector('.ptt').onchange = (e) => { cfg.ptt = e.target.checked; store.set('ai-ptt', cfg.ptt); };
     s.querySelector('.mictest').onclick = () => micTest(s);
     s.querySelectorAll('.veng button').forEach((b) => (b.onclick = () => { cfg.voiceEngine = b.dataset.v; store.set('ai-voice-engine', cfg.voiceEngine); ttsBroken = false; kokoroBroken = false; if (cfg.voiceEngine === 'kokoro') loadKokoro().catch(() => {}); drawSettings(); }));
