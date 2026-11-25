@@ -1,7 +1,7 @@
-/* ML Tutor — AI Tutor: Emma & Nora, the live video AI personas from Nuance Labs.
+/* ML Tutor — "Talk to Emma or Nora": a link to the live video AI personas from Nuance Labs.
    They run only on Nuance Labs' own site (no embed or API for them), so this opens that site in a new tab.
    Nuance's terms: adults 18+, English only, available in the US (some states excluded), EU, UK and Canada.
-   MLS.openTutor(question?) keeps working for every "Ask the tutor" button: the question is shown, ready to copy or say. */
+   The site's own AI teachers (ai-tutor.js) are the main tutor; this panel is opened with MLS.openEmmaNora(). */
 (() => {
   const MLS = window.MLS;
   const { u, h, esc, toast } = MLS;
@@ -24,7 +24,7 @@
     enFab: { en: 'Emma & Nora', ne: 'Emma र Nora', zh: 'Emma 和 Nora' },
   });
 
-  let panel = null, fab = null;
+  let panel = null;
   const open = () => window.open(NUANCE_URL, '_blank', 'noopener');
 
   function persona(cls, name) {
@@ -54,9 +54,7 @@
     };
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) close(); });
 
-    fab = h(`<button class="tutor-fab en-fab" title="${u('enTitle')}"><span class="fab-ic">📹</span><span class="fab-tx">${u('enFab')}</span></button>`);
-    fab.onclick = () => (panel.hidden ? openTutor() : close());
-    document.body.append(fab, panel);
+    document.body.append(panel);
   }
 
   function drawLive() {   // the in-page live tutor (live-tutor.js): only on the owner's computer, where the key server runs
@@ -76,15 +74,10 @@
     const q = panel.querySelector('.en-q');
     q.hidden = !question;
     panel.querySelector('.en-qtext').innerHTML = question ? esc(question) : '';
-    panel.hidden = false; fab.classList.add('open');
+    panel.hidden = false;
     panel.querySelector('.en-go').focus();
   }
-  function close() { panel.hidden = true; fab.classList.remove('open'); }
+  function close() { panel.hidden = true; }
 
-  MLS.openTutor = openTutor;
-  MLS.openCall = openTutor;
-  MLS.closeTutorPanel = () => { if (panel && !panel.hidden) close(); };
-
-  // Show the floating button on every page.
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
+  MLS.openEmmaNora = openTutor;
 })();

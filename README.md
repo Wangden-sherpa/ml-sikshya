@@ -24,16 +24,25 @@ python -m http.server 8765
 
 The first time you press **▶ Run**, Python loads in the browser (10–30 seconds, needs internet).
 
-## 📹 AI Tutor: Emma & Nora (Nuance Labs)
+## 🧑‍🏫 AI teachers: Asha & Kiran (free, for every student)
 
-The AI Tutor is **Emma and Nora**, real-time, full-duplex video AI personas made by
-[Nuance Labs](https://www.nuancelabs.ai). The **📹 Emma & Nora** button (and every "Ask the tutor"
-button) opens a panel that sends the student to Nuance's own free site, `app.nuancelabs.ai`, in a new
-tab. Emma and Nora can't be embedded or used through Nuance's API, so they don't see the lesson or code;
-when a button had a question ready, the panel shows it so the student can say it or copy it.
+Two original AI teachers, drawn in code (no photos), live on every page: **Asha** (calm and patient)
+and **Kiran** (energetic and fun). They:
 
-Nuance's rules (shown in the panel): **adults 18+ only**, **English only**, and available only in the
-US (not Colorado, Connecticut, Illinois or Texas), the EU, the UK and Canada (not Quebec).
+- know the **whole course**: every lesson's text, code examples and quiz, all projects (goal, steps,
+  challenges, starter code) and the glossary, searched in English, Nepali and Chinese;
+- see the lesson the student is on, their latest code run and error, and guide them step by step,
+  quiz them with the lesson's own questions, and give project hints instead of full solutions;
+- chat by text, by voice, or in a **face-to-face call** docked beside the page, so the lesson stays in view;
+- answer in **English, नेपाली or 中文**, and speak English with a **natural voice** (Kokoro) that runs in
+  the browser for free, downloaded once (about 92 MB; not by default on phones). Nepali and Chinese use the
+  browser's voices. The lips move with the real speech.
+
+They use the free AI brain by default; Claude, ChatGPT, an on-device model or WANG AI can be chosen in ⚙️.
+
+**Emma & Nora** (Nuance Labs) are linked from the home page. They run only on Nuance's own site
+(`app.nuancelabs.ai`), which can't be embedded, so they don't know the course. Nuance's rules: adults 18+,
+English only, US (not CO, CT, IL, TX), EU, UK and Canada (not Quebec).
 
 ## 🎥 Live AI video tutor in the page (owner only, Nuance API)
 
@@ -50,8 +59,9 @@ It only runs on the owner's computer, because it needs your Nuance API key:
 2. Save the key (it starts with `nk_`) in `%USERPROFILE%\.ml-sikshya\nuance_key.txt` on Windows, or
    `~/.ml-sikshya/nuance_key.txt` on Mac/Linux. **Never** put it in this project, on GitHub or in a chat.
 3. Double-click `tools\start-live-tutor.bat` and keep its window open.
-4. In ML Tutor open **📹 Emma & Nora**, open **🎥 Live AI video tutor (owner only)**, tick
-   **"This is my computer"**, then press **🎥 Live AI video tutor**.
+4. In ML Tutor open the AI teacher's **⚙️ settings**, tick **"This is my computer — show the live
+   tutor"**, then press **🎥 Live AI video tutor** (on the home page or in the teacher's panel). The class
+   opens docked beside the page.
 
 Good to know: the personas speak and understand **English only** (Nuance refuses other languages), Nuance's
 API is for adults 18+, and each class uses your Nuance credits.
