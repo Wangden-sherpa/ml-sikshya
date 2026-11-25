@@ -1,5 +1,7 @@
 # 🧠 ML Sikshya — Learn Machine Learning (English + नेपाली)
 
+Created by **Wangden Sherpa**, Master of Business Analytics (MBAN) student at Saint Mary's University.
+
 A free, bilingual (English / Nepali) platform to learn **Machine Learning from zero to professional** — with simple explanations, real theory, quizzes, and **live Python code that runs right in your browser**.
 
 ## ✨ Features

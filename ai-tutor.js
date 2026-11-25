@@ -53,6 +53,7 @@
     fileP: { en: 'This page was opened as a file (by double-clicking index.html), so ChatGPT can\'t sign in here: it needs a web address. The online version works straight away and has everything.', ne: 'यो पेज फाइलको रूपमा खोलिएको छ (index.html मा डबल-क्लिक गरेर), त्यसैले यहाँ ChatGPT साइन-इन हुन सक्दैन: यसलाई वेब ठेगाना चाहिन्छ। अनलाइन संस्करण तुरुन्तै चल्छ र त्यहाँ सबै कुरा छ।', zh: '此页面是以文件方式打开的（双击 index.html），没有网址，所以 ChatGPT 无法在这里登录。在线版可立即使用，功能完全相同。' },
     fileBtn: { en: '🌐 Open online version', ne: '🌐 अनलाइन संस्करण खोल्नुहोस्', zh: '🌐 打开在线版' },
     fileLocal: { en: 'Prefer your own copy? Double-click "Start ML Sikshya.bat" in the ML Sikshya folder instead of index.html.', ne: 'आफ्नै कपी चलाउन चाहनुहुन्छ? index.html को सट्टा ML Sikshya फोल्डरमा "Start ML Sikshya.bat" मा डबल-क्लिक गर्नुहोस्।', zh: '想用自己电脑上的副本？请双击 ML Sikshya 文件夹里的 "Start ML Sikshya.bat"，而不是 index.html。' },
+    madeByAnswer: { en: 'ML Sikshya was made by <b class="notranslate">Wangden Sherpa</b>, a Master of Business Analytics (MBAN) student at Saint Mary\'s University, as a free and friendly place for everyone to learn machine learning. 💙', ne: 'ML Sikshya <b class="notranslate">Wangden Sherpa</b> ले बनाउनुभएको हो। उहाँ Saint Mary\'s University मा Master of Business Analytics (MBAN) पढ्दै हुनुहुन्छ, र सबैले निःशुल्क मेसिन लर्निङ सिक्न सकून् भनेर यो बनाउनुभयो। 💙', zh: 'ML Sikshya 由 <b class="notranslate">Wangden Sherpa</b> 创建。Wangden Sherpa 正在圣玛丽大学（Saint Mary\'s University）攻读商业分析硕士（MBAN），希望让每个人都能免费学习机器学习。💙' },
     fileShort: { en: 'opened as a file', ne: 'फाइलको रूपमा खोलिएको', zh: '以文件方式打开' },
     aiTimeout: { en: '⏳ The AI took too long to reply. Check your internet and try again.', ne: '⏳ AI ले जवाफ दिन धेरै समय लगायो। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।', zh: '⏳ AI 回复超时。请检查网络后重试。' },
     aiOops: { en: 'Something went wrong while answering.', ne: 'उत्तर दिँदा केही गडबड भयो।', zh: '回答时出了点问题。' },
@@ -234,7 +235,11 @@
   }
   const SITE_LANG = { en: 'English', ne: 'Nepali (Devanagari script)', zh: 'Simplified Chinese' };
   const persona = () => 'a warm, patient, encouraging human teacher who speaks naturally like a real person in a one-to-one class — friendly, curious, uses everyday examples, and is never robotic.';
+  // Who made this website: the AI teacher knows it and says so warmly when asked.
+  const ABOUT = 'About this website: ML Sikshya was created by Wangden Sherpa, a Master of Business Analytics (MBAN) student at Saint Mary\'s University, as a free and friendly place where anyone can learn machine learning in English, Nepali or Chinese. If anyone asks who made, built, created or owns ML Sikshya or this AI teacher, say warmly and proudly that Wangden Sherpa built it while doing the MBAN at Saint Mary\'s University (the teacher\'s answers come from an AI language model, but the website, lessons and AI teacher were designed and built by Wangden Sherpa). Refer to Wangden Sherpa by name rather than guessing pronouns.';
   const SYSTEM = (voice, small) => `You are ${teacherName()}, a human-like AI teacher and personal assistant inside "ML Sikshya", a free learning website. Your personality — ${persona()}
+
+${ABOUT}
 
 What you can help with: ANY question the learner asks — every school and university subject (maths, physics, chemistry, biology, history, geography, economics, accounting, languages, literature), programming in any language, computers and technology, careers and job applications, study skills, writing and translation, general knowledge and everyday life. You are ALSO an expert machine-learning, data-science and AI teacher, which is the main topic of this website. Never refuse or redirect a normal question just because it is not about machine learning — answer it fully and helpfully, like a brilliant private tutor. If you are not sure about a fact, say so honestly instead of guessing. Do not help with anything harmful or dangerous.
 
@@ -245,8 +250,9 @@ How to teach:
 - Code: complete, runnable examples in \`\`\`python blocks (or the language asked). On this site, Python runs in the browser with numpy, pandas, matplotlib, scikit-learn and scipy (no PyTorch/TensorFlow). Uploaded files are DATA["<name>"] or /data/<name>.
 - For errors: what it means, why it happened, and the corrected code.
 - When a lesson or real-world mission on this site fits, mention it by name.
+- Sound like a real person talking, not a textbook or a robot: use contractions (it's, you'll, let's), plain everyday words, varied sentence lengths and a little warmth or light humour. React naturally to what the learner says ("Ah, good question!", "Nice, you're close!") but vary it and don't open every answer the same way. Never say "As an AI".
 - Be encouraging and human. ${small ? 'Keep answers focused (under about 250 words).' : 'Ask a short check-your-understanding question at the end when it helps.'}
-${voice ? '- The learner is TALKING to you by voice and will HEAR your reply: answer like a person in a video call — short, natural spoken sentences (about 3–6), no tables or lists, minimal formatting, no code unless asked.' : '- Use short paragraphs, lists and headings where they help.'}
+${voice ? '- The learner is TALKING to you by voice and will HEAR your reply, so write exactly what a friendly teacher would SAY on a video call: short, natural spoken sentences (about 3–6), contractions and everyday words, starting with the direct answer or a quick natural reaction. No lists, headings, tables, emojis, symbols, markdown or code (unless asked). Say numbers and maths the way people speak them ("x squared", "zero point eight"). It is fine to end with a short, friendly question to keep the chat going.' : '- Use short paragraphs, lists and headings where they help, but keep simple answers simple and conversational.'}
 
 Current context:
 ${small ? smallContext() : context()}`;
@@ -286,7 +292,14 @@ ${small ? smallContext() : context()}`;
   cfg.voiceEngine = store.get('ai-voice-engine', 'openai');
   cfg.oaVoice = store.get('ai-oa-voice', 'marin');
   const OA_VOICES = [['marin', 'Marin — warm & natural (recommended)'], ['cedar', 'Cedar — calm & natural'], ['coral', 'Coral — bright & friendly'], ['sage', 'Sage — gentle'], ['verse', 'Verse — expressive'], ['alloy', 'Alloy — neutral'], ['ash', 'Ash'], ['ballad', 'Ballad'], ['echo', 'Echo'], ['fable', 'Fable'], ['nova', 'Nova — energetic'], ['onyx', 'Onyx — deep'], ['shimmer', 'Shimmer — soft']];
-  const VOICE_STYLE = 'Speak like a warm, friendly human teacher on a one-to-one video call: natural conversational pace, expressive intonation, small natural pauses, encouraging and kind. Never sound robotic or like you are reading.';
+  const VOICE_STYLE = [
+    'Voice: a warm, friendly teacher talking one-to-one with a student on a relaxed video call; sounds like a real person, genuinely interested, with a smile in the voice.',
+    'Tone: conversational and encouraging, like explaining something to a friend over tea. Never formal, robotic, announcer-like or as if reading a script.',
+    'Pacing: natural and unhurried; a little slower on key ideas, numbers and new terms, a little quicker on easy connecting words.',
+    'Intonation: lively and varied, with natural rises on questions and gentle emphasis on the most important word of each sentence.',
+    'Pauses: short natural breaths at commas and between ideas, and a brief beat before the key point.',
+    'Pronunciation: say technical terms clearly (NumPy as "num-pie", scikit-learn as "sy-kit learn", matplotlib as "mat-plot-lib") and speak every language with a natural native accent.',
+  ].join(' ');
   const engine = () => (cfg.brain === 'wang' ? 'wang' : cfg.key ? 'claude' : cfg.brain === 'local' && hasGPU ? 'local' : cfg.brain === 'offline' ? 'offline' : 'cloud');
 
   // ---------- Cloud AI for everyone via Puter.js (no API key; each visitor uses their own free Puter allowance) ----------
@@ -419,7 +432,7 @@ ${small ? smallContext() : context()}`;
     try {
       resp = await fetch(wangBase() + '/api/chat', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
-        body: JSON.stringify({ message: question, conversation_id: wangConv, mode: 'ml_sikshya', context: (voice ? smallContext() : context()).slice(0, 12000), voice: !!voice }),
+        body: JSON.stringify({ message: question, conversation_id: wangConv, mode: 'ml_sikshya', context: (ABOUT + '\n\n' + (voice ? smallContext() : context())).slice(0, 12000), voice: !!voice }),
       });
     } catch (e) {
       if (e && e.name === 'AbortError') throw e;
@@ -498,8 +511,10 @@ ${small ? smallContext() : context()}`;
   }
 
   // ---------- Offline helper ----------
+  const WHO_MADE = /\bwho\b.{0,30}\b(made|created?|built|developed?|designed?|owns?)\b.{0,25}(\byou\b|\bml ?sikshya\b|\bthis\s*(\?|$|site\b|website|app\b|platform|course|page))|\b(creator|founder|maker)s?\b.{0,25}(\bml ?sikshya\b|\bthis\s*(\?|$|site\b|website|app\b|platform|course|page))|कसले.{0,25}(बना|निर्माण)|निर्माता|谁.{0,6}(做|开发|创建|制作|建)|创始人|kasle.{0,20}banay/i;
   function offlineAnswer(q) {
     const ql = q.toLowerCase();
+    if (WHO_MADE.test(q)) return `<p>${u('madeByAnswer')}</p>`;
     let html = '';
     if (MLS.lastRun && MLS.lastRun.err && /error|गल्ती|problem|समस्या|fix|help|मद्दत|bug|错误|报错|问题|帮/.test(ql)) {
       const d = t(diagnose(MLS.lastRun.err));
@@ -582,21 +597,40 @@ ${small ? smallContext() : context()}`;
     };
     return vs.map((v) => [score(v), v]).filter((x) => x[0] >= 0).sort((a, b) => b[0] - a[0]).map((x) => x[1])[0] || null;
   }
-  const speakable = (md) => md.replace(/```[\s\S]*?(```|$)/g, ' ' + u('seeCode') + ' ').replace(/<[^>]+>/g, ' ').replace(/[*#`_>|]/g, '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim().slice(0, 2400);
+  // Turn written text into what a person would actually SAY: no emojis, symbols or markdown; lists and headings become sentences.
+  const endPunct = (x) => (/[.!?।。！？:;,]$/.test(x) ? x : x + '.');
+  const voiceText = (x) => x
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/^\s{0,3}#{1,6}\s*(.+?)\s*$/gm, (m, y) => endPunct(y))
+    .replace(/^\s*(?:[-*•]|\d+[.)])\s+(.+?)\s*$/gm, (m, y) => endPunct(y))
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/\$\$|\$(?!\d)|\\[()[\]]/g, '') // maths $ signs go (but "$5" stays money)
+    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '$1 over $2').replace(/\\sqrt\{([^{}]+)\}/g, 'the square root of $1').replace(/\\(?:cdot|times)/g, ' times ')
+    .replace(/\^2\b|²/g, ' squared').replace(/\^3\b|³/g, ' cubed')
+    .replace(/\\(?:left|right)\b/g, '').replace(/\\([a-zA-Z]+)/g, ' $1 ').replace(/[{}]/g, '')
+    .replace(/\be\.g\.,?/gi, 'for example,').replace(/\bi\.e\.,?/gi, 'that is,').replace(/\betc\./gi, 'and so on.')
+    .replace(/\s*(?:→|⟶|->|=>)\s*/g, ', ')
+    .replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{20E3}]/gu, '')
+    .replace(/_/g, ' ').replace(/[*#`>|~]/g, '')
+    .replace(/\s+([,.!?])/g, '$1').replace(/\s+/g, ' ').trim();
+  // split into sentences only where a sentence really ends (so "0.5" and "train.py" stay whole)
+  const sentences = (x) => x.split(/(?<=[.!?])\s+|(?<=[।。！？])\s*/).map((y) => y.trim()).filter(Boolean);
+  const speakable = (md) => voiceText(md.replace(/```[\s\S]*?(```|$)/g, '\n' + u('seeCode') + '\n')).slice(0, 2400);
   // Speak like a person: sentence by sentence, small natural pauses, slight changes in pace and pitch, lips moving on every word.
   function humanUtterance(text, lang, voice) {
     const ut = new SpeechSynthesisUtterance(text);
     ut.lang = voice ? voice.lang : lang; if (voice) ut.voice = voice;
     const baseRate = (lang.startsWith('zh') ? 0.95 : 0.98) * (cfg.rate || 1);
-    ut.rate = baseRate * (0.96 + Math.random() * 0.08);
-    ut.pitch = (cfg.pitch || 1) * (/\?\s*$/.test(text) ? 1.06 : 0.98 + Math.random() * 0.06);
+    ut.rate = baseRate * (0.985 + Math.random() * 0.03); // tiny natural variation in pace
+    ut.pitch = cfg.pitch || 1;                           // steady pitch: the voice itself handles question intonation
     ut.onboundary = (e) => { if (!e.name || e.name === 'word') lipPulse(1); };
     return ut;
   }
   let speakQueue = 0;
   // ---- OpenAI voice (same voice technology as ChatGPT) via Puter ----
   let ttsBroken = false, audioCtx = null, analyser = null, levelBuf = null, curAudio = null, audioPlaying = false, curAnalysed = false;
-  const useCloudVoice = () => cfg.voiceEngine === 'openai' && !ttsBroken && engine() === 'cloud' && isSignedIn();
+  const useCloudVoice = () => cfg.voiceEngine === 'openai' && !ttsBroken && !FILE_MODE && isSignedIn();
   const ttsCache = new Map();
   function tts(text) {
     const key = cfg.oaVoice + '|' + text;
@@ -636,9 +670,10 @@ ${small ? smallContext() : context()}`;
     });
   }
   function ttsChunks(text) {
-    const sents = (text.match(/[^.!?।。！？\n]+[.!?।。！？]*/g) || [text]).map((x) => x.trim()).filter(Boolean);
+    const sents = sentences(text);
     const out = []; let cur = '';
-    sents.forEach((x) => { const limit = out.length === 0 ? 150 : 420; if (cur && (cur + ' ' + x).length > limit) { out.push(cur); cur = x; } else cur = cur ? cur + ' ' + x : x; });
+    const limit = () => (out.length === 0 ? 150 : out.length === 1 ? 320 : 650); // short first part = fast start, longer parts = fewer seams
+    sents.forEach((x) => { if (cur && (cur + ' ' + x).length > limit()) { out.push(cur); cur = x; } else cur = cur ? cur + ' ' + x : x; });
     if (cur) out.push(cur);
     return out;
   }
@@ -671,14 +706,14 @@ ${small ? smallContext() : context()}`;
     noteSaid(text);
     synth.cancel();
     const lang = detectLang(text), voice = pickVoice(lang);
-    const chunks = (text.match(/[^.!?।。！？\n]+[.!?।。！？]?/g) || [text]).map((c) => c.trim()).filter(Boolean);
+    const chunks = sentences(text);
     const id = ++speakQueue;
     setState('speaking');
     const next = (i) => {
       if (id !== speakQueue) return;
       if (i >= chunks.length) { setState('idle'); onDone && onDone(); return; }
       const ut = humanUtterance(chunks[i], lang, voice);
-      ut.onend = ut.onerror = () => setTimeout(() => next(i + 1), /[.!?।。！？]$/.test(chunks[i]) ? 180 + Math.random() * 220 : 90);
+      ut.onend = ut.onerror = () => setTimeout(() => next(i + 1), /[.!?।。！？]$/.test(chunks[i]) ? 150 + Math.random() * 170 : 90);
       synth.speak(ut);
     };
     next(0);
@@ -829,17 +864,20 @@ ${small ? smallContext() : context()}`;
   }
 
   // Speak an answer sentence by sentence while it is still being written, instead of waiting for all of it.
-  function sentenceFeeder(say) {
-    let acc = '', spoken = 0;
+  function sentenceFeeder(sayNow) {
+    let acc = '', spoken = 0, buf = '', first = true;
+    // group short sentences (~90+ characters) so the voice flows with fewer seams; the very first one goes out at once
+    const say = (x) => { buf = buf ? buf + ' ' + x : x; if (first || buf.length >= 90) { first = false; sayNow(buf); buf = ''; } };
+    const flush = () => { if (buf) { sayNow(buf); buf = ''; } };
     return (d, final) => {
       acc += d || '';
       for (;;) {
-        const rest = acc.slice(spoken); if (!rest) return;
+        const rest = acc.slice(spoken); if (!rest) { if (final) flush(); return; }
         const fence = rest.indexOf('```');
-        if (fence === 0) { const close = rest.indexOf('```', 3); if (close < 0) return; say(u('seeCode')); spoken += close + 3; continue; }
+        if (fence === 0) { const close = rest.indexOf('```', 3); if (close < 0) { if (final) flush(); return; } say(u('seeCode')); spoken += close + 3; continue; }
         const m = rest.match(/[.!?](?=\s)|[。！？।\n]/); /* a period ends a sentence only before a space (not in train.py) */ let end = m ? m.index + 1 : -1;
         if (fence > 0 && (end < 0 || fence < end)) end = fence;
-        if (end < 0) { if (final) { say(rest); spoken = acc.length; } return; }
+        if (end < 0) { if (final) { say(rest); flush(); spoken = acc.length; } return; }
         say(rest.slice(0, end)); spoken += end;
       }
     };
@@ -1158,6 +1196,7 @@ ${small ? smallContext() : context()}`;
   }
   function openTutor(prefill) {
     if (engine() === 'cloud') loadPuter().then(() => { if (panel) { refresh(); if (!history.length) drawMsgs(); } }).catch(() => {});
+    else if (cfg.voiceEngine === 'openai' && !FILE_MODE) loadPuter().catch(() => {}); // natural ChatGPT voice for every brain once connected
     if (!panel) build();
     panel.hidden = false; fab.classList.add('open'); refresh();
     if (prefill) send(prefill); else panel.querySelector('.tutor-form textarea').focus();
@@ -1179,7 +1218,7 @@ ${small ? smallContext() : context()}`;
   });
   let call = null;
   const normTxt = (s) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
-  const cleanSpeech = (s) => s.replace(/[*#`_>|]/g, '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim();
+  const cleanSpeech = (x) => voiceText(x);
   function face(cls, on) { if (call) call.el.querySelector('.call-avatar').classList.toggle(cls, on); }
   function caption(who, txt) { if (call) call.el.querySelector('.call-caption.' + who).textContent = txt; }
   function cStatus(txt) { if (call) call.el.querySelector('.call-status').textContent = txt; }
@@ -1369,6 +1408,7 @@ ${small ? smallContext() : context()}`;
     cSay(u('callGreet').replace('{name}', teacherName()));
     gateStart().then(() => { if (call) cListen(); });
     if (engine() === 'cloud') loadPuter().then(() => { if (call && !isSignedIn()) { call.el.querySelector('.cb.connect').hidden = false; cStatus(u('needConnect')); } }).catch(() => { if (call && FILE_MODE) { call.el.querySelector('.cb.connect').hidden = false; cStatus(u('fileT')); } });
+    else if (cfg.voiceEngine === 'openai' && !FILE_MODE) loadPuter().catch(() => {});
   }
   function escCall(e) { if (e.key === 'Escape') endCall(); }
   function endCall() {

@@ -31,6 +31,8 @@
     start: { en: 'Start learning', ne: 'सिक्न सुरु गर्नुहोस्' },
     continue: { en: 'Continue', ne: 'जारी राख्नुहोस्' },
     seeProjects: { en: 'Browse projects', ne: 'प्रोजेक्टहरू हेर्नुहोस्' },
+    madeBy: { en: 'Made with 💙 by <b class="notranslate">Wangden Sherpa</b> · MBAN student at Saint Mary\'s University', ne: '💙 सहित <b class="notranslate">Wangden Sherpa</b> द्वारा निर्मित · Saint Mary\'s University मा MBAN विद्यार्थी', zh: '由 <b class="notranslate">Wangden Sherpa</b> 用 💙 打造 · 圣玛丽大学 MBAN 学生' },
+    madeByShort: { en: 'Made by <span class="notranslate">Wangden Sherpa</span> · MBAN, Saint Mary\'s University', ne: '<span class="notranslate">Wangden Sherpa</span> द्वारा निर्मित · MBAN, Saint Mary\'s University', zh: '由 <span class="notranslate">Wangden Sherpa</span> 制作 · 圣玛丽大学 MBAN' },
     statLessons: { en: 'Lessons', ne: 'पाठहरू' },
     statProjects: { en: 'Projects', ne: 'प्रोजेक्टहरू' },
     statDone: { en: 'Completed', ne: 'पूरा भएका' },
@@ -287,6 +289,7 @@ def _mls_figs():
       html += `<div class="side-level"><button class="side-level-title">${lv.emoji} ${i + 1}. ${t(lv.title)}<span class="count">${d}/${ls.length}</span></button>
         <div class="side-lessons">${ls.map((l) => `<a href="#/learn/${l.id}" class="side-lesson ${S.done[l.id] ? 'done' : ''} ${l.id === activeId ? 'active' : ''}"><span class="dot">${S.done[l.id] ? '✓' : ''}</span><span>${t(l.title)}</span></a>`).join('')}</div></div>`;
     });
+    html += `<div class="side-credit">💙 ${u('madeByShort')}</div>`;
     const sb = $('#sidebar');
     sb.innerHTML = html;
     sb.querySelectorAll('.side-level-title').forEach((b) => (b.onclick = () => b.parentElement.classList.toggle('collapsed')));
@@ -338,6 +341,7 @@ def _mls_figs():
           <div class="bar"><span style="width:${pct}%"></span></div>
           <div class="muted" style="font-size:.84rem">${d} / ${ls.length} ${u('lessons')}</div></a>`;
       }).join('')}</div>
+      <footer class="made-by">${u('madeBy')}</footer>
     </div>`);
     MLS.hooks.home.forEach((f) => { try { f(el); } catch (e) { console.error(e); } });
     return el;
