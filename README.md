@@ -42,6 +42,27 @@ Use the local copy (`Start ML Sikshya.bat`) or the online site. If Chrome
 asks to let the site access devices on your local network, click **Allow**:
 that is how the page reaches the server on your computer.
 
+## 🎥 Live AI video tutor (owner only, Nuance Live)
+
+A real-time video teacher (an AI persona from [Nuance Labs](https://docs.nuancelabs.ai)) that talks with
+the student face to face. During a class it can see the current lesson and the student's latest code run,
+read and open lessons, look up glossary terms, and put runnable code examples on the screen (the student
+presses ▶ Run; the teacher never runs code itself). Students can talk, interrupt, type, press **Stop**,
+or press **Give me a minute** to keep the teacher quiet while they read.
+
+It only runs on the owner's computer, because it needs your Nuance API key:
+
+1. Create an API key on [platform.nuancelabs.ai](https://platform.nuancelabs.ai) and accept the developer
+   agreement there.
+2. Save the key (it starts with `nk_`) in `%USERPROFILE%\.ml-sikshya\nuance_key.txt` on Windows, or
+   `~/.ml-sikshya/nuance_key.txt` on Mac/Linux. **Never** put it in this project, on GitHub or in a chat.
+3. Double-click `tools\start-live-tutor.bat` and keep its window open.
+4. In ML Sikshya: **AI Teacher → ⚙️ → "This is my computer — show the live tutor"**, then press
+   **🎥 Live AI video tutor**.
+
+Good to know: the Nuance persona speaks and understands **English only**. With the camera on, a student
+under 18 needs an adult next to them, or Nuance ends the class. Each class uses Nuance credits.
+
 ## 🗂️ Structure
 
 ```
