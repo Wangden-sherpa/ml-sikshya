@@ -643,7 +643,7 @@ ${small ? smallContext() : context()}`;
     return out;
   }
   function speakCloud(text, onDone) {
-    stopSpeaking();
+    stopSpeaking(); noteSaid(text);
     const id = ++speakQueue; setState('speaking');
     const chunks = ttsChunks(text);
     let i = 0, nextP = tts(chunks[0]);
@@ -668,6 +668,7 @@ ${small ? smallContext() : context()}`;
   }
   function speakBrowser(text, onDone) {
     if (!synth || !cfg.speak || !text) { onDone && onDone(); return; }
+    noteSaid(text);
     synth.cancel();
     const lang = detectLang(text), voice = pickVoice(lang);
     const chunks = (text.match(/[^.!?।。！？\n]+[.!?।。！？]?/g) || [text]).map((c) => c.trim()).filter(Boolean);
@@ -684,26 +685,220 @@ ${small ? smallContext() : context()}`;
   }
   function stopSpeaking() { if (synth) synth.cancel(); if (curAudio) { try { curAudio.pause(); } catch { /* ignore */ } } audioPlaying = false; speakQueue++; setState('idle'); }
 
+  // ---------- Voice gate: noise suppression, voice detection and echo filtering ----------
+  // Only real speech near the microphone may interrupt the teacher or become a question.
+  // 1) The microphone is opened with the browser's WebRTC echo cancellation + noise suppression.
+  // 2) A voice-activity detector learns the room's background noise level and only counts sound
+  //    that is clearly louder than it AND mostly in the human-voice frequency band.
+  // 3) Transcripts are dropped when the recogniser is unsure, when they are only "uh"/"hmm",
+  //    when no real voice was measured, or when they repeat what the teacher just said (echo).
+  Object.assign(MLS.UI, {
+    micSensT: { en: 'Microphone sensitivity', ne: 'माइकको संवेदनशीलता', zh: '麦克风灵敏度' },
+    micHigh: { en: 'High — quiet room, soft voice', ne: 'उच्च — शान्त कोठा, मसिनो आवाज', zh: '高——安静房间、声音较小' },
+    micNormal: { en: 'Normal', ne: 'सामान्य', zh: '普通' },
+    micLow: { en: 'Low — noisy room (ignores more background noise)', ne: 'कम — हल्ला भएको ठाउँ (पृष्ठभूमिको आवाज बढी बेवास्ता गर्छ)', zh: '低——嘈杂环境（忽略更多背景噪音）' },
+    pttOn: { en: 'Push-to-talk: listen only while I hold 🎙️ or the Space key (best for very noisy places)', ne: 'थिचेर बोल्ने: 🎙️ वा Space थिचिराख्दा मात्र सुन्ने (धेरै हल्ला हुने ठाउँका लागि उत्तम)', zh: '按键说话：只有按住 🎙️ 或空格键时才收听（最适合非常嘈杂的地方）' },
+    micTest: { en: 'Test microphone', ne: 'माइक जाँच्नुहोस्', zh: '测试麦克风' },
+    micTestSay: { en: 'Say a sentence now…', ne: 'अहिले एउटा वाक्य बोल्नुहोस्…', zh: '现在请说一句话…' },
+    micTestOk: { en: '✓ Your voice is detected clearly.', ne: '✓ तपाईंको आवाज स्पष्ट सुनियो।', zh: '✓ 清楚地检测到你的声音。' },
+    micTestNone: { en: 'No clear voice detected. Speak closer to the microphone, or choose a higher sensitivity.', ne: 'स्पष्ट आवाज सुनिएन। माइकको नजिक बोल्नुहोस्, वा उच्च संवेदनशीलता छान्नुहोस्।', zh: '没有检测到清晰的声音。请靠近麦克风说话，或选择更高的灵敏度。' },
+    micTestNoisy: { en: ' Your room is noisy — "Low — noisy room" or push-to-talk will work better.', ne: ' तपाईंको कोठामा हल्ला छ — "कम — हल्ला भएको ठाउँ" वा थिचेर बोल्ने राम्रो हुन्छ।', zh: ' 你的环境比较嘈杂——选择“低——嘈杂环境”或按键说话效果更好。' },
+    micNoAccess: { en: 'The microphone could not be opened.', ne: 'माइक खोल्न सकिएन।', zh: '无法打开麦克风。' },
+    noiseIgnored: { en: '🔇 Background noise ignored', ne: '🔇 पृष्ठभूमिको आवाज बेवास्ता गरियो', zh: '🔇 已忽略背景噪音' },
+    pttHint: { en: 'Hold 🎙️ or the Space key while you talk', ne: 'बोल्दा 🎙️ वा Space थिचिराख्नुहोस्', zh: '说话时按住 🎙️ 或空格键' },
+  });
+  const SENS = { // k: how many times louder than the room noise a voice must be · min: absolute minimum · conf: minimum recogniser confidence
+    high: { k: 2.0, min: 0.006, conf: 0.3 },
+    normal: { k: 2.8, min: 0.011, conf: 0.45 },
+    low: { k: 3.8, min: 0.02, conf: 0.6 },
+  };
+  cfg.micSens = SENS[store.get('ai-mic-sens', 'normal')] ? store.get('ai-mic-sens', 'normal') : 'normal';
+  cfg.ptt = store.get('ai-ptt', false);
+  const gate = { stream: null, track: null, ctx: null, an: null, td: null, fd: null, timer: null, starting: null, floor: 0.005, rms: 0, thr: 1, hist: [], lastVoice: 0, confirmedAt: 0, teacherAt: 0 };
+  const teacherTalking = () => !!((call && call.speaking) || audioPlaying || (synth && synth.speaking));
+  // Only trust the detector while its audio is actually running (Chrome can keep it paused until the next click).
+  const gateOn = () => !!(gate.an && gate.ctx && gate.ctx.state === 'running');
+  document.addEventListener('pointerdown', () => { if (gate.ctx && gate.ctx.state === 'suspended') gate.ctx.resume().catch(() => {}); }, true);
+  function gateStart() {
+    if (gate.track && gate.track.readyState === 'live') return Promise.resolve(gate.track);
+    if (gate.starting) return gate.starting;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.resolve(null);
+    gate.starting = navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } })
+      .then((stream) => {
+        gate.stream = stream; gate.track = stream.getAudioTracks()[0];
+        gate.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        gate.an = gate.ctx.createAnalyser(); gate.an.fftSize = 1024; gate.an.smoothingTimeConstant = 0.2;
+        gate.ctx.createMediaStreamSource(stream).connect(gate.an);
+        gate.td = new Float32Array(gate.an.fftSize); gate.fd = new Float32Array(gate.an.frequencyBinCount);
+        gate.floor = 0.005; gate.hist = []; gate.startedAt = Date.now();
+        gate.timer = setInterval(gateTick, 30);
+        return gate.track;
+      })
+      .catch((e) => { console.warn('Voice gate unavailable:', e && e.message); return null; })
+      .finally(() => { gate.starting = null; });
+    return gate.starting;
+  }
+  function gateStop() {
+    clearInterval(gate.timer);
+    if (gate.stream) gate.stream.getTracks().forEach((tr) => tr.stop());
+    if (gate.ctx) gate.ctx.close().catch(() => {});
+    Object.assign(gate, { stream: null, track: null, ctx: null, an: null, timer: null, hist: [] });
+  }
+  MLS.voiceGate = gate;                       // live numbers, for troubleshooting in the browser console
+  const gateIdle = () => { if (!call && !convo && !listening && !gate.testing) gateStop(); };
+  function gateTick() {
+    if (!gate.an) return;
+    if (gate.ctx.state === 'suspended') gate.ctx.resume().catch(() => {});
+    gate.an.getFloatTimeDomainData(gate.td);
+    let sum = 0; for (let i = 0; i < gate.td.length; i++) sum += gate.td[i] * gate.td[i];
+    const rms = Math.sqrt(sum / gate.td.length);
+    // Share of the energy in the human-voice band (~100–4000 Hz): hum, rumble and hiss fall mostly outside it.
+    gate.an.getFloatFrequencyData(gate.fd);
+    const hz = gate.ctx.sampleRate / gate.an.fftSize;
+    let band = 0, total = 0;
+    for (let i = 1; i < gate.fd.length; i++) { const pw = Math.pow(10, gate.fd[i] / 10); total += pw; const f = i * hz; if (f >= 100 && f <= 4000) band += pw; }
+    const share = total > 0 ? band / total : 0;
+    const now = Date.now(), talking = teacherTalking();
+    if (talking) gate.teacherAt = now;
+    const sp = SENS[cfg.micSens];
+    const thr = Math.max(sp.min, gate.floor * sp.k) * (talking ? 1.6 : 1); // the teacher's own voice leaks back into the mic
+    // First 0.8 s: only learn the room's noise level (nothing counts as a voice yet).
+    const voiced = rms > thr && share > 0.55 && now - gate.startedAt > 800;
+    // Learn the background level: quickly when it gets quieter, slowly otherwise (so steady music/TV also raises it).
+    gate.floor += (rms - gate.floor) * (rms < gate.floor ? 0.08 : voiced ? 0.004 : 0.02);
+    gate.floor = Math.min(Math.max(gate.floor, 0.001), 0.1);
+    // Speech has short gaps between syllables, so judge by the SHARE of recent moments that were voice.
+    gate.hist.push([now, voiced]); while (gate.hist.length && now - gate.hist[0][0] > 1500) gate.hist.shift();
+    if (voiced) gate.lastVoice = now;
+    if (voiceShare(300) >= 0.5) gate.confirmedAt = now;
+    gate.rms = rms; gate.thr = thr;
+    if (call) call.el.querySelector('.cb.mic').classList.toggle('hearing', voiceShare(200) >= 0.4);
+  }
+  const voiceHeardSince = (t) => !gateOn() || gate.confirmedAt >= t;     // without the gate, trust the recogniser
+  function voiceShare(ms) {
+    const now = Date.now(); let n = 0, v = 0;
+    for (let i = gate.hist.length - 1; i >= 0 && now - gate.hist[i][0] <= ms; i--) { n++; if (gate.hist[i][1]) v++; }
+    return n ? v / n : 0;
+  }
+  const sustainedVoice = (ms) => !gateOn() || voiceShare(ms) >= 0.5;    // a voice for at least about half of the last `ms`
+  const FILLER = /^(uh+|um+|hm+|mm+|ah+|eh+|er+|erm|huh|oh)$/;
+  const tokens = (str) => {
+    const n = normTxt(str);
+    if (/[぀-ヿ㐀-鿿가-힯]/.test(n)) { const c = n.replace(/\s+/g, ''), out = []; for (let i = 0; i < c.length - 1; i++) out.push(c.slice(i, i + 2)); return out.length ? out : c ? [c] : []; }
+    return n.split(' ').filter(Boolean);
+  };
+  const meaningful = (text) => { const w = normTxt(text).split(' ').filter(Boolean); return w.join('').length >= 2 && !w.every((x) => FILLER.test(x)); };
+  const confident = (conf) => !(conf > 0) || conf >= SENS[cfg.micSens].conf; // Chrome reports 0 when it has no score
+  // What the teacher said recently, to recognise its own voice coming back through the speakers.
+  const saidLog = [];
+  function noteSaid(text) { const now = Date.now(); saidLog.push({ text, at: now }); while (saidLog.length && now - saidLog[0].at > 20000) saidLog.shift(); }
+  // Echo = the heard words repeat a PHRASE the teacher said (not just common words like "what" or "is").
+  function isEcho(heard) {
+    if (!(teacherTalking() || Date.now() - gate.teacherAt < 2500 || (call && call.speaking))) return false;
+    const a = tokens(heard); if (!a.length) return false;
+    const saidTok = tokens(saidLog.map((x) => x.text).join(' ') + ' ' + (call ? call.cur + ' ' + call.queue.map((q) => q.text).join(' ') : ''));
+    if (a.length === 1) return saidTok.includes(a[0]);
+    if (` ${saidTok.join(' ')} `.includes(` ${a.join(' ')} `)) return true;              // exact phrase
+    if (a.length < 3) return false;
+    const pairs = new Set(saidTok.slice(1).map((w, i) => saidTok[i] + ' ' + w));
+    const hp = a.slice(1).map((w, i) => a[i] + ' ' + w);
+    return hp.filter((x) => pairs.has(x)).length / hp.length >= 0.7;                  // mostly the same word pairs (misheard echo)
+  }
+  // Give the recogniser the cleaned-up microphone (echo-cancelled, noise-suppressed) where the browser supports it.
+  function recStart(r) {
+    try { if (gate.track && gate.track.readyState === 'live') r.start(gate.track); else r.start(); }
+    catch { try { r.start(); } catch { /* already running */ } }
+  }
+  function micTest(s) {
+    const res = s.querySelector('.micres'), bar = s.querySelector('.mic-meter span');
+    gate.testing = true; res.textContent = u('micTestSay');
+    gateStart().then((track) => {
+      if (!track) { gate.testing = false; res.textContent = u('micNoAccess'); return; }
+      const t0 = Date.now(), floors = [];
+      const iv = setInterval(() => {
+        bar.style.width = Math.min(100, (gate.rms / gate.thr) * 50) + '%';
+        bar.classList.toggle('voice', voiceShare(200) >= 0.4);
+        floors.push(gate.floor);
+        if (Date.now() - t0 < 5000) return;
+        clearInterval(iv); gate.testing = false; bar.style.width = '0';
+        const noisy = floors.sort((a, b) => a - b)[Math.floor(floors.length / 2)] > SENS.normal.min;
+        res.textContent = (gate.confirmedAt >= t0 ? u('micTestOk') : u('micTestNone')) + (noisy && cfg.micSens !== 'low' ? u('micTestNoisy') : '');
+        gateIdle();
+      }, 60);
+    });
+  }
+
+  // Speak an answer sentence by sentence while it is still being written, instead of waiting for all of it.
+  function sentenceFeeder(say) {
+    let acc = '', spoken = 0;
+    return (d, final) => {
+      acc += d || '';
+      for (;;) {
+        const rest = acc.slice(spoken); if (!rest) return;
+        const fence = rest.indexOf('```');
+        if (fence === 0) { const close = rest.indexOf('```', 3); if (close < 0) return; say(u('seeCode')); spoken += close + 3; continue; }
+        const m = rest.match(/[.!?](?=\s)|[。！？।\n]/); /* a period ends a sentence only before a space (not in train.py) */ let end = m ? m.index + 1 : -1;
+        if (fence > 0 && (end < 0 || fence < end)) end = fence;
+        if (end < 0) { if (final) { say(rest); spoken = acc.length; } return; }
+        say(rest.slice(0, end)); spoken += end;
+      }
+    };
+  }
+  function makeSpeaker(onDone) {
+    stopSpeaking();
+    const id = ++speakQueue, q = [];
+    let playing = false, ended = false, finished = false;
+    const finish = () => { if (finished || id !== speakQueue) return; finished = true; setState('idle'); onDone && onDone(); };
+    async function pump() {
+      if (playing || id !== speakQueue) return;
+      const item = q.shift();
+      if (!item) { if (ended) finish(); return; }
+      playing = true; setState('speaking'); noteSaid(item.text);
+      let done = false;
+      if (item.audioP) {
+        try { const a = await item.audioP; if (id !== speakQueue) return; done = (await playAudio(a)) === 'ended'; } catch { ttsBroken = true; }
+      }
+      if (!done && id === speakQueue && synth) {
+        await new Promise((res) => { const lang = detectLang(item.text); const ut = humanUtterance(item.text, lang, pickVoice(lang)); ut.onend = ut.onerror = res; synth.speak(ut); });
+      }
+      playing = false;
+      if (id === speakQueue) pump();
+    }
+    return {
+      say(text) { text = cleanSpeech(text); if (!text || !/[\p{L}\p{N}]/u.test(text)) return; q.push({ text, audioP: useCloudVoice() ? tts(text) : null }); pump(); },
+      end() { ended = true; if (!playing && !q.length) finish(); },
+    };
+  }
+
   // ---------- Voice: speech recognition (listen) ----------
   let rec = null, listening = false, convo = false;
   const recLang = () => (cfg.voice !== 'auto' ? cfg.voice : MLS.extLang ? MLS.extLang.speech : { en: 'en-US', ne: 'ne-NP', zh: 'zh-CN' }[MLS.S.lang] || 'en-US');
-  function listen() {
+  async function listen() {
     if (!SpeechRec) { toast(u('noMic')); return; }
     if (listening) { rec && rec.stop(); return; }
     stopSpeaking();
-    rec = new SpeechRec();
-    rec.lang = recLang(); rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+    listening = true;                                    // reserve: a second click while the mic opens stops instead
+    await gateStart();
+    const r = (rec = new SpeechRec());
+    r.lang = recLang(); r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
     const ta = panel.querySelector('.tutor-form textarea');
-    let finalText = '';
-    rec.onstart = () => { listening = true; setState('listening'); };
-    rec.onresult = (e) => {
+    let finalText = '', conf = 0;
+    const startedAt = Date.now();
+    r.onstart = () => { listening = true; setState('listening'); };
+    r.onresult = (e) => {
       let interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) finalText += r[0].transcript; else interim += r[0].transcript; }
+      for (let i = e.resultIndex; i < e.results.length; i++) { const x = e.results[i]; if (x.isFinal) { finalText += x[0].transcript; conf = Math.max(conf, x[0].confidence || 0); } else interim += x[0].transcript; }
       ta.value = (finalText + interim).trim();
     };
-    rec.onerror = (e) => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { toast(u('micDenied')); convo = false; drawConvo(); } };
-    rec.onend = () => { listening = false; setState('idle'); if (finalText.trim()) send(finalText.trim(), true); else if (convo) convo = false, drawConvo(); };
-    try { rec.start(); } catch { /* already started */ }
+    r.onerror = (e) => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { toast(u('micDenied')); convo = false; drawConvo(); } };
+    r.onend = () => {
+      listening = false; setState('idle');
+      const txt = finalText.trim();
+      if (txt && meaningful(txt) && confident(conf) && voiceHeardSince(startedAt)) send(txt, true);
+      else if (txt) { ta.value = ''; toast(u('noiseIgnored')); if (convo) setTimeout(listen, 300); else gateIdle(); }   // noise: keep listening
+      else { if (convo) { convo = false; drawConvo(); } gateIdle(); }
+    };
+    recStart(r);
   }
 
   // ---------- Panel UI ----------
@@ -800,6 +995,11 @@ ${small ? smallContext() : context()}`;
       <label class="small">${u('tutorVoice')} <select class="voice">${VOICES.map(([id, n]) => `<option value="${id}" ${id === cfg.voice ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <label class="small chk"><input type="checkbox" class="speak" ${cfg.speak ? 'checked' : ''}> ${u('tutorSpeak')}</label>
       <p class="small muted">${u('voiceNote')}</p>
+      <b>🎙️ ${u('micSensT')}</b>
+      <select class="micsens">${[['high', u('micHigh')], ['normal', u('micNormal')], ['low', u('micLow')]].map(([k, n]) => `<option value="${k}" ${cfg.micSens === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
+      <label class="small chk"><input type="checkbox" class="ptt" ${cfg.ptt ? 'checked' : ''}> ${u('pttOn')}</label>
+      <div class="row"><button class="btn ghost sm mictest">🎙️ ${u('micTest')}</button><small class="micres"></small></div>
+      <div class="mic-meter"><span></span></div>
       <b>⚡ ${u('brainT')}</b>
       <div class="seg brain">${[['cloud', u('brainCloud')], ['local', u('brainLocal')], ['wang', u('brainWang')], ['offline', u('brainOff')]].map(([k, n]) => `<button data-b="${k}" class="${cfg.brain === k ? 'on' : ''}">${n}</button>`).join('')}</div>
       <p class="small">${cfg.brain === 'wang' ? u('wangHelp') : u('brainHelp')}</p>
@@ -817,6 +1017,9 @@ ${small ? smallContext() : context()}`;
       <label class="small">${u('tutorModel')} <select class="model">${MODELS.map(([id, n]) => `<option value="${id}" ${id === cfg.model ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       <div class="row"><button class="btn sm save">${u('tutorSave')}</button>${cfg.key ? `<button class="btn ghost sm forget">${u('tutorForget')}</button>` : ''}</div>`;
     s.querySelectorAll('.brain button').forEach((b) => (b.onclick = () => { cfg.brain = b.dataset.b; cfg.local = cfg.brain === 'local'; store.set('ai-brain', cfg.brain); store.set('ai-local', cfg.local); refresh(); drawSettings(); }));
+    s.querySelector('.micsens').onchange = (e) => { cfg.micSens = e.target.value; store.set('ai-mic-sens', cfg.micSens); };
+    s.querySelector('.ptt').onchange = (e) => { cfg.ptt = e.target.checked; store.set('ai-ptt', cfg.ptt); };
+    s.querySelector('.mictest').onclick = () => micTest(s);
     s.querySelectorAll('.veng button').forEach((b) => (b.onclick = () => { cfg.voiceEngine = b.dataset.v; store.set('ai-voice-engine', cfg.voiceEngine); ttsBroken = false; drawSettings(); }));
     s.querySelector('.oavoice').onchange = (e) => { cfg.oaVoice = e.target.value; store.set('ai-oa-voice', cfg.oaVoice); ttsBroken = false; };
     const avSet = (k, v) => { cfg.av = { ...cfg.av, [k]: v }; store.set('ai-avatar', cfg.av); refresh(); drawSettings(); };
@@ -925,16 +1128,19 @@ ${small ? smallContext() : context()}`;
     history.push({ role: 'user', content: text });
     const holder = (curHolder = {});
     let acc = '', A = null, last = 0;
+    const speaker = (viaVoice || convo) && cfg.speak ? makeSpeaker(after) : null;   // talk while the answer is still arriving
+    const feed = speaker ? sentenceFeeder((x) => speaker.say(x)) : null;
     try {
       if (engine() === 'claude') A = await sdk();
       const full = await askAI((d) => {
-        acc += d;
+        acc += d; if (feed) feed(d);
         const now = Date.now(); if (now - last > 80) { last = now; out.innerHTML = liveFmt(acc); box.scrollTop = box.scrollHeight; }
       }, viaVoice || convo, holder);
       history.push({ role: 'assistant', content: full });
       render(full, out);
-      speak(speakable(full), after);
+      if (speaker) { feed('', true); speaker.end(); } else speak(speakable(full), after);
     } catch (e) {
+      if (speaker) stopSpeaking();
       const aborted = !holder.timedOut && /abort/i.test(puterErr(e) + String(e && e.name));
       if (aborted && acc) { history.push({ role: 'assistant', content: acc }); render(acc, out); }
       else {
@@ -956,7 +1162,7 @@ ${small ? smallContext() : context()}`;
     panel.hidden = false; fab.classList.add('open'); refresh();
     if (prefill) send(prefill); else panel.querySelector('.tutor-form textarea').focus();
   }
-  function close() { panel.hidden = true; fab.classList.remove('open'); stopSpeaking(); convo = false; drawConvo(); if (listening && rec) rec.stop(); }
+  function close() { panel.hidden = true; fab.classList.remove('open'); stopSpeaking(); convo = false; drawConvo(); if (listening && rec) rec.stop(); setTimeout(gateIdle, 500); }
   MLS.openTutor = openTutor;
   MLS.closeTutorPanel = () => { if (panel && !panel.hidden) close(); };
 
@@ -987,7 +1193,7 @@ ${small ? smallContext() : context()}`;
     const item = call.queue.shift();
     if (!item) { call.speaking = false; call.cur = ''; face('talking', false); setTimeout(() => { if (call && !call.speaking) caption('bot', ''); }, 1800); return; }
     const s = item.text;
-    call.speaking = true; call.cur = s; face('talking', true); caption('bot', s);
+    call.speaking = true; call.cur = s; face('talking', true); caption('bot', s); noteSaid(s);
     const advance = () => { if (call && call.cur === s) setTimeout(() => { if (call && call.cur === s) cNext(); }, /[.!?。！？।]$/.test(s) ? 110 + Math.random() * 150 : 60); };
     if (!cfg.speak) { setTimeout(advance, 55 * s.length + 400); return; }
     if (item.audioP) {
@@ -1019,26 +1225,57 @@ ${small ? smallContext() : context()}`;
     const cls = /error|wrong|sorry|mistake|problem|गल्ती|माफ|错误|抱歉|问题/i.test(text) ? 'concerned' : /great|well done|excellent|awesome|perfect|शाबास|उत्कृष्ट|太棒|很好|完美|!|！/i.test(text) ? 'happy' : '';
     if (!cls) return; face(cls, true); setTimeout(() => face(cls, false), 4000);
   }
-  function isEcho(heard) {
-    const a = normTxt(heard), b = normTxt(call.cur + ' ' + call.queue.map((q) => q.text).join(' '));
-    return a.length > 0 && a.length < 60 && b.includes(a.slice(0, Math.min(a.length, 14)));
-  }
   function cListen() {
     if (!call || call.muted || !SpeechRec) return;
     const r = new SpeechRec(); call.rec = r;
     r.lang = call.lang; r.continuous = true; r.interimResults = true;
     r.onresult = (e) => {
-      let interim = '', fin = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) { const x = e.results[i]; if (x.isFinal) fin += x[0].transcript; else interim += x[0].transcript; }
+      if (!call) return;
+      let interim = '', fin = '', conf = 0;
+      for (let i = e.resultIndex; i < e.results.length; i++) { const x = e.results[i]; if (x.isFinal) { fin += x[0].transcript; conf = Math.max(conf, x[0].confidence || 0); } else interim += x[0].transcript; }
       const heard = (fin || interim).trim(); if (!heard) return;
-      if (call.speaking && isEcho(heard)) return;              // ignore the teacher's own voice from the speakers
-      if (call.speaking && heard.length >= 5) { cHush(); cStatus(u('callInterrupt')); }   // barge-in
-      caption('you', heard); backchannel();
-      if (fin.trim()) cAsk(fin.trim());
+      if (!call.uttStart) call.uttStart = Date.now() - 1500;                     // roughly when this utterance began
+      if (cfg.ptt && !call.ptt && Date.now() - call.pttUp > 1500) { call.uttStart = 0; return; }   // push-to-talk: only while held
+      if (isEcho(heard)) { call.uttStart = 0; return; }                         // the teacher's own voice from the speakers
+      if (call.speaking) {
+        // Interrupt only for a real voice near the mic: 2+ words AND sustained voice energy (not a cough, TV or a fan).
+        if (!cfg.ptt && !(tokens(heard).length >= 2 && sustainedVoice(400))) return;
+        cHush(); cStatus(u('callInterrupt'));
+      }
+      caption('you', ((call.pending || '') + ' ' + heard).trim()); backchannel();
+      if (!fin.trim()) return;
+      const since = call.uttStart; call.uttStart = 0;
+      if (!meaningful(fin) || !confident(conf) || !voiceHeardSince(since)) { noiseNote(); return; }
+      call.pending = ((call.pending || '') + ' ' + fin.trim()).trim();
+      scheduleAsk();
     };
     r.onerror = (e) => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { toast(u('micDenied')); call.muted = true; drawCallBar(); } };
     r.onend = () => { if (call && !call.muted && call.rec === r) setTimeout(cListen, 250); };
-    try { r.start(); } catch { /* already running */ }
+    recStart(r);
+  }
+  function noiseNote() {
+    if (!call || call.speaking) return;
+    cStatus(u('noiseIgnored'));
+    setTimeout(() => { if (call && call.el.querySelector('.call-status').textContent === u('noiseIgnored')) cStatus(''); }, 1500);
+  }
+  // Ask once the student has really finished speaking: Chrome may cut one sentence into pieces at every short pause,
+  // and asking each piece separately cancelled the previous answer and produced replies to half-questions.
+  function scheduleAsk() {
+    clearTimeout(call.askTimer);
+    const t0 = Date.now();
+    const check = () => {
+      if (!call || !call.pending) return;
+      const quiet = gateOn() ? Date.now() - gate.lastVoice > 550 : Date.now() - t0 >= 600;
+      if ((cfg.ptt ? !call.ptt : quiet) || Date.now() - t0 > 2500) { const q = call.pending; call.pending = ''; caption('you', q); cAsk(q); }
+      else call.askTimer = setTimeout(check, 100);
+    };
+    call.askTimer = setTimeout(check, gateOn() ? 100 : 600);
+  }
+  function pttKey(e) {
+    if (!call || !cfg.ptt || e.code !== 'Space' || e.target.closest('input, textarea, select, button')) return;
+    e.preventDefault();
+    if (e.type === 'keydown' && !call.ptt) { call.ptt = true; drawCallBar(); }
+    if (e.type === 'keyup') { call.ptt = false; call.pttUp = Date.now(); drawCallBar(); if (call.pending) scheduleAsk(); }
   }
   async function cAsk(text) {
     const turn = ++call.turn;
@@ -1059,7 +1296,7 @@ ${small ? smallContext() : context()}`;
         const rest = acc.slice(spoken); if (!rest) return;
         const fence = rest.indexOf('```');
         if (fence === 0) { const close = rest.indexOf('```', 3); if (close < 0) return; cSay(u('seeCode')); spoken += close + 3; continue; }
-        const m = rest.match(/[.!?。！？।\n]/); let end = m ? m.index + 1 : -1;
+        const m = rest.match(/[.!?](?=\s)|[。！？।\n]/); /* a period ends a sentence only before a space (not in train.py) */ let end = m ? m.index + 1 : -1;
         if (fence > 0 && (end < 0 || fence < end)) end = fence;
         if (end < 0) { if (final) { cSay(rest); spoken = acc.length; } return; }
         cSay(rest.slice(0, end)); spoken += end;
@@ -1085,8 +1322,8 @@ ${small ? smallContext() : context()}`;
   function drawCallBar() {
     if (!call) return;
     const m = call.el.querySelector('.cb.mic');
-    m.classList.toggle('on', !call.muted); m.textContent = call.muted ? '🔇' : '🎙️';
-    cStatus(call.muted ? u('callMuted') : '');
+    m.classList.toggle('on', cfg.ptt ? call.ptt : !call.muted); m.textContent = call.muted ? '🔇' : '🎙️';
+    cStatus(call.muted ? u('callMuted') : cfg.ptt && call.ptt ? u('stListening') : '');
   }
   async function toggleCam() {
     const v = call.el.querySelector('.selfview'), b = call.el.querySelector('.cb.cam');
@@ -1108,7 +1345,7 @@ ${small ? smallContext() : context()}`;
         <div class="call-caption bot"></div><div class="call-caption you"></div>
         <video class="selfview" autoplay muted playsinline hidden></video>
       </div>
-      <div class="call-hint">${u('callHint')}${SpeechRec ? '' : ' — ' + u('noMic')}</div>
+      <div class="call-hint">${cfg.ptt ? u('pttHint') : u('callHint')}${SpeechRec ? '' : ' — ' + u('noMic')}</div>
       <div class="call-bar">
         <button class="cb mic on" title="Microphone">🎙️</button>
         <button class="cb cam" title="Camera">📷</button>
@@ -1117,15 +1354,20 @@ ${small ? smallContext() : context()}`;
         <button class="cb end" title="End">📞</button>
       </div></div>`);
     document.body.appendChild(el);
-    call = { el, muted: false, speaking: false, queue: [], cur: '', rec: null, stream: null, turn: 0, lastBC: 0, holder: null, lang: recLang() };
-    el.querySelector('.cb.mic').onclick = () => { call.muted = !call.muted; if (call.muted && call.rec) { const r = call.rec; call.rec = null; r.abort(); } else cListen(); drawCallBar(); };
+    call = { el, muted: false, speaking: false, queue: [], cur: '', rec: null, stream: null, turn: 0, lastBC: 0, holder: null, lang: recLang(), pending: '', uttStart: 0, askTimer: null, ptt: false, pttUp: 0 };
+    const micBtn = el.querySelector('.cb.mic');
+    micBtn.onclick = () => { if (cfg.ptt) return; call.muted = !call.muted; if (call.muted && call.rec) { const r = call.rec; call.rec = null; r.abort(); } else cListen(); drawCallBar(); };
+    const pttSet = (on) => { if (!call || !cfg.ptt) return; call.ptt = on; if (!on) { call.pttUp = Date.now(); if (call.pending) scheduleAsk(); } drawCallBar(); };
+    micBtn.onpointerdown = () => pttSet(true);
+    micBtn.onpointerup = micBtn.onpointerleave = micBtn.onpointercancel = () => { if (call && call.ptt) pttSet(false); };
+    document.addEventListener('keydown', pttKey); document.addEventListener('keyup', pttKey);
     el.querySelector('.cb.cam').onclick = toggleCam;
     el.querySelector('.cb.end').onclick = endCall;
     el.querySelector('.cl').onchange = (e) => { cfg.voice = e.target.value; store.set('ai-voice', cfg.voice); call.lang = recLang(); if (call.rec) { const r = call.rec; call.rec = null; r.abort(); } cListen(); };
     document.addEventListener('keydown', escCall);
     el.querySelector('.cb.connect').onclick = (ev) => connectPuter(ev.currentTarget);
     cSay(u('callGreet').replace('{name}', teacherName()));
-    cListen();
+    gateStart().then(() => { if (call) cListen(); });
     if (engine() === 'cloud') loadPuter().then(() => { if (call && !isSignedIn()) { call.el.querySelector('.cb.connect').hidden = false; cStatus(u('needConnect')); } }).catch(() => { if (call && FILE_MODE) { call.el.querySelector('.cb.connect').hidden = false; cStatus(u('fileT')); } });
   }
   function escCall(e) { if (e.key === 'Escape') endCall(); }
@@ -1137,7 +1379,10 @@ ${small ? smallContext() : context()}`;
     if (synth) synth.cancel();
     if (c.stream) c.stream.getTracks().forEach((tr) => tr.stop());
     c.el.remove();
+    clearTimeout(c.askTimer);
     document.removeEventListener('keydown', escCall);
+    document.removeEventListener('keydown', pttKey); document.removeEventListener('keyup', pttKey);
+    gateIdle();
   }
   MLS.openCall = openCall;
   MLS.setTutor = () => { if (!panel) build(); refresh(); };
